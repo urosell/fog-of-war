@@ -48,6 +48,13 @@ class _MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
 
   @override
+  void initState() {
+    super.initState();
+    // Cargar el fog guardado en disco (si lo hay) al arrancar.
+    _fog.load();
+  }
+
+  @override
   void dispose() {
     _fog.dispose();
     super.dispose();

@@ -15,6 +15,54 @@ import 'package:latlong2/latlong.dart';
 /// Z20 ≈ 38 m por celda en el ecuador.
 const int kCellZoom = 20;
 
+/// Nivel de zoom del "tile" de almacenamiento. Un tile Z16 contiene 16x16 = 256
+/// celdas Z20 (porque 16 = 2^4 y 20 - 16 = 4). Cada tile se guarda como un
+/// bitmap de 256 bits = 32 bytes (ver fog_codec.dart).
+const int kStorageTileZoom = 16;
+
+/// Número de celdas por lado dentro de un tile de almacenamiento: 2^4 = 16.
+const int kCellsPerTileSide = 1 << (kCellZoom - kStorageTileZoom); // 16
+
+/// Identificador del tile de almacenamiento Z16 que contiene una celda.
+class TileId {
+  final int x;
+  final int y;
+
+  const TileId(this.x, this.y);
+
+  @override
+  bool operator ==(Object other) =>
+      other is TileId && other.x == x && other.y == y;
+
+  @override
+  int get hashCode => Object.hash(x, y);
+
+  @override
+  String toString() => 'TileId($x, $y)';
+}
+
+/// Tile de almacenamiento al que pertenece una celda (división entera por 16).
+TileId tileForCell(CellId cell) =>
+    TileId(cell.x ~/ kCellsPerTileSide, cell.y ~/ kCellsPerTileSide);
+
+/// Índice de bit (0..255) de una celda dentro de su tile.
+/// Fila (y local) * 16 + columna (x local).
+int bitIndexForCell(CellId cell) {
+  final localX = cell.x % kCellsPerTileSide;
+  final localY = cell.y % kCellsPerTileSide;
+  return localY * kCellsPerTileSide + localX;
+}
+
+/// Reconstruye una celda a partir de su tile y su índice de bit.
+CellId cellFromTileAndBit(TileId tile, int bitIndex) {
+  final localY = bitIndex ~/ kCellsPerTileSide;
+  final localX = bitIndex % kCellsPerTileSide;
+  return CellId(
+    tile.x * kCellsPerTileSide + localX,
+    tile.y * kCellsPerTileSide + localY,
+  );
+}
+
 /// Identificador de una celda del grid: coordenadas enteras (x, y) en el zoom
 /// [kCellZoom]. Dos celdas son iguales si tienen el mismo x e y.
 class CellId {
