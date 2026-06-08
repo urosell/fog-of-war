@@ -80,9 +80,19 @@ class _MapScreenState extends State<MapScreen> {
     final resultado = await _location.ensurePermission();
     if (!mounted) return;
 
-    if (resultado != LocationPermissionResult.granted) {
+    final concedido = resultado == LocationPermissionResult.grantedAlways ||
+        resultado == LocationPermissionResult.grantedWhileInUse;
+    if (!concedido) {
       _mostrarAviso(_mensajePermiso(resultado));
       return;
+    }
+
+    // Con "Mientras usas la app" el GPS funciona, pero el segundo plano puede
+    // no ser fiable: avisamos para que el usuario suba el permiso a Ajustes.
+    if (resultado == LocationPermissionResult.grantedWhileInUse) {
+      _mostrarAviso(
+          'Para registrar con la app cerrada, pon "Permitir todo el tiempo" '
+          'en Ajustes de ubicación.');
     }
 
     _posSub = _location.positionStream().listen(_onNuevaPosicion);
@@ -108,7 +118,8 @@ class _MapScreenState extends State<MapScreen> {
         return 'Permiso de ubicación denegado. Actívalo en Ajustes de la app.';
       case LocationPermissionResult.denied:
         return 'Sin permiso de ubicación: la niebla no se desvelará al moverte.';
-      case LocationPermissionResult.granted:
+      case LocationPermissionResult.grantedWhileInUse:
+      case LocationPermissionResult.grantedAlways:
         return '';
     }
   }

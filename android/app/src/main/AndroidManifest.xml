@@ -3,6 +3,14 @@
          al moverse. FINE = precisión alta (GPS), COARSE = aproximada (red). -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <!-- Ubicación en segundo plano (app cerrada / pantalla bloqueada). -->
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
+    <!-- Servicio en primer plano: mantiene vivo el seguimiento con una
+         notificación permanente. FOREGROUND_SERVICE_LOCATION es obligatorio
+         desde Android 14 (API 34) para servicios de tipo ubicación. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <application
         android:label="fog_of_war"
         android:name="${applicationName}"
