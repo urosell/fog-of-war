@@ -15,6 +15,7 @@ import 'cities/city.dart';
 import 'fog/fog_controller.dart';
 import 'fog/fog_layer.dart';
 import 'location/location_service.dart';
+import 'map/map_style.dart';
 
 void main() {
   runApp(const FogOfWarApp());
@@ -60,6 +61,8 @@ class _MapScreenState extends State<MapScreen> {
   LatLng? _userPosition;
   // Si está activo, el mapa sigue automáticamente al usuario al moverse.
   bool _seguir = true;
+  // Índice del estilo de mapa actual dentro de kMapStyles.
+  int _styleIndex = 0;
 
   @override
   void initState() {
@@ -130,6 +133,16 @@ class _MapScreenState extends State<MapScreen> {
         .showSnackBar(SnackBar(content: Text(texto)));
   }
 
+  // Pasa al siguiente estilo de mapa (vuelve al primero tras el último) y
+  // avisa con el nombre del estilo elegido.
+  void _siguienteEstilo() {
+    setState(() => _styleIndex = (_styleIndex + 1) % kMapStyles.length);
+    // Quitar avisos en cola para que, al pulsar rápido, se vea siempre el
+    // nombre del estilo actual y no los anteriores encolados.
+    ScaffoldMessenger.of(context).clearSnackBars();
+    _mostrarAviso('Mapa: ${kMapStyles[_styleIndex].name}');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -137,6 +150,12 @@ class _MapScreenState extends State<MapScreen> {
         title: const Text('Fog of War'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
+          // Botón para cambiar el estilo del mapa (rota por kMapStyles).
+          IconButton(
+            icon: const Icon(Icons.layers),
+            tooltip: 'Cambiar estilo de mapa',
+            onPressed: _siguienteEstilo,
+          ),
           // Progreso: % de la ciudad desvelado + celdas totales.
           // ListenableBuilder se redibuja cuando el fog cambia.
           ListenableBuilder(
@@ -172,14 +191,13 @@ class _MapScreenState extends State<MapScreen> {
           onTap: (tapPosition, punto) => _fog.reveal(punto),
         ),
         children: [
-          // Mapa base con estilo "Voyager" de Carto: fondo claro, colores vivos
-          // y limpios, look moderno/gaming. Carto sirve los tiles desde varios
-          // subdominios (a/b/c/d) para repartir la carga.
-          // Atribución obligatoria: © OpenStreetMap, © CARTO.
+          // Mapa base. El estilo lo elige el usuario con el botón de capas;
+          // se usa el estilo actual de kMapStyles. La clave (key) fuerza a
+          // flutter_map a recrear la capa al cambiar de estilo.
           TileLayer(
-            urlTemplate:
-                'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
-            subdomains: const ['a', 'b', 'c', 'd'],
+            key: ValueKey(kMapStyles[_styleIndex].urlTemplate),
+            urlTemplate: kMapStyles[_styleIndex].urlTemplate,
+            subdomains: kMapStyles[_styleIndex].subdomains,
             userAgentPackageName: 'com.fogofwar.fog_of_war',
           ),
           // La niebla va encima de los tiles del mapa.
