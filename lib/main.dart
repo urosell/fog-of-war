@@ -64,6 +64,8 @@ class _MapScreenState extends State<MapScreen> {
   bool _seguir = true;
   // Índice del estilo de mapa actual dentro de kMapStyles.
   int _styleIndex = 0;
+  // Modo de seguimiento del GPS (precisión vs batería).
+  TrackingMode _modo = TrackingMode.exploracion;
 
   @override
   void initState() {
@@ -100,7 +102,29 @@ class _MapScreenState extends State<MapScreen> {
           'en Ajustes de ubicación.');
     }
 
-    _posSub = _location.positionStream().listen(_onNuevaPosicion);
+    _suscribirGps();
+  }
+
+  // (Re)suscribe al flujo de posiciones con el modo actual. Cancela la
+  // suscripción anterior si la había (p. ej. al cambiar de modo).
+  void _suscribirGps() {
+    _posSub?.cancel();
+    _posSub = _location.positionStream(mode: _modo).listen(_onNuevaPosicion);
+  }
+
+  // Alterna entre modo Exploración y Ahorro, y reinicia el GPS con los nuevos
+  // ajustes (solo si el seguimiento ya estaba activo).
+  void _cambiarModo() {
+    setState(() {
+      _modo = _modo == TrackingMode.exploracion
+          ? TrackingMode.ahorro
+          : TrackingMode.exploracion;
+    });
+    if (_posSub != null) _suscribirGps();
+    final nombre = _modo == TrackingMode.exploracion
+        ? 'Exploración (alta precisión)'
+        : 'Ahorro de batería';
+    _mostrarAviso('GPS: $nombre');
   }
 
   // Se ejecuta cada vez que el GPS nos da una posición nueva.
@@ -175,13 +199,28 @@ class _MapScreenState extends State<MapScreen> {
                 ),
               ),
             ),
-            // Botón de cambiar estilo de mapa (arriba-derecha).
+            // Botones de la esquina superior derecha: estilo de mapa y modo GPS.
             Align(
               alignment: Alignment.topRight,
-              child: GlassIconButton(
-                icon: Icons.layers,
-                tooltip: 'Cambiar estilo de mapa',
-                onPressed: _siguienteEstilo,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GlassIconButton(
+                    icon: Icons.layers,
+                    tooltip: 'Cambiar estilo de mapa',
+                    onPressed: _siguienteEstilo,
+                  ),
+                  const SizedBox(height: 10),
+                  // El icono refleja el modo actual: brújula = exploración,
+                  // batería = ahorro. Al pulsar, se alterna.
+                  GlassIconButton(
+                    icon: _modo == TrackingMode.exploracion
+                        ? Icons.explore
+                        : Icons.battery_saver,
+                    tooltip: 'Cambiar modo de GPS (precisión / batería)',
+                    onPressed: _cambiarModo,
+                  ),
+                ],
               ),
             ),
             // Botón de recentrar en el usuario (abajo-derecha).

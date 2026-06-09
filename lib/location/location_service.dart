@@ -17,6 +17,51 @@ import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
+/// Modo de seguimiento del GPS. Cada uno equilibra precisión y batería.
+enum TrackingMode {
+  /// Alta precisión y refresco frecuente. Para salir a descubrir activamente.
+  /// Gasta más batería (como una app de running).
+  exploracion,
+
+  /// Precisión media y refresco espaciado. Para llevar la app puesta en el día
+  /// a día sin vaciar la batería.
+  ahorro,
+}
+
+/// Ajustes concretos de GPS para cada modo.
+class _ModeConfig {
+  final LocationAccuracy accuracy;
+  final int distanceFilterMeters;
+  final Duration interval;
+  final String notificationText;
+
+  const _ModeConfig({
+    required this.accuracy,
+    required this.distanceFilterMeters,
+    required this.interval,
+    required this.notificationText,
+  });
+}
+
+_ModeConfig _configFor(TrackingMode mode) {
+  switch (mode) {
+    case TrackingMode.exploracion:
+      return const _ModeConfig(
+        accuracy: LocationAccuracy.high,
+        distanceFilterMeters: 10,
+        interval: Duration(seconds: 4),
+        notificationText: 'Explorando con alta precisión.',
+      );
+    case TrackingMode.ahorro:
+      return const _ModeConfig(
+        accuracy: LocationAccuracy.medium,
+        distanceFilterMeters: 40,
+        interval: Duration(seconds: 30),
+        notificationText: 'Modo ahorro de batería.',
+      );
+  }
+}
+
 /// Resultado de pedir permiso de ubicación.
 enum LocationPermissionResult {
   /// Permiso "Mientras usas la app" concedido: el GPS funciona con la app
@@ -69,29 +114,33 @@ class LocationService {
     }
   }
 
-  /// Flujo de posiciones. Emite una nueva ubicación cada vez que te mueves al
-  /// menos [distanceFilterMeters] metros. En Android activa el servicio en
-  /// primer plano (notificación permanente) para seguir registrando con la app
-  /// cerrada. Convertimos la Position de geolocator a un LatLng de latlong2.
-  Stream<LatLng> positionStream({int distanceFilterMeters = 10}) {
+  /// Flujo de posiciones según el [mode] elegido (precisión vs batería). Emite
+  /// una nueva ubicación cada vez que te mueves lo suficiente. En Android activa
+  /// el servicio en primer plano (notificación permanente) para seguir
+  /// registrando con la app cerrada. Convertimos la Position de geolocator a un
+  /// LatLng de latlong2.
+  Stream<LatLng> positionStream({TrackingMode mode = TrackingMode.exploracion}) {
+    final cfg = _configFor(mode);
     final LocationSettings settings;
     if (defaultTargetPlatform == TargetPlatform.android) {
       settings = AndroidSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: distanceFilterMeters,
+        accuracy: cfg.accuracy,
+        distanceFilter: cfg.distanceFilterMeters,
+        // Intervalo mínimo entre lecturas: más largo en modo ahorro.
+        intervalDuration: cfg.interval,
         // Mantiene la CPU despierta para recibir posiciones con pantalla
-        // apagada.
-        foregroundNotificationConfig: const ForegroundNotificationConfig(
+        // apagada. El texto cambia según el modo para que el usuario lo vea.
+        foregroundNotificationConfig: ForegroundNotificationConfig(
           notificationTitle: 'Fog of War',
-          notificationText: 'Registrando tu recorrido para desvelar la niebla.',
+          notificationText: cfg.notificationText,
           enableWakeLock: true,
           setOngoing: true,
         ),
       );
     } else {
       settings = LocationSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: distanceFilterMeters,
+        accuracy: cfg.accuracy,
+        distanceFilter: cfg.distanceFilterMeters,
       );
     }
     return Geolocator.getPositionStream(locationSettings: settings)
