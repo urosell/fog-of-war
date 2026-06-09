@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
+import 'cities/city.dart';
 import 'fog/fog_controller.dart';
 import 'fog/fog_layer.dart';
 import 'location/location_service.dart';
@@ -136,16 +137,22 @@ class _MapScreenState extends State<MapScreen> {
         title: const Text('Fog of War'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
-          // Contador de celdas descubiertas. ListenableBuilder se redibuja
-          // cuando el fog cambia.
+          // Progreso: % de la ciudad desvelado + celdas totales.
+          // ListenableBuilder se redibuja cuando el fog cambia.
           ListenableBuilder(
             listenable: _fog,
-            builder: (context, _) => Center(
-              child: Padding(
-                padding: const EdgeInsets.only(right: 16),
-                child: Text('${_fog.discoveredCount} celdas'),
-              ),
-            ),
+            builder: (context, _) {
+              final pct = kBarcelona.discoveryPercentage(_fog.discovered);
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 16),
+                  child: Text(
+                    '${kBarcelona.name} '
+                    '${pct.toStringAsFixed(2)}% · ${_fog.discoveredCount} celdas',
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),
