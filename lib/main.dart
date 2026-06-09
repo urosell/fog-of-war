@@ -16,6 +16,7 @@ import 'fog/fog_controller.dart';
 import 'fog/fog_layer.dart';
 import 'location/location_service.dart';
 import 'map/map_style.dart';
+import 'ui/hud.dart';
 
 void main() {
   runApp(const FogOfWarApp());
@@ -143,91 +144,113 @@ class _MapScreenState extends State<MapScreen> {
     _mostrarAviso('Mapa: ${kMapStyles[_styleIndex].name}');
   }
 
+  // Vuelve a centrar el mapa en el usuario y reactiva el auto-seguir.
+  void _recentrar() {
+    final pos = _userPosition;
+    if (pos == null) {
+      _mostrarAviso('Aún no tengo tu ubicación.');
+      return;
+    }
+    setState(() => _seguir = true);
+    _mapController.move(pos, _mapController.camera.zoom);
+  }
+
+  // HUD: la interfaz de cristal que flota sobre el mapa.
+  Widget _buildHud() {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Stack(
+          children: [
+            // Tarjeta de estadísticas (arriba-izquierda). Se redibuja sola al
+            // cambiar el fog gracias al ListenableBuilder.
+            Align(
+              alignment: Alignment.topLeft,
+              child: ListenableBuilder(
+                listenable: _fog,
+                builder: (context, _) => HudStats(
+                  cityName: kBarcelona.name,
+                  percentage: kBarcelona.discoveryPercentage(_fog.discovered),
+                  cells: _fog.discoveredCount,
+                ),
+              ),
+            ),
+            // Botón de cambiar estilo de mapa (arriba-derecha).
+            Align(
+              alignment: Alignment.topRight,
+              child: GlassIconButton(
+                icon: Icons.layers,
+                tooltip: 'Cambiar estilo de mapa',
+                onPressed: _siguienteEstilo,
+              ),
+            ),
+            // Botón de recentrar en el usuario (abajo-derecha).
+            Align(
+              alignment: Alignment.bottomRight,
+              child: GlassIconButton(
+                icon: _seguir ? Icons.my_location : Icons.location_searching,
+                tooltip: 'Centrar en mí',
+                onPressed: _recentrar,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Fog of War'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        actions: [
-          // Botón para cambiar el estilo del mapa (rota por kMapStyles).
-          IconButton(
-            icon: const Icon(Icons.layers),
-            tooltip: 'Cambiar estilo de mapa',
-            onPressed: _siguienteEstilo,
-          ),
-          // Progreso: % de la ciudad desvelado + celdas totales.
-          // ListenableBuilder se redibuja cuando el fog cambia.
-          ListenableBuilder(
-            listenable: _fog,
-            builder: (context, _) {
-              final pct = kBarcelona.discoveryPercentage(_fog.discovered);
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 16),
-                  child: Text(
-                    '${kBarcelona.name} '
-                    '${pct.toStringAsFixed(2)}% · ${_fog.discoveredCount} celdas',
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-      body: FlutterMap(
-        mapController: _mapController,
-        options: MapOptions(
-          initialCenter: _userPosition ?? _centroInicial,
-          initialZoom: 16,
-          // Si el usuario arrastra el mapa a mano, desactivamos el auto-seguir
-          // para no pelearnos con él.
-          onPositionChanged: (camera, hasGesture) {
-            if (hasGesture && _seguir) {
-              setState(() => _seguir = false);
-            }
-          },
-          // Tocar el mapa desvela la niebla en ese punto (respaldo / pruebas).
-          onTap: (tapPosition, punto) => _fog.reveal(punto),
-        ),
+      // Sin AppBar: el mapa ocupa toda la pantalla y el HUD flota encima.
+      body: Stack(
         children: [
-          // Mapa base. El estilo lo elige el usuario con el botón de capas;
-          // se usa el estilo actual de kMapStyles. La clave (key) fuerza a
-          // flutter_map a recrear la capa al cambiar de estilo.
-          TileLayer(
-            key: ValueKey(kMapStyles[_styleIndex].urlTemplate),
-            urlTemplate: kMapStyles[_styleIndex].urlTemplate,
-            subdomains: kMapStyles[_styleIndex].subdomains,
-            userAgentPackageName: 'com.fogofwar.fog_of_war',
-          ),
-          // La niebla va encima de los tiles del mapa.
-          FogLayer(controller: _fog),
-          // Punto azul de "estás aquí" (solo si ya tenemos posición).
-          if (_userPosition != null)
-            MarkerLayer(
-              markers: [
-                Marker(
-                  point: _userPosition!,
-                  width: 24,
-                  height: 24,
-                  child: const _MarcadorUsuario(),
+          Positioned.fill(
+            child: FlutterMap(
+              mapController: _mapController,
+              options: MapOptions(
+                initialCenter: _userPosition ?? _centroInicial,
+                initialZoom: 16,
+                // Si el usuario arrastra el mapa a mano, desactivamos el
+                // auto-seguir para no pelearnos con él.
+                onPositionChanged: (camera, hasGesture) {
+                  if (hasGesture && _seguir) {
+                    setState(() => _seguir = false);
+                  }
+                },
+                // Tocar el mapa desvela la niebla en ese punto (respaldo/pruebas).
+                onTap: (tapPosition, punto) => _fog.reveal(punto),
+              ),
+              children: [
+                // Mapa base. El estilo lo elige el usuario con el botón de capas;
+                // se usa el estilo actual de kMapStyles. La clave (key) fuerza a
+                // flutter_map a recrear la capa al cambiar de estilo.
+                TileLayer(
+                  key: ValueKey(kMapStyles[_styleIndex].urlTemplate),
+                  urlTemplate: kMapStyles[_styleIndex].urlTemplate,
+                  subdomains: kMapStyles[_styleIndex].subdomains,
+                  userAgentPackageName: 'com.fogofwar.fog_of_war',
                 ),
+                // La niebla va encima de los tiles del mapa.
+                FogLayer(controller: _fog),
+                // Punto azul de "estás aquí" (solo si ya tenemos posición).
+                if (_userPosition != null)
+                  MarkerLayer(
+                    markers: [
+                      Marker(
+                        point: _userPosition!,
+                        width: 24,
+                        height: 24,
+                        child: const _MarcadorUsuario(),
+                      ),
+                    ],
+                  ),
               ],
             ),
+          ),
+          // El HUD de cristal por encima del mapa.
+          _buildHud(),
         ],
-      ),
-      // Botón para volver a centrar el mapa en ti y reactivar el auto-seguir.
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          final pos = _userPosition;
-          if (pos == null) {
-            _mostrarAviso('Aún no tengo tu ubicación.');
-            return;
-          }
-          setState(() => _seguir = true);
-          _mapController.move(pos, _mapController.camera.zoom);
-        },
-        child: Icon(_seguir ? Icons.my_location : Icons.location_searching),
       ),
     );
   }
