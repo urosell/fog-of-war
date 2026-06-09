@@ -64,13 +64,13 @@ class _FogPainter extends CustomPainter {
     final cellSePx = camera
         .latLngToScreenOffset(cellNorthWest(CellId(centerCell.x + 1, centerCell.y + 1)));
     final cellSidePx = (cellSePx.dx - cellNwPx.dx).abs();
-    // 0.72 ≈ media diagonal: garantiza que las celdas vecinas (en recto y en
-    // diagonal) se solapen sin dejar huecos.
-    final radius = cellSidePx * 0.72;
+    // Radio generoso (~1 celda): cuanto más se solapan los círculos de celdas
+    // vecinas, más liso y redondeado queda el contorno general (menos "grumos").
+    final radius = cellSidePx * 1.0;
 
     final clearPaint = Paint()
       ..blendMode = BlendMode.clear
-      ..maskFilter = MaskFilter.blur(BlurStyle.normal, cellSidePx * 0.18);
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, cellSidePx * 0.28);
 
     for (final cell in controller.discovered) {
       final nw = cellNorthWest(cell);
