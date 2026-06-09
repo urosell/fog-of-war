@@ -86,17 +86,23 @@ class GlassIconButton extends StatelessWidget {
   }
 }
 
-/// Tarjeta de estadísticas: nombre de la ciudad + % descubierto + nº de celdas.
+/// Tarjeta de estadísticas: ciudad + % descubierto, celdas, puntos y POIs.
 class HudStats extends StatelessWidget {
   final String cityName;
   final double percentage;
   final int cells;
+  final int points;
+  final int poisDiscovered;
+  final int poisTotal;
 
   const HudStats({
     super.key,
     required this.cityName,
     required this.percentage,
     required this.cells,
+    required this.points,
+    required this.poisDiscovered,
+    required this.poisTotal,
   });
 
   @override
@@ -121,12 +127,14 @@ class HudStats extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 4),
-              Row(
-                mainAxisSize: MainAxisSize.min,
+              Wrap(
+                spacing: 16,
+                runSpacing: 4,
                 children: [
                   _Stat(value: '${percentage.toStringAsFixed(2)}%', label: 'ciudad'),
-                  const SizedBox(width: 16),
                   _Stat(value: '$cells', label: 'celdas'),
+                  _Stat(value: '$points', label: 'puntos'),
+                  _Stat(value: '$poisDiscovered/$poisTotal', label: 'POIs'),
                 ],
               ),
             ],

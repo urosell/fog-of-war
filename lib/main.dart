@@ -16,6 +16,8 @@ import 'fog/fog_controller.dart';
 import 'fog/fog_layer.dart';
 import 'location/location_service.dart';
 import 'map/map_style.dart';
+import 'poi/poi.dart';
+import 'poi/poi_controller.dart';
 import 'ui/hud.dart';
 
 void main() {
@@ -51,6 +53,8 @@ class _MapScreenState extends State<MapScreen> {
 
   // Controla el estado del fog (celdas descubiertas).
   final FogController _fog = FogController();
+  // Controla el estado de los POIs (descubiertos y puntos).
+  final PoiController _poi = PoiController();
   // Permite mover/leer la cámara del mapa (para centrar en el usuario).
   final MapController _mapController = MapController();
   // Acceso al GPS.
@@ -70,8 +74,9 @@ class _MapScreenState extends State<MapScreen> {
   @override
   void initState() {
     super.initState();
-    // Cargar el fog guardado en disco (si lo hay) y luego arrancar el GPS.
+    // Cargar el fog y los POIs guardados en disco (si los hay) y arrancar GPS.
     _fog.load();
+    _poi.load();
     _iniciarGps();
   }
 
@@ -79,6 +84,7 @@ class _MapScreenState extends State<MapScreen> {
   void dispose() {
     _posSub?.cancel();
     _fog.dispose();
+    _poi.dispose();
     super.dispose();
   }
 
@@ -132,10 +138,33 @@ class _MapScreenState extends State<MapScreen> {
     setState(() => _userPosition = pos);
     // Desvelar la niebla a tu alrededor.
     _fog.reveal(pos);
+    // ¿Has llegado a algún POI nuevo? Si es así, celébralo.
+    final nuevos = _poi.checkDiscoveries(pos);
+    if (nuevos.isNotEmpty) _celebrarPois(nuevos);
     // Si el modo "seguir" está activo, centrar el mapa en ti.
     if (_seguir) {
       _mapController.move(pos, _mapController.camera.zoom);
     }
+  }
+
+  // Muestra un aviso al descubrir uno o varios POIs.
+  void _celebrarPois(List<Poi> nuevos) {
+    final String texto;
+    if (nuevos.length == 1) {
+      final p = nuevos.first;
+      texto = '🏛️ ¡Descubriste ${p.name}!  +${p.points} puntos';
+    } else {
+      final puntos = nuevos.fold<int>(0, (s, p) => s + p.points);
+      texto = '🏛️ ¡${nuevos.length} POIs descubiertos!  +$puntos puntos';
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(texto),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.black87,
+        duration: const Duration(seconds: 3),
+      ),
+    );
   }
 
   // Mensaje legible según por qué no tenemos permiso/GPS.
@@ -191,11 +220,14 @@ class _MapScreenState extends State<MapScreen> {
             Align(
               alignment: Alignment.topLeft,
               child: ListenableBuilder(
-                listenable: _fog,
+                listenable: Listenable.merge([_fog, _poi]),
                 builder: (context, _) => HudStats(
                   cityName: kBarcelona.name,
                   percentage: kBarcelona.discoveryPercentage(_fog.discovered),
                   cells: _fog.discoveredCount,
+                  points: _poi.totalPoints,
+                  poisDiscovered: _poi.discoveredCount,
+                  poisTotal: _poi.totalCount,
                 ),
               ),
             ),
@@ -272,6 +304,18 @@ class _MapScreenState extends State<MapScreen> {
                 ),
                 // La niebla va encima de los tiles del mapa.
                 FogLayer(controller: _fog),
+                // Marcadores de los POIs ya descubiertos (encima de la niebla).
+                MarkerLayer(
+                  markers: [
+                    for (final poi in _poi.discoveredPois)
+                      Marker(
+                        point: poi.location,
+                        width: 40,
+                        height: 40,
+                        child: _PoiMarker(category: poi.category),
+                      ),
+                  ],
+                ),
                 // Punto azul de "estás aquí" (solo si ya tenemos posición).
                 if (_userPosition != null)
                   MarkerLayer(
@@ -291,6 +335,46 @@ class _MapScreenState extends State<MapScreen> {
           _buildHud(),
         ],
       ),
+    );
+  }
+}
+
+// Icono representativo de cada categoría de POI.
+IconData _iconForCategory(PoiCategory c) {
+  switch (c) {
+    case PoiCategory.monumento:
+      return Icons.account_balance;
+    case PoiCategory.iglesia:
+      return Icons.church;
+    case PoiCategory.museo:
+      return Icons.museum;
+    case PoiCategory.parque:
+      return Icons.park;
+    case PoiCategory.mirador:
+      return Icons.landscape;
+    case PoiCategory.plaza:
+      return Icons.location_city;
+  }
+}
+
+// Marcador de un POI descubierto: un círculo ámbar con el icono de su categoría.
+class _PoiMarker extends StatelessWidget {
+  final PoiCategory category;
+
+  const _PoiMarker({required this.category});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFB300), // ámbar: "tesoro" descubierto
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 2.5),
+        boxShadow: const [
+          BoxShadow(color: Colors.black45, blurRadius: 4),
+        ],
+      ),
+      child: Icon(_iconForCategory(category), color: Colors.white, size: 22),
     );
   }
 }
