@@ -50,8 +50,27 @@ class _FogPainter extends CustomPainter {
     canvas.drawRect(fullRect, Paint()..color = kFogColor);
 
     // 2) Borrar cada celda descubierta que sea visible en pantalla.
-    final clearPaint = Paint()..blendMode = BlendMode.clear;
+    //
+    // En vez de un cuadrado por celda (que deja bordes escalonados), abrimos un
+    // CÍRCULO centrado en cada celda con un radio algo mayor que media celda:
+    // así los círculos de celdas vecinas se solapan y el conjunto forma un
+    // trazado redondeado y orgánico. Un ligero desenfoque suaviza el borde.
     final visible = camera.visibleBounds;
+
+    // Tamaño en pantalla de una celda a este zoom (es constante en todo el mapa
+    // para un zoom dado). Lo usamos para el radio y el desenfoque.
+    final centerCell = cellForLatLng(camera.center);
+    final cellNwPx = camera.latLngToScreenOffset(cellNorthWest(centerCell));
+    final cellSePx = camera
+        .latLngToScreenOffset(cellNorthWest(CellId(centerCell.x + 1, centerCell.y + 1)));
+    final cellSidePx = (cellSePx.dx - cellNwPx.dx).abs();
+    // 0.72 ≈ media diagonal: garantiza que las celdas vecinas (en recto y en
+    // diagonal) se solapen sin dejar huecos.
+    final radius = cellSidePx * 0.72;
+
+    final clearPaint = Paint()
+      ..blendMode = BlendMode.clear
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, cellSidePx * 0.18);
 
     for (final cell in controller.discovered) {
       final nw = cellNorthWest(cell);
@@ -67,9 +86,11 @@ class _FogPainter extends CustomPainter {
 
       final topLeft = camera.latLngToScreenOffset(nw);
       final bottomRight = camera.latLngToScreenOffset(se);
-      // Inflamos medio píxel para que celdas contiguas no dejen líneas de niebla.
-      final rect = Rect.fromPoints(topLeft, bottomRight).inflate(0.5);
-      canvas.drawRect(rect, clearPaint);
+      final center = Offset(
+        (topLeft.dx + bottomRight.dx) / 2,
+        (topLeft.dy + bottomRight.dy) / 2,
+      );
+      canvas.drawCircle(center, radius, clearPaint);
     }
 
     canvas.restore();
