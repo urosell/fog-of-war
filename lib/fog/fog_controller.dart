@@ -13,11 +13,17 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:latlong2/latlong.dart';
 
+import 'fog_holes.dart';
 import 'fog_storage.dart';
 import 'tile_math.dart';
 
 /// Radio por defecto, en metros, que se desvela alrededor de cada posición.
 const double kDefaultRevealRadiusMeters = 50.0;
+
+/// Tamaño máximo (en celdas) de un agujero cerrado que se autodescubre. Con
+/// celdas de ~38 m, 4 celdas ≈ un microhueco por imprecisión del GPS. Poner 0
+/// desactiva el autorrelleno.
+const int kMaxAutoFillHoleCells = 4;
 
 /// Cuánto se espera tras un cambio antes de guardar en disco.
 const Duration _saveDebounce = Duration(seconds: 2);
@@ -59,12 +65,45 @@ class FogController extends ChangeNotifier {
     final nuevas = cellsWithinRadius(position, radiusMeters);
     final antes = _discovered.length;
     _discovered.addAll(nuevas);
+    // Si se descubrió algo nuevo, rellenar microhuecos que hayan podido quedar
+    // encerrados alrededor.
+    if (_discovered.length != antes) {
+      _rellenarHuecosAlrededor(nuevas);
+    }
     final huboCambios = _discovered.length != antes;
     if (huboCambios) {
       _scheduleSave();
       notifyListeners();
     }
     return huboCambios;
+  }
+
+  // Rellena agujeros pequeños y cerrados en una caja alrededor de las celdas
+  // recién desveladas [nuevas]. La caja se amplía un margen para poder
+  // comprobar que el agujero está realmente rodeado de celdas descubiertas.
+  void _rellenarHuecosAlrededor(Set<CellId> nuevas) {
+    if (kMaxAutoFillHoleCells <= 0 || nuevas.isEmpty) return;
+
+    var minX = nuevas.first.x, maxX = nuevas.first.x;
+    var minY = nuevas.first.y, maxY = nuevas.first.y;
+    for (final c in nuevas) {
+      if (c.x < minX) minX = c.x;
+      if (c.x > maxX) maxX = c.x;
+      if (c.y < minY) minY = c.y;
+      if (c.y > maxY) maxY = c.y;
+    }
+
+    // Margen >= tamaño del agujero para detectar bien el "encierro".
+    const margin = kMaxAutoFillHoleCells + 1;
+    final huecos = findEnclosedHoles(
+      _discovered,
+      minX: minX - margin,
+      minY: minY - margin,
+      maxX: maxX + margin,
+      maxY: maxY + margin,
+      maxHoleCells: kMaxAutoFillHoleCells,
+    );
+    _discovered.addAll(huecos);
   }
 
   /// Borra todo lo descubierto (útil para pruebas).
