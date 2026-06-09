@@ -172,13 +172,13 @@ class _MapScreenState extends State<MapScreen> {
           onTap: (tapPosition, punto) => _fog.reveal(punto),
         ),
         children: [
-          // Mapa base con estilo oscuro (Carto "Dark Matter"). Sobre este fondo
-          // oscuro, la niebla y las zonas desveladas resaltan mucho mejor.
-          // Carto sirve los tiles desde varios subdominios (a/b/c/d) para
-          // repartir la carga. Atribución obligatoria: © OpenStreetMap, © CARTO.
+          // Mapa base con estilo "Voyager" de Carto: fondo claro, colores vivos
+          // y limpios, look moderno/gaming. Carto sirve los tiles desde varios
+          // subdominios (a/b/c/d) para repartir la carga.
+          // Atribución obligatoria: © OpenStreetMap, © CARTO.
           TileLayer(
             urlTemplate:
-                'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+                'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
             subdomains: const ['a', 'b', 'c', 'd'],
             userAgentPackageName: 'com.fogofwar.fog_of_war',
           ),
