@@ -19,7 +19,8 @@ import 'map/map_style.dart';
 import 'poi/poi.dart';
 import 'poi/poi_controller.dart';
 import 'ui/hud.dart';
-import 'ui/poi_collection_screen.dart';
+import 'ui/poi_collection_screen.dart' show iconForCategory;
+import 'ui/poi_collections_screen.dart';
 
 void main() {
   runApp(const FogOfWarApp());
@@ -198,12 +199,12 @@ class _MapScreenState extends State<MapScreen> {
     _mostrarAviso('Mapa: ${kMapStyles[_styleIndex].name}');
   }
 
-  // Abre la pantalla de colección de POIs. Si al cerrarla el usuario tocó un
-  // POI descubierto, centramos el mapa en él (y desactivamos el auto-seguir).
+  // Abre el hub de colecciones de POIs. Si al cerrarlo el usuario tocó un POI
+  // descubierto, centramos el mapa en él (y desactivamos el auto-seguir).
   Future<void> _abrirColeccion() async {
     final elegido = await Navigator.of(context).push<Poi>(
       MaterialPageRoute(
-        builder: (_) => PoiCollectionScreen(poiController: _poi),
+        builder: (_) => PoiCollectionsScreen(poiController: _poi),
       ),
     );
     if (elegido == null || !mounted) return;

@@ -14,7 +14,8 @@ enum PoiCategory {
   museo(label: 'Museo', points: 40),
   parque(label: 'Parque', points: 30),
   mirador(label: 'Mirador', points: 25),
-  plaza(label: 'Plaza', points: 20);
+  plaza(label: 'Plaza', points: 20),
+  tienda(label: 'Tienda', points: 15);
 
   final String label;
   final int points;
@@ -42,7 +43,11 @@ class Poi {
   int get points => category.points;
 }
 
-/// Lista curada de POIs reales de Barcelona para arrancar el sistema.
+/// "Pozo" común de POIs: TODOS los lugares conocidos de Barcelona.
+///
+/// Las colecciones temáticas (ver `poi_collection.dart`) no tienen sus propios
+/// POIs: simplemente referencian por ID a los de esta lista. Así un mismo lugar
+/// (p. ej. la Sagrada Família) puede pertenecer a varias colecciones a la vez.
 const List<Poi> kBarcelonaPois = [
   Poi(
     id: 'sagrada_familia',
@@ -127,5 +132,38 @@ const List<Poi> kBarcelonaPois = [
     name: 'Tibidabo (Sagrat Cor)',
     location: LatLng(41.4225, 2.1187),
     category: PoiCategory.mirador,
+  ),
+  // --- Obras de Gaudí adicionales (para la colección "Ruta Gaudí") ---
+  Poi(
+    id: 'casa_vicens',
+    name: 'Casa Vicens',
+    location: LatLng(41.4036, 2.1518),
+    category: PoiCategory.monumento,
+  ),
+  Poi(
+    id: 'palau_guell',
+    name: 'Palau Güell',
+    location: LatLng(41.3793, 2.1742),
+    category: PoiCategory.monumento,
+  ),
+  Poi(
+    id: 'torre_bellesguard',
+    name: 'Torre Bellesguard',
+    location: LatLng(41.4186, 2.1320),
+    category: PoiCategory.monumento,
+  ),
+  // --- Ejemplo de otro tema: tiendas "otaku"/cómic (colección "Otaku BCN") ---
+  // NOTA: coordenadas APROXIMADAS, verificar antes de publicar.
+  Poi(
+    id: 'norma_comics',
+    name: 'Norma Cómics',
+    location: LatLng(41.3922, 2.1806),
+    category: PoiCategory.tienda,
+  ),
+  Poi(
+    id: 'gigamesh',
+    name: 'Llibreria Gigamesh',
+    location: LatLng(41.3908, 2.1797),
+    category: PoiCategory.tienda,
   ),
 ];

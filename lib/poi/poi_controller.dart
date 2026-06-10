@@ -29,11 +29,17 @@ class PoiController extends ChangeNotifier {
   /// Todos los POIs conocidos (descubiertos o no).
   List<Poi> get allPois => _allPois;
 
+  /// Mapa id→Poi, calculado una vez, para resolver colecciones por ID rápido.
+  late final Map<String, Poi> poiById = {for (final p in _allPois) p.id: p};
+
   bool get isLoaded => _loaded;
   int get discoveredCount => _discoveredIds.length;
   int get totalCount => _allPois.length;
 
   bool isDiscovered(Poi poi) => _discoveredIds.contains(poi.id);
+
+  /// Igual que [isDiscovered] pero por ID (lo usan las colecciones).
+  bool isDiscoveredId(String id) => _discoveredIds.contains(id);
 
   /// POIs ya descubiertos (para dibujarlos en el mapa).
   List<Poi> get discoveredPois =>

@@ -1,8 +1,8 @@
-// Pantalla de colección de POIs (tipo "logros").
+// Pantalla de DETALLE de una colección temática (p. ej. "Ruta Gaudí").
 //
-// Muestra todos los POIs conocidos agrupados por categoría: los descubiertos
-// con su nombre y puntos, y los que aún no has visitado como bloqueados (nombre
-// oculto, candado) para picar la curiosidad y animar a explorar.
+// Muestra los POIs de esa colección en orden: los descubiertos con su nombre y
+// puntos, y los que aún no has visitado como bloqueados (nombre oculto, candado)
+// para picar la curiosidad. La cabecera lleva el progreso de la colección.
 //
 // Al tocar un POI ya descubierto, la pantalla se cierra devolviéndolo, y el
 // mapa se centra en él (lo hace quien la abrió, en main.dart).
@@ -10,8 +10,8 @@
 import 'package:flutter/material.dart';
 
 import '../poi/poi.dart';
+import '../poi/poi_collection.dart';
 import '../poi/poi_controller.dart';
-import 'hud.dart';
 
 /// Icono representativo de cada categoría de POI. Público para reutilizarlo
 /// tanto aquí como en los marcadores del mapa.
@@ -29,6 +29,8 @@ IconData iconForCategory(PoiCategory c) {
       return Icons.landscape;
     case PoiCategory.plaza:
       return Icons.location_city;
+    case PoiCategory.tienda:
+      return Icons.storefront;
   }
 }
 
@@ -40,8 +42,13 @@ const Color _kBackground = Color(0xFF161A21);
 
 class PoiCollectionScreen extends StatelessWidget {
   final PoiController poiController;
+  final PoiCollection collection;
 
-  const PoiCollectionScreen({super.key, required this.poiController});
+  const PoiCollectionScreen({
+    super.key,
+    required this.poiController,
+    required this.collection,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -51,98 +58,91 @@ class PoiCollectionScreen extends StatelessWidget {
         backgroundColor: _kBackground,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: const Text('Colección de POIs'),
+        title: Text(collection.name),
       ),
       // Se redibuja sola si descubres un POI mientras la tienes abierta.
       body: ListenableBuilder(
         listenable: poiController,
         builder: (context, _) {
+          final pois = collection.resolvePois(poiController.poiById);
+          // Descubiertos primero (manteniendo el orden de la colección dentro
+          // de cada grupo) para que se vean los logros arriba.
+          final ordenados = [
+            ...pois.where(poiController.isDiscovered),
+            ...pois.where((p) => !poiController.isDiscovered(p)),
+          ];
+
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
             children: [
-              _Header(poiController: poiController),
+              _Header(poiController: poiController, collection: collection),
               const SizedBox(height: 20),
-              ..._buildCategories(context),
+              for (final poi in ordenados)
+                _PoiCard(
+                  poi: poi,
+                  discovered: poiController.isDiscovered(poi),
+                ),
             ],
           );
         },
       ),
     );
   }
-
-  // Construye, por cada categoría con POIs, su cabecera y sus tarjetas
-  // (descubiertos primero). Las categorías van en el orden del enum.
-  List<Widget> _buildCategories(BuildContext context) {
-    final widgets = <Widget>[];
-    for (final categoria in PoiCategory.values) {
-      final delGrupo =
-          poiController.allPois.where((p) => p.category == categoria).toList();
-      if (delGrupo.isEmpty) continue;
-
-      // Descubiertos primero, dentro del grupo, para que se vean los logros.
-      delGrupo.sort((a, b) {
-        final da = poiController.isDiscovered(a) ? 0 : 1;
-        final db = poiController.isDiscovered(b) ? 0 : 1;
-        return da.compareTo(db);
-      });
-
-      final descubiertos =
-          delGrupo.where(poiController.isDiscovered).length;
-
-      widgets.add(_CategoryHeader(
-        categoria: categoria,
-        descubiertos: descubiertos,
-        total: delGrupo.length,
-      ));
-      for (final poi in delGrupo) {
-        widgets.add(_PoiCard(
-          poi: poi,
-          discovered: poiController.isDiscovered(poi),
-        ));
-      }
-      widgets.add(const SizedBox(height: 16));
-    }
-    return widgets;
-  }
 }
 
-// Cabecera con el progreso global: contador, barra y puntos totales.
+// Cabecera con el progreso de la colección: icono, descripción, barra y puntos.
 class _Header extends StatelessWidget {
   final PoiController poiController;
+  final PoiCollection collection;
 
-  const _Header({required this.poiController});
+  const _Header({required this.poiController, required this.collection});
 
   @override
   Widget build(BuildContext context) {
-    final descubiertos = poiController.discoveredCount;
-    final total = poiController.totalCount;
+    final pois = collection.resolvePois(poiController.poiById);
+    final descubiertos = collection.discoveredCount(poiController.isDiscoveredId);
+    final total = pois.length;
     final fraccion = total == 0 ? 0.0 : descubiertos / total;
+    final puntos = pois
+        .where(poiController.isDiscovered)
+        .fold<int>(0, (s, p) => s + p.points);
+    final completa = total > 0 && descubiertos == total;
 
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
+        color: collection.accent.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+        border: Border.all(color: collection.accent.withValues(alpha: 0.30)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.emoji_events, color: kHudAccent, size: 28),
+              Icon(collection.icon, color: collection.accent, size: 28),
               const SizedBox(width: 10),
-              Text(
-                '$descubiertos / $total descubiertos',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
+              Expanded(
+                child: Text(
+                  '$descubiertos / $total descubiertos',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
-              const Spacer(),
-              _PointsBadge(points: poiController.totalPoints),
+              _PointsBadge(points: puntos, accent: collection.accent),
             ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            completa ? '¡Colección completada! 🎉' : collection.description,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.70),
+              fontSize: 14,
+              fontWeight: completa ? FontWeight.w700 : FontWeight.w500,
+            ),
           ),
           const SizedBox(height: 14),
           ClipRRect(
@@ -151,7 +151,7 @@ class _Header extends StatelessWidget {
               value: fraccion,
               minHeight: 10,
               backgroundColor: Colors.white.withValues(alpha: 0.10),
-              valueColor: const AlwaysStoppedAnimation(kHudAccent),
+              valueColor: AlwaysStoppedAnimation(collection.accent),
             ),
           ),
         ],
@@ -160,71 +160,28 @@ class _Header extends StatelessWidget {
   }
 }
 
-// Insignia con los puntos totales acumulados.
+// Insignia con los puntos acumulados en esta colección.
 class _PointsBadge extends StatelessWidget {
   final int points;
+  final Color accent;
 
-  const _PointsBadge({required this.points});
+  const _PointsBadge({required this.points, required this.accent});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: kHudAccent.withValues(alpha: 0.15),
+        color: accent.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
         '$points pts',
-        style: const TextStyle(
-          color: kHudAccent,
+        style: TextStyle(
+          color: accent,
           fontSize: 15,
           fontWeight: FontWeight.w800,
         ),
-      ),
-    );
-  }
-}
-
-// Cabecera de un grupo de categoría: "Monumentos  2/4".
-class _CategoryHeader extends StatelessWidget {
-  final PoiCategory categoria;
-  final int descubiertos;
-  final int total;
-
-  const _CategoryHeader({
-    required this.categoria,
-    required this.descubiertos,
-    required this.total,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 4, bottom: 8),
-      child: Row(
-        children: [
-          Icon(iconForCategory(categoria),
-              color: Colors.white.withValues(alpha: 0.55), size: 18),
-          const SizedBox(width: 8),
-          Text(
-            categoria.label,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.85),
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.3,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            '$descubiertos/$total',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.45),
-              fontSize: 13,
-            ),
-          ),
-        ],
       ),
     );
   }
