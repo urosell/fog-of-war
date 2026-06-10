@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import '../poi/poi.dart';
 import '../poi/poi_collection.dart';
 import '../poi/poi_controller.dart';
+import 'leaderboard_screen.dart';
 
 /// Icono representativo de cada categoría de POI. Público para reutilizarlo
 /// tanto aquí como en los marcadores del mapa.
@@ -59,6 +60,20 @@ class PoiCollectionScreen extends StatelessWidget {
         foregroundColor: Colors.white,
         elevation: 0,
         title: Text(collection.name),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.leaderboard),
+            tooltip: 'Clasificación de esta colección',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => CollectionLeaderboardScreen(
+                  poiController: poiController,
+                  collection: collection,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
       // Se redibuja sola si descubres un POI mientras la tienes abierta.
       body: ListenableBuilder(

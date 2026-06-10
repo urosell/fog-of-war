@@ -19,6 +19,7 @@ import 'map/map_style.dart';
 import 'poi/poi.dart';
 import 'poi/poi_controller.dart';
 import 'ui/hud.dart';
+import 'ui/leaderboard_screen.dart';
 import 'ui/poi_collection_screen.dart' show iconForCategory;
 import 'ui/poi_collections_screen.dart';
 
@@ -212,6 +213,18 @@ class _MapScreenState extends State<MapScreen> {
     _mapController.move(elegido.location, 17);
   }
 
+  // Abre la clasificación (ranking) de jugadores por puntuación.
+  void _abrirRanking() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => LeaderboardScreen(
+          fogController: _fog,
+          poiController: _poi,
+        ),
+      ),
+    );
+  }
+
   // Vuelve a centrar el mapa en el usuario y reactiva el auto-seguir.
   void _recentrar() {
     final pos = _userPosition;
@@ -270,13 +283,24 @@ class _MapScreenState extends State<MapScreen> {
                 ],
               ),
             ),
-            // Botón de la colección de POIs (abajo-izquierda).
+            // Botones de la esquina inferior izquierda: ranking y colecciones.
             Align(
               alignment: Alignment.bottomLeft,
-              child: GlassIconButton(
-                icon: Icons.emoji_events,
-                tooltip: 'Colección de POIs',
-                onPressed: _abrirColeccion,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GlassIconButton(
+                    icon: Icons.leaderboard,
+                    tooltip: 'Clasificación',
+                    onPressed: _abrirRanking,
+                  ),
+                  const SizedBox(height: 10),
+                  GlassIconButton(
+                    icon: Icons.emoji_events,
+                    tooltip: 'Colección de POIs',
+                    onPressed: _abrirColeccion,
+                  ),
+                ],
               ),
             ),
             // Botón de recentrar en el usuario (abajo-derecha).
