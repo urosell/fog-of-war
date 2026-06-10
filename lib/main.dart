@@ -19,6 +19,7 @@ import 'map/map_style.dart';
 import 'poi/poi.dart';
 import 'poi/poi_controller.dart';
 import 'ui/hud.dart';
+import 'ui/poi_collection_screen.dart';
 
 void main() {
   runApp(const FogOfWarApp());
@@ -197,6 +198,19 @@ class _MapScreenState extends State<MapScreen> {
     _mostrarAviso('Mapa: ${kMapStyles[_styleIndex].name}');
   }
 
+  // Abre la pantalla de colección de POIs. Si al cerrarla el usuario tocó un
+  // POI descubierto, centramos el mapa en él (y desactivamos el auto-seguir).
+  Future<void> _abrirColeccion() async {
+    final elegido = await Navigator.of(context).push<Poi>(
+      MaterialPageRoute(
+        builder: (_) => PoiCollectionScreen(poiController: _poi),
+      ),
+    );
+    if (elegido == null || !mounted) return;
+    setState(() => _seguir = false);
+    _mapController.move(elegido.location, 17);
+  }
+
   // Vuelve a centrar el mapa en el usuario y reactiva el auto-seguir.
   void _recentrar() {
     final pos = _userPosition;
@@ -253,6 +267,15 @@ class _MapScreenState extends State<MapScreen> {
                     onPressed: _cambiarModo,
                   ),
                 ],
+              ),
+            ),
+            // Botón de la colección de POIs (abajo-izquierda).
+            Align(
+              alignment: Alignment.bottomLeft,
+              child: GlassIconButton(
+                icon: Icons.emoji_events,
+                tooltip: 'Colección de POIs',
+                onPressed: _abrirColeccion,
               ),
             ),
             // Botón de recentrar en el usuario (abajo-derecha).
@@ -339,24 +362,6 @@ class _MapScreenState extends State<MapScreen> {
   }
 }
 
-// Icono representativo de cada categoría de POI.
-IconData _iconForCategory(PoiCategory c) {
-  switch (c) {
-    case PoiCategory.monumento:
-      return Icons.account_balance;
-    case PoiCategory.iglesia:
-      return Icons.church;
-    case PoiCategory.museo:
-      return Icons.museum;
-    case PoiCategory.parque:
-      return Icons.park;
-    case PoiCategory.mirador:
-      return Icons.landscape;
-    case PoiCategory.plaza:
-      return Icons.location_city;
-  }
-}
-
 // Marcador de un POI descubierto: un círculo ámbar con el icono de su categoría.
 class _PoiMarker extends StatelessWidget {
   final PoiCategory category;
@@ -374,7 +379,7 @@ class _PoiMarker extends StatelessWidget {
           BoxShadow(color: Colors.black45, blurRadius: 4),
         ],
       ),
-      child: Icon(_iconForCategory(category), color: Colors.white, size: 22),
+      child: Icon(iconForCategory(category), color: Colors.white, size: 22),
     );
   }
 }
