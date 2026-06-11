@@ -13,6 +13,7 @@ import '../poi/poi.dart';
 import '../poi/poi_collection.dart';
 import '../poi/poi_controller.dart';
 import 'leaderboard_screen.dart';
+import 'transitions.dart';
 
 /// Icono representativo de cada categoría de POI. Público para reutilizarlo
 /// tanto aquí como en los marcadores del mapa.
@@ -65,12 +66,10 @@ class PoiCollectionScreen extends StatelessWidget {
             icon: const Icon(Icons.leaderboard),
             tooltip: 'Clasificación de esta colección',
             onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => CollectionLeaderboardScreen(
-                  poiController: poiController,
-                  collection: collection,
-                ),
-              ),
+              appRoute(CollectionLeaderboardScreen(
+                poiController: poiController,
+                collection: collection,
+              )),
             ),
           ),
         ],

@@ -11,6 +11,7 @@ import '../poi/poi.dart';
 import '../poi/poi_collection.dart';
 import '../poi/poi_controller.dart';
 import 'poi_collection_screen.dart';
+import 'transitions.dart';
 
 /// Fondo oscuro, en sintonía con el tono de la niebla.
 const Color _kBackground = Color(0xFF161A21);
@@ -31,12 +32,10 @@ class PoiCollectionsScreen extends StatelessWidget {
   // cerramos también este hub devolviéndolo para que main centre el mapa.
   Future<void> _abrir(BuildContext context, PoiCollection collection) async {
     final elegido = await Navigator.of(context).push<Poi>(
-      MaterialPageRoute(
-        builder: (_) => PoiCollectionScreen(
-          poiController: poiController,
-          collection: collection,
-        ),
-      ),
+      appRoute(PoiCollectionScreen(
+        poiController: poiController,
+        collection: collection,
+      )),
     );
     if (elegido != null && context.mounted) {
       Navigator.of(context).pop(elegido);

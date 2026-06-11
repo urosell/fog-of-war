@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
+import 'avatar/avatar.dart';
+import 'avatar/avatar_controller.dart';
 import 'cities/city.dart';
 import 'fog/fog_controller.dart';
 import 'fog/fog_layer.dart';
@@ -22,6 +24,8 @@ import 'ui/hud.dart';
 import 'ui/leaderboard_screen.dart';
 import 'ui/poi_collection_screen.dart' show iconForCategory;
 import 'ui/poi_collections_screen.dart';
+import 'ui/settings_screen.dart';
+import 'ui/transitions.dart';
 
 void main() {
   runApp(const FogOfWarApp());
@@ -58,6 +62,8 @@ class _MapScreenState extends State<MapScreen> {
   final FogController _fog = FogController();
   // Controla el estado de los POIs (descubiertos y puntos).
   final PoiController _poi = PoiController();
+  // Personalización del marcador del jugador (icono y color).
+  final AvatarController _avatar = AvatarController();
   // Permite mover/leer la cámara del mapa (para centrar en el usuario).
   final MapController _mapController = MapController();
   // Acceso al GPS.
@@ -80,6 +86,7 @@ class _MapScreenState extends State<MapScreen> {
     // Cargar el fog y los POIs guardados en disco (si los hay) y arrancar GPS.
     _fog.load();
     _poi.load();
+    _avatar.load();
     _iniciarGps();
   }
 
@@ -88,6 +95,7 @@ class _MapScreenState extends State<MapScreen> {
     _posSub?.cancel();
     _fog.dispose();
     _poi.dispose();
+    _avatar.dispose();
     super.dispose();
   }
 
@@ -204,24 +212,27 @@ class _MapScreenState extends State<MapScreen> {
   // descubierto, centramos el mapa en él (y desactivamos el auto-seguir).
   Future<void> _abrirColeccion() async {
     final elegido = await Navigator.of(context).push<Poi>(
-      MaterialPageRoute(
-        builder: (_) => PoiCollectionsScreen(poiController: _poi),
-      ),
+      appRoute(PoiCollectionsScreen(poiController: _poi)),
     );
     if (elegido == null || !mounted) return;
     setState(() => _seguir = false);
     _mapController.move(elegido.location, 17);
   }
 
+  // Abre los Ajustes (personalización del marcador del jugador).
+  void _abrirAjustes() {
+    Navigator.of(context).push(
+      appRoute(SettingsScreen(avatar: _avatar)),
+    );
+  }
+
   // Abre la clasificación (ranking) de jugadores por puntuación.
   void _abrirRanking() {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => LeaderboardScreen(
-          fogController: _fog,
-          poiController: _poi,
-        ),
-      ),
+      appRoute(LeaderboardScreen(
+        fogController: _fog,
+        poiController: _poi,
+      )),
     );
   }
 
@@ -278,7 +289,14 @@ class _MapScreenState extends State<MapScreen> {
                         ? Icons.explore
                         : Icons.battery_saver,
                     tooltip: 'Cambiar modo de GPS (precisión / batería)',
+                    active: _modo == TrackingMode.exploracion,
                     onPressed: _cambiarModo,
+                  ),
+                  const SizedBox(height: 10),
+                  GlassIconButton(
+                    icon: Icons.settings,
+                    tooltip: 'Ajustes y personalización',
+                    onPressed: _abrirAjustes,
                   ),
                 ],
               ),
@@ -309,6 +327,7 @@ class _MapScreenState extends State<MapScreen> {
               child: GlassIconButton(
                 icon: _seguir ? Icons.my_location : Icons.location_searching,
                 tooltip: 'Centrar en mí',
+                active: _seguir,
                 onPressed: _recentrar,
               ),
             ),
@@ -362,17 +381,24 @@ class _MapScreenState extends State<MapScreen> {
                       ),
                   ],
                 ),
-                // Punto azul de "estás aquí" (solo si ya tenemos posición).
+                // Marcador de "estás aquí" (solo si ya tenemos posición). Se
+                // redibuja al cambiar el avatar en Ajustes.
                 if (_userPosition != null)
-                  MarkerLayer(
-                    markers: [
-                      Marker(
-                        point: _userPosition!,
-                        width: 24,
-                        height: 24,
-                        child: const _MarcadorUsuario(),
-                      ),
-                    ],
+                  ListenableBuilder(
+                    listenable: _avatar,
+                    builder: (context, _) => MarkerLayer(
+                      markers: [
+                        Marker(
+                          point: _userPosition!,
+                          width: 34,
+                          height: 34,
+                          child: AvatarMarker(
+                            icon: _avatar.icon,
+                            color: _avatar.color,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
               ],
             ),
@@ -407,21 +433,3 @@ class _PoiMarker extends StatelessWidget {
   }
 }
 
-// Dibujo del marcador de posición del usuario: un punto azul con borde blanco.
-class _MarcadorUsuario extends StatelessWidget {
-  const _MarcadorUsuario();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.blueAccent,
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 3),
-        boxShadow: const [
-          BoxShadow(color: Colors.black38, blurRadius: 4),
-        ],
-      ),
-    );
-  }
-}
