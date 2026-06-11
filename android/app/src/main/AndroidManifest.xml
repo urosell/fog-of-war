@@ -1,4 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Necesario para descargar los tiles del mapa. Flutter solo lo añade
+         automáticamente en debug/profile, así que en release hay que declararlo
+         a mano o el mapa de fondo sale en blanco. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <!-- Permisos de ubicación: necesarios para leer el GPS y desvelar la niebla
          al moverse. FINE = precisión alta (GPS), COARSE = aproximada (red). -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>

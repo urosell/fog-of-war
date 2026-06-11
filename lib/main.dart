@@ -337,8 +337,6 @@ class _MapScreenState extends State<MapScreen> {
                     setState(() => _seguir = false);
                   }
                 },
-                // Tocar el mapa desvela la niebla en ese punto (respaldo/pruebas).
-                onTap: (tapPosition, punto) => _fog.reveal(punto),
               ),
               children: [
                 // Mapa base. El estilo lo elige el usuario con el botón de capas;
