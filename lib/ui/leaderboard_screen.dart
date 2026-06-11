@@ -11,6 +11,8 @@
 import 'package:flutter/material.dart';
 
 import '../fog/fog_controller.dart';
+import '../l10n/content_l10n.dart';
+import '../l10n/l10n_ext.dart';
 import '../poi/poi_collection.dart';
 import '../poi/poi_controller.dart';
 import '../ranking/ranking.dart';
@@ -32,8 +34,9 @@ class LeaderboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return _LeaderboardScaffold(
-      title: 'Clasificación',
+      title: l.leaderboardTitle,
       accent: kHudAccent,
       listenable: Listenable.merge([fogController, poiController]),
       buildBoard: () {
@@ -47,10 +50,10 @@ class LeaderboardScreen extends StatelessWidget {
         );
         return _BoardData(
           board: board,
-          headline: 'Vas el nº ${board.you.rank}',
-          subtitle: 'Tu puntuación: ${board.you.score} pts',
+          headline: l.rankHeadline(board.you.rank),
+          subtitle: l.globalSubtitle(board.you.score),
           valueText: (score) => '$score',
-          unit: 'pts',
+          unit: l.unitPts,
         );
       },
     );
@@ -71,9 +74,10 @@ class CollectionLeaderboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final total = collection.poiIds.length;
     return _LeaderboardScaffold(
-      title: collection.name,
+      title: localizedCollectionName(l, collection.id, collection.name),
       accent: collection.accent,
       listenable: poiController,
       buildBoard: () {
@@ -84,10 +88,10 @@ class CollectionLeaderboardScreen extends StatelessWidget {
         );
         return _BoardData(
           board: board,
-          headline: 'Vas el nº ${board.you.rank}',
-          subtitle: 'Has descubierto ${board.you.score} de $total',
+          headline: l.rankHeadline(board.you.rank),
+          subtitle: l.collectionSubtitle(board.you.score, total),
           valueText: (score) => '$score/$total',
-          unit: 'POIs',
+          unit: l.unitPois,
         );
       },
     );
@@ -276,7 +280,7 @@ class _RankRow extends StatelessWidget {
           const SizedBox(width: 14),
           Expanded(
             child: Text(
-              you ? '${player.name} (tú)' : player.name,
+              you ? context.l10n.youSuffix(player.name) : player.name,
               style: TextStyle(
                 color: you ? accent : Colors.white,
                 fontSize: 16,

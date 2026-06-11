@@ -48,3 +48,6 @@ run.pid
 # Memoria interna de Claude y plan privado (no subir a GitHub)
 /memory/
 /BLUEPRINT.md
+
+# Skill de UI/UX (herramienta local, no es parte de la app)
+/ui-ux-pro-max-skill/

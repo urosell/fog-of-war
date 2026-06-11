@@ -1,0 +1,68 @@
+{
+  "@@locale": "es",
+
+  "appTitle": "Fog of War",
+
+  "hudCells": "celdas",
+  "hudPoints": "puntos",
+  "hudPois": "POIs",
+
+  "tooltipMapStyle": "Cambiar estilo de mapa",
+  "tooltipGpsMode": "Cambiar modo de GPS (precisión / batería)",
+  "tooltipSettings": "Ajustes y personalización",
+  "tooltipRanking": "Clasificación",
+  "tooltipCollections": "Colección de POIs",
+  "tooltipRecenter": "Centrar en mí",
+
+  "gpsModeExploration": "Exploración (alta precisión)",
+  "gpsModeBattery": "Ahorro de batería",
+  "gpsStatus": "GPS: {mode}",
+  "mapStatus": "Mapa: {name}",
+  "noLocationYet": "Aún no tengo tu ubicación.",
+
+  "permGrantedWhileInUse": "Para registrar con la app cerrada, pon \"Permitir todo el tiempo\" en Ajustes de ubicación.",
+  "permServiceDisabled": "La ubicación del dispositivo está apagada. Actívala para jugar.",
+  "permDeniedForever": "Permiso de ubicación denegado. Actívalo en Ajustes de la app.",
+  "permDenied": "Sin permiso de ubicación: la niebla no se desvelará al moverte.",
+
+  "poiDiscoveredSingle": "🏛️ ¡Descubriste {name}!  +{points} puntos",
+  "poiDiscoveredMultiple": "🏛️ ¡{count} POIs descubiertos!  +{points} puntos",
+
+  "mapStyleVoyager": "Voyager",
+  "mapStyleLight": "Claro",
+  "mapStyleDark": "Oscuro",
+  "mapStyleOsm": "OSM clásico",
+  "mapStyleSatellite": "Satélite",
+  "mapStyleTopographic": "Topográfico",
+
+  "settingsTitle": "Ajustes",
+  "settingsIcon": "Icono",
+  "settingsColor": "Color",
+  "settingsMarkerPreview": "Tu marcador en el mapa",
+  "settingsLanguage": "Idioma",
+  "languageSystem": "Idioma del sistema",
+
+  "leaderboardTitle": "Clasificación",
+  "rankHeadline": "Vas el nº {rank}",
+  "globalSubtitle": "Tu puntuación: {score} pts",
+  "collectionSubtitle": "Has descubierto {discovered} de {total}",
+  "unitPts": "pts",
+  "unitPois": "POIs",
+  "youSuffix": "{name} (tú)",
+
+  "collectionsTitle": "Colecciones",
+  "collectionLeaderboardTooltip": "Clasificación de esta colección",
+  "collectionProgress": "{discovered} / {total} descubiertos",
+  "collectionCompleted": "¡Colección completada! 🎉",
+  "pointsBadge": "{points} pts",
+  "poiHiddenName": "?????",
+  "poiPointsEarned": "+{points} puntos",
+  "poiToDiscover": "Por descubrir · {points} pts",
+
+  "collGaudiName": "Ruta Gaudí",
+  "collGaudiDesc": "La obra modernista de Antoni Gaudí por Barcelona.",
+  "collEssentialName": "Imprescindibles de Barcelona",
+  "collEssentialDesc": "Los lugares que no te puedes perder en la ciudad.",
+  "collOtakuName": "Otaku BCN (ejemplo)",
+  "collOtakuDesc": "Templos del cómic, el manga y la cultura geek."
+}

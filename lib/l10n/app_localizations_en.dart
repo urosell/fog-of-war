@@ -1,0 +1,201 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for English (`en`).
+class AppLocalizationsEn extends AppLocalizations {
+  AppLocalizationsEn([String locale = 'en']) : super(locale);
+
+  @override
+  String get appTitle => 'Fog of War';
+
+  @override
+  String get hudCells => 'cells';
+
+  @override
+  String get hudPoints => 'points';
+
+  @override
+  String get hudPois => 'POIs';
+
+  @override
+  String get tooltipMapStyle => 'Change map style';
+
+  @override
+  String get tooltipGpsMode => 'Change GPS mode (accuracy / battery)';
+
+  @override
+  String get tooltipSettings => 'Settings & customization';
+
+  @override
+  String get tooltipRanking => 'Leaderboard';
+
+  @override
+  String get tooltipCollections => 'POI collection';
+
+  @override
+  String get tooltipRecenter => 'Center on me';
+
+  @override
+  String get gpsModeExploration => 'Exploration (high accuracy)';
+
+  @override
+  String get gpsModeBattery => 'Battery saving';
+
+  @override
+  String gpsStatus(String mode) {
+    return 'GPS: $mode';
+  }
+
+  @override
+  String mapStatus(String name) {
+    return 'Map: $name';
+  }
+
+  @override
+  String get noLocationYet => 'I don\'t have your location yet.';
+
+  @override
+  String get permGrantedWhileInUse =>
+      'To record with the app closed, set \"Allow all the time\" in location settings.';
+
+  @override
+  String get permServiceDisabled =>
+      'Device location is off. Turn it on to play.';
+
+  @override
+  String get permDeniedForever =>
+      'Location permission denied. Enable it in the app settings.';
+
+  @override
+  String get permDenied =>
+      'No location permission: the fog won\'t clear as you move.';
+
+  @override
+  String poiDiscoveredSingle(String name, int points) {
+    return '🏛️ You discovered $name!  +$points points';
+  }
+
+  @override
+  String poiDiscoveredMultiple(int count, int points) {
+    return '🏛️ $count POIs discovered!  +$points points';
+  }
+
+  @override
+  String get mapStyleVoyager => 'Voyager';
+
+  @override
+  String get mapStyleLight => 'Light';
+
+  @override
+  String get mapStyleDark => 'Dark';
+
+  @override
+  String get mapStyleOsm => 'Classic OSM';
+
+  @override
+  String get mapStyleSatellite => 'Satellite';
+
+  @override
+  String get mapStyleTopographic => 'Topographic';
+
+  @override
+  String get settingsTitle => 'Settings';
+
+  @override
+  String get settingsIcon => 'Icon';
+
+  @override
+  String get settingsColor => 'Color';
+
+  @override
+  String get settingsMarkerPreview => 'Your marker on the map';
+
+  @override
+  String get settingsLanguage => 'Language';
+
+  @override
+  String get languageSystem => 'System default';
+
+  @override
+  String get leaderboardTitle => 'Leaderboard';
+
+  @override
+  String rankHeadline(int rank) {
+    return 'You\'re #$rank';
+  }
+
+  @override
+  String globalSubtitle(int score) {
+    return 'Your score: $score pts';
+  }
+
+  @override
+  String collectionSubtitle(int discovered, int total) {
+    return 'You\'ve discovered $discovered of $total';
+  }
+
+  @override
+  String get unitPts => 'pts';
+
+  @override
+  String get unitPois => 'POIs';
+
+  @override
+  String youSuffix(String name) {
+    return '$name (you)';
+  }
+
+  @override
+  String get collectionsTitle => 'Collections';
+
+  @override
+  String get collectionLeaderboardTooltip => 'This collection\'s leaderboard';
+
+  @override
+  String collectionProgress(int discovered, int total) {
+    return '$discovered / $total discovered';
+  }
+
+  @override
+  String get collectionCompleted => 'Collection completed! 🎉';
+
+  @override
+  String pointsBadge(int points) {
+    return '$points pts';
+  }
+
+  @override
+  String get poiHiddenName => '?????';
+
+  @override
+  String poiPointsEarned(int points) {
+    return '+$points points';
+  }
+
+  @override
+  String poiToDiscover(int points) {
+    return 'To discover · $points pts';
+  }
+
+  @override
+  String get collGaudiName => 'Gaudí Route';
+
+  @override
+  String get collGaudiDesc =>
+      'Antoni Gaudí\'s modernist work across Barcelona.';
+
+  @override
+  String get collEssentialName => 'Barcelona Essentials';
+
+  @override
+  String get collEssentialDesc => 'The must-see places in the city.';
+
+  @override
+  String get collOtakuName => 'Otaku BCN (example)';
+
+  @override
+  String get collOtakuDesc => 'Temples of comics, manga and geek culture.';
+}

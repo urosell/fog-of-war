@@ -7,6 +7,8 @@
 
 import 'package:flutter/material.dart';
 
+import '../l10n/content_l10n.dart';
+import '../l10n/l10n_ext.dart';
 import '../poi/poi.dart';
 import '../poi/poi_collection.dart';
 import '../poi/poi_controller.dart';
@@ -50,7 +52,7 @@ class PoiCollectionsScreen extends StatelessWidget {
         backgroundColor: _kBackground,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: const Text('Colecciones'),
+        title: Text(context.l10n.collectionsTitle),
       ),
       // Se redibuja sola si descubres un POI mientras la tienes abierta.
       body: ListenableBuilder(
@@ -129,7 +131,8 @@ class _CollectionCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            collection.name,
+                            localizedCollectionName(
+                                context.l10n, collection.id, collection.name),
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 17,
@@ -138,7 +141,8 @@ class _CollectionCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            collection.description,
+                            localizedCollectionDescription(context.l10n,
+                                collection.id, collection.description),
                             style: TextStyle(
                               color: Colors.white.withValues(alpha: 0.60),
                               fontSize: 13,

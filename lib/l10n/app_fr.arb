@@ -1,0 +1,68 @@
+{
+  "@@locale": "fr",
+
+  "appTitle": "Fog of War",
+
+  "hudCells": "cellules",
+  "hudPoints": "points",
+  "hudPois": "POIs",
+
+  "tooltipMapStyle": "Changer le style de carte",
+  "tooltipGpsMode": "Changer le mode GPS (précision / batterie)",
+  "tooltipSettings": "Paramètres et personnalisation",
+  "tooltipRanking": "Classement",
+  "tooltipCollections": "Collection de POIs",
+  "tooltipRecenter": "Me centrer",
+
+  "gpsModeExploration": "Exploration (haute précision)",
+  "gpsModeBattery": "Économie de batterie",
+  "gpsStatus": "GPS : {mode}",
+  "mapStatus": "Carte : {name}",
+  "noLocationYet": "Je n'ai pas encore votre position.",
+
+  "permGrantedWhileInUse": "Pour enregistrer avec l'app fermée, choisissez « Toujours autoriser » dans les paramètres de localisation.",
+  "permServiceDisabled": "La localisation de l'appareil est désactivée. Activez-la pour jouer.",
+  "permDeniedForever": "Autorisation de localisation refusée. Activez-la dans les paramètres de l'app.",
+  "permDenied": "Sans autorisation de localisation : le brouillard ne se dissipera pas en vous déplaçant.",
+
+  "poiDiscoveredSingle": "🏛️ Vous avez découvert {name} !  +{points} points",
+  "poiDiscoveredMultiple": "🏛️ {count} POIs découverts !  +{points} points",
+
+  "mapStyleVoyager": "Voyager",
+  "mapStyleLight": "Clair",
+  "mapStyleDark": "Sombre",
+  "mapStyleOsm": "OSM classique",
+  "mapStyleSatellite": "Satellite",
+  "mapStyleTopographic": "Topographique",
+
+  "settingsTitle": "Paramètres",
+  "settingsIcon": "Icône",
+  "settingsColor": "Couleur",
+  "settingsMarkerPreview": "Votre marqueur sur la carte",
+  "settingsLanguage": "Langue",
+  "languageSystem": "Langue du système",
+
+  "leaderboardTitle": "Classement",
+  "rankHeadline": "Vous êtes nº {rank}",
+  "globalSubtitle": "Votre score : {score} pts",
+  "collectionSubtitle": "Vous avez découvert {discovered} sur {total}",
+  "unitPts": "pts",
+  "unitPois": "POIs",
+  "youSuffix": "{name} (vous)",
+
+  "collectionsTitle": "Collections",
+  "collectionLeaderboardTooltip": "Classement de cette collection",
+  "collectionProgress": "{discovered} / {total} découverts",
+  "collectionCompleted": "Collection terminée ! 🎉",
+  "pointsBadge": "{points} pts",
+  "poiHiddenName": "?????",
+  "poiPointsEarned": "+{points} points",
+  "poiToDiscover": "À découvrir · {points} pts",
+
+  "collGaudiName": "Route Gaudí",
+  "collGaudiDesc": "L'œuvre moderniste d'Antoni Gaudí à travers Barcelone.",
+  "collEssentialName": "Incontournables de Barcelone",
+  "collEssentialDesc": "Les lieux à ne pas manquer dans la ville.",
+  "collOtakuName": "Otaku BCN (exemple)",
+  "collOtakuDesc": "Temples de la BD, du manga et de la culture geek."
+}

@@ -9,6 +9,8 @@
 
 import 'package:flutter/material.dart';
 
+import '../l10n/content_l10n.dart';
+import '../l10n/l10n_ext.dart';
 import '../poi/poi.dart';
 import '../poi/poi_collection.dart';
 import '../poi/poi_controller.dart';
@@ -60,11 +62,12 @@ class PoiCollectionScreen extends StatelessWidget {
         backgroundColor: _kBackground,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: Text(collection.name),
+        title: Text(
+            localizedCollectionName(context.l10n, collection.id, collection.name)),
         actions: [
           IconButton(
             icon: const Icon(Icons.leaderboard),
-            tooltip: 'Clasificación de esta colección',
+            tooltip: context.l10n.collectionLeaderboardTooltip,
             onPressed: () => Navigator.of(context).push(
               appRoute(CollectionLeaderboardScreen(
                 poiController: poiController,
@@ -138,7 +141,7 @@ class _Header extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  '$descubiertos / $total descubiertos',
+                  context.l10n.collectionProgress(descubiertos, total),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 20,
@@ -151,7 +154,10 @@ class _Header extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            completa ? '¡Colección completada! 🎉' : collection.description,
+            completa
+                ? context.l10n.collectionCompleted
+                : localizedCollectionDescription(
+                    context.l10n, collection.id, collection.description),
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.70),
               fontSize: 14,
@@ -190,7 +196,7 @@ class _PointsBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        '$points pts',
+        context.l10n.pointsBadge(points),
         style: TextStyle(
           color: accent,
           fontSize: 15,
@@ -251,7 +257,7 @@ class _PoiCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  discovered ? poi.name : '?????',
+                  discovered ? poi.name : context.l10n.poiHiddenName,
                   style: TextStyle(
                     color: discovered
                         ? Colors.white
@@ -264,8 +270,8 @@ class _PoiCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   discovered
-                      ? '+${poi.points} puntos'
-                      : 'Por descubrir · ${poi.points} pts',
+                      ? context.l10n.poiPointsEarned(poi.points)
+                      : context.l10n.poiToDiscover(poi.points),
                   style: TextStyle(
                     color: discovered
                         ? _kDiscoveredColor

@@ -16,6 +16,10 @@ import 'avatar/avatar_controller.dart';
 import 'cities/city.dart';
 import 'fog/fog_controller.dart';
 import 'fog/fog_layer.dart';
+import 'l10n/app_localizations.dart';
+import 'l10n/content_l10n.dart';
+import 'l10n/l10n_ext.dart';
+import 'locale/locale_controller.dart';
 import 'location/location_service.dart';
 import 'map/map_style.dart';
 import 'poi/poi.dart';
@@ -31,24 +35,53 @@ void main() {
   runApp(const FogOfWarApp());
 }
 
-class FogOfWarApp extends StatelessWidget {
+class FogOfWarApp extends StatefulWidget {
   const FogOfWarApp({super.key});
 
   @override
+  State<FogOfWarApp> createState() => _FogOfWarAppState();
+}
+
+class _FogOfWarAppState extends State<FogOfWarApp> {
+  // Idioma de la app (o null = el del sistema). Se carga del disco al arrancar.
+  final LocaleController _locale = LocaleController();
+
+  @override
+  void initState() {
+    super.initState();
+    _locale.load();
+  }
+
+  @override
+  void dispose() {
+    _locale.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Fog of War',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
+    // Al cambiar el idioma, se reconstruye toda la app.
+    return ListenableBuilder(
+      listenable: _locale,
+      builder: (context, _) => MaterialApp(
+        title: 'Fog of War',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
+        ),
+        locale: _locale.locale,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: MapScreen(localeController: _locale),
       ),
-      home: const MapScreen(),
     );
   }
 }
 
 class MapScreen extends StatefulWidget {
-  const MapScreen({super.key});
+  final LocaleController localeController;
+
+  const MapScreen({super.key, required this.localeController});
 
   @override
   State<MapScreen> createState() => _MapScreenState();
@@ -114,9 +147,7 @@ class _MapScreenState extends State<MapScreen> {
     // Con "Mientras usas la app" el GPS funciona, pero el segundo plano puede
     // no ser fiable: avisamos para que el usuario suba el permiso a Ajustes.
     if (resultado == LocationPermissionResult.grantedWhileInUse) {
-      _mostrarAviso(
-          'Para registrar con la app cerrada, pon "Permitir todo el tiempo" '
-          'en Ajustes de ubicación.');
+      _mostrarAviso(context.l10n.permGrantedWhileInUse);
     }
 
     _suscribirGps();
@@ -138,10 +169,11 @@ class _MapScreenState extends State<MapScreen> {
           : TrackingMode.exploracion;
     });
     if (_posSub != null) _suscribirGps();
+    final l = context.l10n;
     final nombre = _modo == TrackingMode.exploracion
-        ? 'Exploración (alta precisión)'
-        : 'Ahorro de batería';
-    _mostrarAviso('GPS: $nombre');
+        ? l.gpsModeExploration
+        : l.gpsModeBattery;
+    _mostrarAviso(l.gpsStatus(nombre));
   }
 
   // Se ejecuta cada vez que el GPS nos da una posición nueva.
@@ -160,13 +192,14 @@ class _MapScreenState extends State<MapScreen> {
 
   // Muestra un aviso al descubrir uno o varios POIs.
   void _celebrarPois(List<Poi> nuevos) {
+    final l = context.l10n;
     final String texto;
     if (nuevos.length == 1) {
       final p = nuevos.first;
-      texto = '🏛️ ¡Descubriste ${p.name}!  +${p.points} puntos';
+      texto = l.poiDiscoveredSingle(p.name, p.points);
     } else {
       final puntos = nuevos.fold<int>(0, (s, p) => s + p.points);
-      texto = '🏛️ ¡${nuevos.length} POIs descubiertos!  +$puntos puntos';
+      texto = l.poiDiscoveredMultiple(nuevos.length, puntos);
     }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -180,13 +213,14 @@ class _MapScreenState extends State<MapScreen> {
 
   // Mensaje legible según por qué no tenemos permiso/GPS.
   String _mensajePermiso(LocationPermissionResult r) {
+    final l = context.l10n;
     switch (r) {
       case LocationPermissionResult.serviceDisabled:
-        return 'La ubicación del dispositivo está apagada. Actívala para jugar.';
+        return l.permServiceDisabled;
       case LocationPermissionResult.deniedForever:
-        return 'Permiso de ubicación denegado. Actívalo en Ajustes de la app.';
+        return l.permDeniedForever;
       case LocationPermissionResult.denied:
-        return 'Sin permiso de ubicación: la niebla no se desvelará al moverte.';
+        return l.permDenied;
       case LocationPermissionResult.grantedWhileInUse:
       case LocationPermissionResult.grantedAlways:
         return '';
@@ -205,7 +239,9 @@ class _MapScreenState extends State<MapScreen> {
     // Quitar avisos en cola para que, al pulsar rápido, se vea siempre el
     // nombre del estilo actual y no los anteriores encolados.
     ScaffoldMessenger.of(context).clearSnackBars();
-    _mostrarAviso('Mapa: ${kMapStyles[_styleIndex].name}');
+    final nombre = localizedMapStyleName(
+        context.l10n, _styleIndex, kMapStyles[_styleIndex].name);
+    _mostrarAviso(context.l10n.mapStatus(nombre));
   }
 
   // Abre el hub de colecciones de POIs. Si al cerrarlo el usuario tocó un POI
@@ -222,7 +258,10 @@ class _MapScreenState extends State<MapScreen> {
   // Abre los Ajustes (personalización del marcador del jugador).
   void _abrirAjustes() {
     Navigator.of(context).push(
-      appRoute(SettingsScreen(avatar: _avatar)),
+      appRoute(SettingsScreen(
+        avatar: _avatar,
+        localeController: widget.localeController,
+      )),
     );
   }
 
@@ -240,7 +279,7 @@ class _MapScreenState extends State<MapScreen> {
   void _recentrar() {
     final pos = _userPosition;
     if (pos == null) {
-      _mostrarAviso('Aún no tengo tu ubicación.');
+      _mostrarAviso(context.l10n.noLocationYet);
       return;
     }
     setState(() => _seguir = true);
@@ -249,6 +288,7 @@ class _MapScreenState extends State<MapScreen> {
 
   // HUD: la interfaz de cristal que flota sobre el mapa.
   Widget _buildHud() {
+    final l = context.l10n;
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -278,7 +318,7 @@ class _MapScreenState extends State<MapScreen> {
                 children: [
                   GlassIconButton(
                     icon: Icons.layers,
-                    tooltip: 'Cambiar estilo de mapa',
+                    tooltip: l.tooltipMapStyle,
                     onPressed: _siguienteEstilo,
                   ),
                   const SizedBox(height: 10),
@@ -288,14 +328,14 @@ class _MapScreenState extends State<MapScreen> {
                     icon: _modo == TrackingMode.exploracion
                         ? Icons.explore
                         : Icons.battery_saver,
-                    tooltip: 'Cambiar modo de GPS (precisión / batería)',
+                    tooltip: l.tooltipGpsMode,
                     active: _modo == TrackingMode.exploracion,
                     onPressed: _cambiarModo,
                   ),
                   const SizedBox(height: 10),
                   GlassIconButton(
                     icon: Icons.settings,
-                    tooltip: 'Ajustes y personalización',
+                    tooltip: l.tooltipSettings,
                     onPressed: _abrirAjustes,
                   ),
                 ],
@@ -309,13 +349,13 @@ class _MapScreenState extends State<MapScreen> {
                 children: [
                   GlassIconButton(
                     icon: Icons.leaderboard,
-                    tooltip: 'Clasificación',
+                    tooltip: l.tooltipRanking,
                     onPressed: _abrirRanking,
                   ),
                   const SizedBox(height: 10),
                   GlassIconButton(
                     icon: Icons.emoji_events,
-                    tooltip: 'Colección de POIs',
+                    tooltip: l.tooltipCollections,
                     onPressed: _abrirColeccion,
                   ),
                 ],
@@ -326,7 +366,7 @@ class _MapScreenState extends State<MapScreen> {
               alignment: Alignment.bottomRight,
               child: GlassIconButton(
                 icon: _seguir ? Icons.my_location : Icons.location_searching,
-                tooltip: 'Centrar en mí',
+                tooltip: l.tooltipRecenter,
                 active: _seguir,
                 onPressed: _recentrar,
               ),

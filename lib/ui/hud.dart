@@ -10,6 +10,8 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n_ext.dart';
+
 /// Color de acento principal del HUD (un turquesa brillante).
 const Color kHudAccent = Color(0xFF4DE3C2);
 
@@ -167,6 +169,7 @@ class HudStats extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return GlassPanel(
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -194,21 +197,21 @@ class HudStats extends StatelessWidget {
                     icon: Icons.grid_view_rounded,
                     color: kHudAccent,
                     value: '$cells',
-                    label: 'celdas',
+                    label: l.hudCells,
                   ),
                   const SizedBox(width: 16),
                   _Stat(
                     icon: Icons.star_rounded,
                     color: kHudGold,
                     value: '$points',
-                    label: 'puntos',
+                    label: l.hudPoints,
                   ),
                   const SizedBox(width: 16),
                   _Stat(
                     icon: Icons.place_rounded,
                     color: kHudCoral,
                     value: '$poisDiscovered/$poisTotal',
-                    label: 'POIs',
+                    label: l.hudPois,
                   ),
                 ],
               ),

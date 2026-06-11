@@ -8,15 +8,38 @@ import 'package:flutter/material.dart';
 
 import '../avatar/avatar.dart';
 import '../avatar/avatar_controller.dart';
+import '../l10n/l10n_ext.dart';
+import '../locale/locale_controller.dart';
+import 'hud.dart' show kHudAccent;
 
 /// Fondo oscuro, en sintonía con el tono de la niebla (igual que las demás
 /// pantallas de la app).
 const Color _kBackground = Color(0xFF161A21);
 
+/// Idiomas que ofrece el selector. `code` null = seguir el idioma del sistema;
+/// `name` se muestra en su propio idioma (endónimo) para reconocerlo siempre.
+class _LangOption {
+  final String? code;
+  final String name;
+  const _LangOption(this.code, this.name);
+}
+
+const List<_LangOption> _kLanguages = [
+  _LangOption('es', 'Español'),
+  _LangOption('en', 'English'),
+  _LangOption('ca', 'Català'),
+  _LangOption('fr', 'Français'),
+];
+
 class SettingsScreen extends StatelessWidget {
   final AvatarController avatar;
+  final LocaleController localeController;
 
-  const SettingsScreen({super.key, required this.avatar});
+  const SettingsScreen({
+    super.key,
+    required this.avatar,
+    required this.localeController,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -26,17 +49,20 @@ class SettingsScreen extends StatelessWidget {
         backgroundColor: _kBackground,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: const Text('Ajustes'),
+        title: Text(context.l10n.settingsTitle),
       ),
+      // Escucha avatar + idioma: al cambiar cualquiera, se redibuja (y al
+      // cambiar el idioma, MaterialApp reconstruye todo en el nuevo idioma).
       body: ListenableBuilder(
-        listenable: avatar,
+        listenable: Listenable.merge([avatar, localeController]),
         builder: (context, _) {
+          final l = context.l10n;
           return ListView(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
             children: [
               _PreviewCard(icon: avatar.icon, color: avatar.color),
               const SizedBox(height: 28),
-              const _SectionTitle('Icono'),
+              _SectionTitle(l.settingsIcon),
               const SizedBox(height: 12),
               _IconPicker(
                 selected: avatar.iconIndex,
@@ -44,11 +70,20 @@ class SettingsScreen extends StatelessWidget {
                 onPick: avatar.setIcon,
               ),
               const SizedBox(height: 28),
-              const _SectionTitle('Color'),
+              _SectionTitle(l.settingsColor),
               const SizedBox(height: 12),
               _ColorPicker(
                 selected: avatar.colorIndex,
                 onPick: avatar.setColor,
+              ),
+              const SizedBox(height: 28),
+              _SectionTitle(l.settingsLanguage),
+              const SizedBox(height: 12),
+              _LanguagePicker(
+                current: localeController.locale?.languageCode,
+                systemLabel: l.languageSystem,
+                onPick: (code) => localeController
+                    .setLocale(code == null ? null : Locale(code)),
               ),
             ],
           );
@@ -88,7 +123,7 @@ class _PreviewCard extends StatelessWidget {
           AvatarMarker(icon: icon, color: color, size: 72),
           const SizedBox(height: 14),
           Text(
-            'Tu marcador en el mapa',
+            context.l10n.settingsMarkerPreview,
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.6),
               fontSize: 13,
@@ -246,6 +281,100 @@ class _ColorTile extends StatelessWidget {
         child: selected
             ? const Icon(Icons.check, color: Colors.white, size: 22)
             : null,
+      ),
+    );
+  }
+}
+
+/// Selector de idioma: una opción "del sistema" + un idioma por cada uno
+/// soportado. [current] es el código forzado (null = sistema).
+class _LanguagePicker extends StatelessWidget {
+  final String? current;
+  final String systemLabel;
+  final ValueChanged<String?> onPick;
+
+  const _LanguagePicker({
+    required this.current,
+    required this.systemLabel,
+    required this.onPick,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _LanguageRow(
+          label: systemLabel,
+          icon: Icons.smartphone,
+          selected: current == null,
+          onTap: () => onPick(null),
+        ),
+        for (final lang in _kLanguages)
+          _LanguageRow(
+            label: lang.name,
+            selected: current == lang.code,
+            onTap: () => onPick(lang.code),
+          ),
+      ],
+    );
+  }
+}
+
+class _LanguageRow extends StatelessWidget {
+  final String label;
+  final IconData? icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _LanguageRow({
+    required this.label,
+    this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: selected
+              ? kHudAccent.withValues(alpha: 0.16)
+              : Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: selected ? kHudAccent : Colors.white.withValues(alpha: 0.12),
+            width: selected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            if (icon != null) ...[
+              Icon(icon,
+                  size: 20,
+                  color: selected
+                      ? kHudAccent
+                      : Colors.white.withValues(alpha: 0.7)),
+              const SizedBox(width: 12),
+            ],
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: selected ? kHudAccent : Colors.white,
+                  fontSize: 16,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                ),
+              ),
+            ),
+            if (selected)
+              const Icon(Icons.check_circle, color: kHudAccent, size: 22),
+          ],
+        ),
       ),
     );
   }

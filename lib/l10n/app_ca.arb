@@ -1,0 +1,68 @@
+{
+  "@@locale": "ca",
+
+  "appTitle": "Fog of War",
+
+  "hudCells": "cel·les",
+  "hudPoints": "punts",
+  "hudPois": "POIs",
+
+  "tooltipMapStyle": "Canviar estil de mapa",
+  "tooltipGpsMode": "Canviar mode de GPS (precisió / bateria)",
+  "tooltipSettings": "Configuració i personalització",
+  "tooltipRanking": "Classificació",
+  "tooltipCollections": "Col·lecció de POIs",
+  "tooltipRecenter": "Centrar en mi",
+
+  "gpsModeExploration": "Exploració (alta precisió)",
+  "gpsModeBattery": "Estalvi de bateria",
+  "gpsStatus": "GPS: {mode}",
+  "mapStatus": "Mapa: {name}",
+  "noLocationYet": "Encara no tinc la teva ubicació.",
+
+  "permGrantedWhileInUse": "Per registrar amb l'app tancada, posa \"Permetre sempre\" a la configuració d'ubicació.",
+  "permServiceDisabled": "La ubicació del dispositiu està apagada. Activa-la per jugar.",
+  "permDeniedForever": "Permís d'ubicació denegat. Activa'l a la configuració de l'app.",
+  "permDenied": "Sense permís d'ubicació: la boira no es desvelarà en moure't.",
+
+  "poiDiscoveredSingle": "🏛️ Has descobert {name}!  +{points} punts",
+  "poiDiscoveredMultiple": "🏛️ {count} POIs descoberts!  +{points} punts",
+
+  "mapStyleVoyager": "Voyager",
+  "mapStyleLight": "Clar",
+  "mapStyleDark": "Fosc",
+  "mapStyleOsm": "OSM clàssic",
+  "mapStyleSatellite": "Satèl·lit",
+  "mapStyleTopographic": "Topogràfic",
+
+  "settingsTitle": "Configuració",
+  "settingsIcon": "Icona",
+  "settingsColor": "Color",
+  "settingsMarkerPreview": "El teu marcador al mapa",
+  "settingsLanguage": "Idioma",
+  "languageSystem": "Idioma del sistema",
+
+  "leaderboardTitle": "Classificació",
+  "rankHeadline": "Vas el núm. {rank}",
+  "globalSubtitle": "La teva puntuació: {score} pts",
+  "collectionSubtitle": "Has descobert {discovered} de {total}",
+  "unitPts": "pts",
+  "unitPois": "POIs",
+  "youSuffix": "{name} (tu)",
+
+  "collectionsTitle": "Col·leccions",
+  "collectionLeaderboardTooltip": "Classificació d'aquesta col·lecció",
+  "collectionProgress": "{discovered} / {total} descoberts",
+  "collectionCompleted": "Col·lecció completada! 🎉",
+  "pointsBadge": "{points} pts",
+  "poiHiddenName": "?????",
+  "poiPointsEarned": "+{points} punts",
+  "poiToDiscover": "Per descobrir · {points} pts",
+
+  "collGaudiName": "Ruta Gaudí",
+  "collGaudiDesc": "L'obra modernista d'Antoni Gaudí per Barcelona.",
+  "collEssentialName": "Imprescindibles de Barcelona",
+  "collEssentialDesc": "Els llocs que no et pots perdre a la ciutat.",
+  "collOtakuName": "Otaku BCN (exemple)",
+  "collOtakuDesc": "Temples del còmic, el manga i la cultura geek."
+}

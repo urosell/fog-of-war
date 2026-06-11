@@ -1,0 +1,116 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "Fog of War",
+
+  "hudCells": "cells",
+  "hudPoints": "points",
+  "hudPois": "POIs",
+
+  "tooltipMapStyle": "Change map style",
+  "tooltipGpsMode": "Change GPS mode (accuracy / battery)",
+  "tooltipSettings": "Settings & customization",
+  "tooltipRanking": "Leaderboard",
+  "tooltipCollections": "POI collection",
+  "tooltipRecenter": "Center on me",
+
+  "gpsModeExploration": "Exploration (high accuracy)",
+  "gpsModeBattery": "Battery saving",
+  "gpsStatus": "GPS: {mode}",
+  "@gpsStatus": {
+    "placeholders": { "mode": { "type": "String" } }
+  },
+  "mapStatus": "Map: {name}",
+  "@mapStatus": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "noLocationYet": "I don't have your location yet.",
+
+  "permGrantedWhileInUse": "To record with the app closed, set \"Allow all the time\" in location settings.",
+  "permServiceDisabled": "Device location is off. Turn it on to play.",
+  "permDeniedForever": "Location permission denied. Enable it in the app settings.",
+  "permDenied": "No location permission: the fog won't clear as you move.",
+
+  "poiDiscoveredSingle": "🏛️ You discovered {name}!  +{points} points",
+  "@poiDiscoveredSingle": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "points": { "type": "int" }
+    }
+  },
+  "poiDiscoveredMultiple": "🏛️ {count} POIs discovered!  +{points} points",
+  "@poiDiscoveredMultiple": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "points": { "type": "int" }
+    }
+  },
+
+  "mapStyleVoyager": "Voyager",
+  "mapStyleLight": "Light",
+  "mapStyleDark": "Dark",
+  "mapStyleOsm": "Classic OSM",
+  "mapStyleSatellite": "Satellite",
+  "mapStyleTopographic": "Topographic",
+
+  "settingsTitle": "Settings",
+  "settingsIcon": "Icon",
+  "settingsColor": "Color",
+  "settingsMarkerPreview": "Your marker on the map",
+  "settingsLanguage": "Language",
+  "languageSystem": "System default",
+
+  "leaderboardTitle": "Leaderboard",
+  "rankHeadline": "You're #{rank}",
+  "@rankHeadline": {
+    "placeholders": { "rank": { "type": "int" } }
+  },
+  "globalSubtitle": "Your score: {score} pts",
+  "@globalSubtitle": {
+    "placeholders": { "score": { "type": "int" } }
+  },
+  "collectionSubtitle": "You've discovered {discovered} of {total}",
+  "@collectionSubtitle": {
+    "placeholders": {
+      "discovered": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "unitPts": "pts",
+  "unitPois": "POIs",
+  "youSuffix": "{name} (you)",
+  "@youSuffix": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+
+  "collectionsTitle": "Collections",
+  "collectionLeaderboardTooltip": "This collection's leaderboard",
+  "collectionProgress": "{discovered} / {total} discovered",
+  "@collectionProgress": {
+    "placeholders": {
+      "discovered": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "collectionCompleted": "Collection completed! 🎉",
+  "pointsBadge": "{points} pts",
+  "@pointsBadge": {
+    "placeholders": { "points": { "type": "int" } }
+  },
+  "poiHiddenName": "?????",
+  "poiPointsEarned": "+{points} points",
+  "@poiPointsEarned": {
+    "placeholders": { "points": { "type": "int" } }
+  },
+  "poiToDiscover": "To discover · {points} pts",
+  "@poiToDiscover": {
+    "placeholders": { "points": { "type": "int" } }
+  },
+
+  "collGaudiName": "Gaudí Route",
+  "collGaudiDesc": "Antoni Gaudí's modernist work across Barcelona.",
+  "collEssentialName": "Barcelona Essentials",
+  "collEssentialDesc": "The must-see places in the city.",
+  "collOtakuName": "Otaku BCN (example)",
+  "collOtakuDesc": "Temples of comics, manga and geek culture."
+}
