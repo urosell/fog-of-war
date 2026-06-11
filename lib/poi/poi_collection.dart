@@ -110,4 +110,50 @@ const List<PoiCollection> kPoiCollections = [
       'gigamesh',
     ],
   ),
+  PoiCollection(
+    id: 'museos',
+    name: 'Museos de Barcelona',
+    description: 'Los grandes museos de la ciudad.',
+    icon: Icons.museum,
+    accent: Color(0xFF5C8DF6), // azul "cultura"
+    poiIds: [
+      'museu_picasso',
+      'mnac',
+      'fundacio_miro',
+      'macba',
+      'cccb',
+      'cosmocaixa',
+      'museu_maritim',
+    ],
+  ),
+  PoiCollection(
+    id: 'tapas',
+    name: 'Ruta de Tapas',
+    description: 'Bares de tapas con solera de Barcelona.',
+    icon: Icons.tapas,
+    accent: Color(0xFFE8743B), // naranja "pimentón"
+    poiIds: [
+      'cal_pep',
+      'el_xampanyet',
+      'quimet_quimet',
+      'bar_canete',
+      'bar_del_pla',
+      'la_cova_fumada',
+    ],
+  ),
+  PoiCollection(
+    id: 'michelins',
+    name: 'Estrellas Michelin',
+    description: 'Alta cocina con estrella en Barcelona.',
+    icon: Icons.restaurant,
+    accent: Color(0xFFCE1A3B), // rojo "Michelin"
+    poiIds: [
+      'abac',
+      'lasarte',
+      'disfrutar',
+      'moments',
+      'cinc_sentits',
+      'enoteca_paco_perez',
+    ],
+  ),
 ];

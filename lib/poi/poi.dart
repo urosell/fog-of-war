@@ -15,7 +15,9 @@ enum PoiCategory {
   parque(label: 'Parque', points: 30),
   mirador(label: 'Mirador', points: 25),
   plaza(label: 'Plaza', points: 20),
-  tienda(label: 'Tienda', points: 15);
+  tienda(label: 'Tienda', points: 15),
+  michelin(label: 'Michelin', points: 60), // alta cocina con estrella
+  tapas(label: 'Tapas', points: 20); // bares de tapas
 
   final String label;
   final int points;
@@ -165,5 +167,113 @@ const List<Poi> kBarcelonaPois = [
     name: 'Llibreria Gigamesh',
     location: LatLng(41.3908, 2.1797),
     category: PoiCategory.tienda,
+  ),
+  // --- Museos adicionales (para la colección "Museos") ---
+  // NOTA: coordenadas APROXIMADAS, verificar antes de publicar.
+  Poi(
+    id: 'fundacio_miro',
+    name: 'Fundació Joan Miró',
+    location: LatLng(41.3686, 2.1601),
+    category: PoiCategory.museo,
+  ),
+  Poi(
+    id: 'macba',
+    name: 'MACBA',
+    location: LatLng(41.3831, 2.1668),
+    category: PoiCategory.museo,
+  ),
+  Poi(
+    id: 'cccb',
+    name: 'CCCB',
+    location: LatLng(41.3838, 2.1663),
+    category: PoiCategory.museo,
+  ),
+  Poi(
+    id: 'cosmocaixa',
+    name: 'CosmoCaixa',
+    location: LatLng(41.4112, 2.1346),
+    category: PoiCategory.museo,
+  ),
+  Poi(
+    id: 'museu_maritim',
+    name: 'Museu Marítim de Barcelona',
+    location: LatLng(41.3754, 2.1759),
+    category: PoiCategory.museo,
+  ),
+  // --- Bares de tapas (colección "Tapas") ---
+  // NOTA: coordenadas APROXIMADAS, verificar antes de publicar.
+  Poi(
+    id: 'cal_pep',
+    name: 'Cal Pep',
+    location: LatLng(41.3839, 2.1818),
+    category: PoiCategory.tapas,
+  ),
+  Poi(
+    id: 'el_xampanyet',
+    name: 'El Xampanyet',
+    location: LatLng(41.3845, 2.1812),
+    category: PoiCategory.tapas,
+  ),
+  Poi(
+    id: 'quimet_quimet',
+    name: 'Quimet & Quimet',
+    location: LatLng(41.3733, 2.1668),
+    category: PoiCategory.tapas,
+  ),
+  Poi(
+    id: 'bar_canete',
+    name: 'Bar Cañete',
+    location: LatLng(41.3786, 2.1709),
+    category: PoiCategory.tapas,
+  ),
+  Poi(
+    id: 'bar_del_pla',
+    name: 'Bar del Pla',
+    location: LatLng(41.3856, 2.1797),
+    category: PoiCategory.tapas,
+  ),
+  Poi(
+    id: 'la_cova_fumada',
+    name: 'La Cova Fumada',
+    location: LatLng(41.3792, 2.1893),
+    category: PoiCategory.tapas,
+  ),
+  // --- Restaurantes con estrella Michelin (colección "Michelins") ---
+  // NOTA: coordenadas APROXIMADAS, verificar antes de publicar.
+  Poi(
+    id: 'abac',
+    name: 'ABaC',
+    location: LatLng(41.4106, 2.1318),
+    category: PoiCategory.michelin,
+  ),
+  Poi(
+    id: 'lasarte',
+    name: 'Lasarte',
+    location: LatLng(41.3935, 2.1607),
+    category: PoiCategory.michelin,
+  ),
+  Poi(
+    id: 'disfrutar',
+    name: 'Disfrutar',
+    location: LatLng(41.3856, 2.1532),
+    category: PoiCategory.michelin,
+  ),
+  Poi(
+    id: 'moments',
+    name: 'Moments',
+    location: LatLng(41.3923, 2.1668),
+    category: PoiCategory.michelin,
+  ),
+  Poi(
+    id: 'cinc_sentits',
+    name: 'Cinc Sentits',
+    location: LatLng(41.3855, 2.1545),
+    category: PoiCategory.michelin,
+  ),
+  Poi(
+    id: 'enoteca_paco_perez',
+    name: 'Enoteca Paco Pérez',
+    location: LatLng(41.3855, 2.1960),
+    category: PoiCategory.michelin,
   ),
 ];

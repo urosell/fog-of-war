@@ -120,6 +120,23 @@ class AppLocalizationsFr extends AppLocalizations {
   String get languageSystem => 'Langue du système';
 
   @override
+  String get hudMission => 'Mission';
+
+  @override
+  String get pinMission => 'Épingler comme mission';
+
+  @override
+  String get unpinMission => 'Retirer la mission';
+
+  @override
+  String missionPinnedToast(String name) {
+    return '📌 Mission : $name';
+  }
+
+  @override
+  String get missionUnpinnedToast => 'Mission retirée';
+
+  @override
   String get leaderboardTitle => 'Classement';
 
   @override
@@ -199,4 +216,22 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get collOtakuDesc =>
       'Temples de la BD, du manga et de la culture geek.';
+
+  @override
+  String get collMuseumsName => 'Musées de Barcelone';
+
+  @override
+  String get collMuseumsDesc => 'Les grands musées de la ville.';
+
+  @override
+  String get collTapasName => 'Route des Tapas';
+
+  @override
+  String get collTapasDesc => 'Les bars à tapas typiques de Barcelone.';
+
+  @override
+  String get collMichelinName => 'Étoiles Michelin';
+
+  @override
+  String get collMichelinDesc => 'La haute gastronomie étoilée de Barcelone.';
 }

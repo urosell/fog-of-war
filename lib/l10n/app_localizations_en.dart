@@ -120,6 +120,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get languageSystem => 'System default';
 
   @override
+  String get hudMission => 'Mission';
+
+  @override
+  String get pinMission => 'Pin as mission';
+
+  @override
+  String get unpinMission => 'Unpin mission';
+
+  @override
+  String missionPinnedToast(String name) {
+    return '📌 Mission: $name';
+  }
+
+  @override
+  String get missionUnpinnedToast => 'Mission removed';
+
+  @override
   String get leaderboardTitle => 'Leaderboard';
 
   @override
@@ -198,4 +215,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get collOtakuDesc => 'Temples of comics, manga and geek culture.';
+
+  @override
+  String get collMuseumsName => 'Barcelona Museums';
+
+  @override
+  String get collMuseumsDesc => 'The city\'s great museums.';
+
+  @override
+  String get collTapasName => 'Tapas Trail';
+
+  @override
+  String get collTapasDesc => 'Barcelona\'s classic tapas bars.';
+
+  @override
+  String get collMichelinName => 'Michelin Stars';
+
+  @override
+  String get collMichelinDesc => 'Barcelona\'s starred fine dining.';
 }

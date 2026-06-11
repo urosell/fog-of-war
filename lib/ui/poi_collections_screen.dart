@@ -5,21 +5,26 @@
 // usuario toca un POI descubierto, ese POI "sube" hasta aquí y se devuelve a
 // main.dart para centrar el mapa en él.
 
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 import '../l10n/content_l10n.dart';
 import '../l10n/l10n_ext.dart';
+import '../mission/mission_controller.dart';
 import '../poi/poi.dart';
 import '../poi/poi_collection.dart';
 import '../poi/poi_controller.dart';
 import 'poi_collection_screen.dart';
 import 'transitions.dart';
 
-/// Fondo oscuro, en sintonía con el tono de la niebla.
-const Color _kBackground = Color(0xFF161A21);
+/// Velo oscuro semitransparente: deja entrever el mapa por detrás (la ruta se
+/// abre sin opacidad) manteniendo el texto legible. A juego con el estilo glass.
+const Color _kScrim = Color(0xC2161A21); // ~76% de opacidad
 
 class PoiCollectionsScreen extends StatelessWidget {
   final PoiController poiController;
+  final MissionController mission;
 
   /// Colecciones a mostrar (por defecto las de Barcelona).
   final List<PoiCollection> collections;
@@ -27,6 +32,7 @@ class PoiCollectionsScreen extends StatelessWidget {
   const PoiCollectionsScreen({
     super.key,
     required this.poiController,
+    required this.mission,
     this.collections = kPoiCollections,
   });
 
@@ -37,6 +43,7 @@ class PoiCollectionsScreen extends StatelessWidget {
       appRoute(PoiCollectionScreen(
         poiController: poiController,
         collection: collection,
+        mission: mission,
       )),
     );
     if (elegido != null && context.mounted) {
@@ -47,29 +54,43 @@ class PoiCollectionsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _kBackground,
+      // Transparente para que se vea el mapa por detrás; el velo + blur va en
+      // el body para difuminar y oscurecer suavemente ese mapa.
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: _kBackground,
+        backgroundColor: _kScrim,
         foregroundColor: Colors.white,
         elevation: 0,
         title: Text(context.l10n.collectionsTitle),
       ),
-      // Se redibuja sola si descubres un POI mientras la tienes abierta.
-      body: ListenableBuilder(
-        listenable: poiController,
-        builder: (context, _) {
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-            children: [
-              for (final c in collections)
-                _CollectionCard(
-                  collection: c,
-                  poiController: poiController,
-                  onTap: () => _abrir(context, c),
-                ),
-            ],
-          );
-        },
+      body: Stack(
+        children: [
+          // Mapa de fondo difuminado + velo oscuro.
+          Positioned.fill(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+              child: Container(color: _kScrim),
+            ),
+          ),
+          // Se redibuja al descubrir un POI o al cambiar la misión fijada.
+          ListenableBuilder(
+            listenable: Listenable.merge([poiController, mission]),
+            builder: (context, _) {
+              return ListView(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                children: [
+                  for (final c in collections)
+                    _CollectionCard(
+                      collection: c,
+                      poiController: poiController,
+                      pinned: mission.isPinned(c.id),
+                      onTap: () => _abrir(context, c),
+                    ),
+                ],
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -80,11 +101,13 @@ class PoiCollectionsScreen extends StatelessWidget {
 class _CollectionCard extends StatelessWidget {
   final PoiCollection collection;
   final PoiController poiController;
+  final bool pinned;
   final VoidCallback onTap;
 
   const _CollectionCard({
     required this.collection,
     required this.poiController,
+    required this.pinned,
     required this.onTap,
   });
 
@@ -151,6 +174,11 @@ class _CollectionCard extends StatelessWidget {
                         ],
                       ),
                     ),
+                    // Indicador de "misión activa" en esta colección.
+                    if (pinned) ...[
+                      Icon(Icons.push_pin, color: accent, size: 18),
+                      const SizedBox(width: 8),
+                    ],
                     const SizedBox(width: 8),
                     if (completa)
                       Icon(Icons.verified, color: accent, size: 24)

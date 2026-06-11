@@ -37,6 +37,12 @@ String localizedCollectionName(AppLocalizations l, String id, String fallback) {
       return l.collEssentialName;
     case 'otaku':
       return l.collOtakuName;
+    case 'museos':
+      return l.collMuseumsName;
+    case 'tapas':
+      return l.collTapasName;
+    case 'michelins':
+      return l.collMichelinName;
     default:
       return fallback;
   }
@@ -52,6 +58,12 @@ String localizedCollectionDescription(
       return l.collEssentialDesc;
     case 'otaku':
       return l.collOtakuDesc;
+    case 'museos':
+      return l.collMuseumsDesc;
+    case 'tapas':
+      return l.collTapasDesc;
+    case 'michelins':
+      return l.collMichelinDesc;
     default:
       return fallback;
   }

@@ -22,11 +22,12 @@ import 'l10n/l10n_ext.dart';
 import 'locale/locale_controller.dart';
 import 'location/location_service.dart';
 import 'map/map_style.dart';
+import 'mission/mission_controller.dart';
 import 'poi/poi.dart';
 import 'poi/poi_controller.dart';
 import 'ui/hud.dart';
 import 'ui/leaderboard_screen.dart';
-import 'ui/poi_collection_screen.dart' show iconForCategory;
+import 'ui/poi_collection_screen.dart' show iconForCategory, PoiCollectionScreen;
 import 'ui/poi_collections_screen.dart';
 import 'ui/settings_screen.dart';
 import 'ui/transitions.dart';
@@ -97,6 +98,8 @@ class _MapScreenState extends State<MapScreen> {
   final PoiController _poi = PoiController();
   // Personalización del marcador del jugador (icono y color).
   final AvatarController _avatar = AvatarController();
+  // Misión activa (colección fijada) que rige el indicador de POIs del HUD.
+  final MissionController _mission = MissionController();
   // Permite mover/leer la cámara del mapa (para centrar en el usuario).
   final MapController _mapController = MapController();
   // Acceso al GPS.
@@ -120,6 +123,7 @@ class _MapScreenState extends State<MapScreen> {
     _fog.load();
     _poi.load();
     _avatar.load();
+    _mission.load();
     _iniciarGps();
   }
 
@@ -129,6 +133,7 @@ class _MapScreenState extends State<MapScreen> {
     _fog.dispose();
     _poi.dispose();
     _avatar.dispose();
+    _mission.dispose();
     super.dispose();
   }
 
@@ -248,7 +253,27 @@ class _MapScreenState extends State<MapScreen> {
   // descubierto, centramos el mapa en él (y desactivamos el auto-seguir).
   Future<void> _abrirColeccion() async {
     final elegido = await Navigator.of(context).push<Poi>(
-      appRoute(PoiCollectionsScreen(poiController: _poi)),
+      appRoute(
+        PoiCollectionsScreen(poiController: _poi, mission: _mission),
+        opaque: false,
+      ),
+    );
+    if (elegido == null || !mounted) return;
+    setState(() => _seguir = false);
+    _mapController.move(elegido.location, 17);
+  }
+
+  // Abre directamente el detalle de la misión fijada (al tocar el HUD). Si
+  // dentro tocas un POI descubierto, centra el mapa en él.
+  Future<void> _abrirMisionSeleccionada() async {
+    final mision = _mission.selected;
+    if (mision == null) return;
+    final elegido = await Navigator.of(context).push<Poi>(
+      appRoute(PoiCollectionScreen(
+        poiController: _poi,
+        collection: mision,
+        mission: _mission,
+      )),
     );
     if (elegido == null || !mounted) return;
     setState(() => _seguir = false);
@@ -299,15 +324,26 @@ class _MapScreenState extends State<MapScreen> {
             Align(
               alignment: Alignment.topLeft,
               child: ListenableBuilder(
-                listenable: Listenable.merge([_fog, _poi]),
-                builder: (context, _) => HudStats(
-                  cityName: kBarcelona.name,
-                  percentage: kBarcelona.discoveryPercentage(_fog.discovered),
-                  cells: _fog.discoveredCount,
-                  points: _poi.totalPoints,
-                  poisDiscovered: _poi.discoveredCount,
-                  poisTotal: _poi.totalCount,
-                ),
+                listenable: Listenable.merge([_fog, _poi, _mission]),
+                builder: (context, _) {
+                  final mision = _mission.selected;
+                  return HudStats(
+                    cityName: kBarcelona.name,
+                    percentage: kBarcelona.discoveryPercentage(_fog.discovered),
+                    cells: _fog.discoveredCount,
+                    points: _poi.totalPoints,
+                    poisDiscovered: _poi.discoveredCount,
+                    poisTotal: _poi.totalCount,
+                    missionActive: mision != null,
+                    missionDiscovered:
+                        mision?.discoveredCount(_poi.isDiscoveredId) ?? 0,
+                    missionTotal: mision?.poiIds.length ?? 0,
+                    missionColor: mision?.accent,
+                    missionIcon: mision?.icon,
+                    missionLabel: l.hudMission,
+                    onTap: mision != null ? _abrirMisionSeleccionada : null,
+                  );
+                },
               ),
             ),
             // Botones de la esquina superior derecha: estilo de mapa y modo GPS.

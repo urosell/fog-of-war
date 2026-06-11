@@ -300,6 +300,36 @@ abstract class AppLocalizations {
   /// **'System default'**
   String get languageSystem;
 
+  /// No description provided for @hudMission.
+  ///
+  /// In en, this message translates to:
+  /// **'Mission'**
+  String get hudMission;
+
+  /// No description provided for @pinMission.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin as mission'**
+  String get pinMission;
+
+  /// No description provided for @unpinMission.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpin mission'**
+  String get unpinMission;
+
+  /// No description provided for @missionPinnedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'📌 Mission: {name}'**
+  String missionPinnedToast(String name);
+
+  /// No description provided for @missionUnpinnedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Mission removed'**
+  String get missionUnpinnedToast;
+
   /// No description provided for @leaderboardTitle.
   ///
   /// In en, this message translates to:
@@ -425,6 +455,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Temples of comics, manga and geek culture.'**
   String get collOtakuDesc;
+
+  /// No description provided for @collMuseumsName.
+  ///
+  /// In en, this message translates to:
+  /// **'Barcelona Museums'**
+  String get collMuseumsName;
+
+  /// No description provided for @collMuseumsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The city\'s great museums.'**
+  String get collMuseumsDesc;
+
+  /// No description provided for @collTapasName.
+  ///
+  /// In en, this message translates to:
+  /// **'Tapas Trail'**
+  String get collTapasName;
+
+  /// No description provided for @collTapasDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Barcelona\'s classic tapas bars.'**
+  String get collTapasDesc;
+
+  /// No description provided for @collMichelinName.
+  ///
+  /// In en, this message translates to:
+  /// **'Michelin Stars'**
+  String get collMichelinName;
+
+  /// No description provided for @collMichelinDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Barcelona\'s starred fine dining.'**
+  String get collMichelinDesc;
 }
 
 class _AppLocalizationsDelegate

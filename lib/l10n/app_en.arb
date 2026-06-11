@@ -60,6 +60,15 @@
   "settingsLanguage": "Language",
   "languageSystem": "System default",
 
+  "hudMission": "Mission",
+  "pinMission": "Pin as mission",
+  "unpinMission": "Unpin mission",
+  "missionPinnedToast": "📌 Mission: {name}",
+  "@missionPinnedToast": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "missionUnpinnedToast": "Mission removed",
+
   "leaderboardTitle": "Leaderboard",
   "rankHeadline": "You're #{rank}",
   "@rankHeadline": {
@@ -112,5 +121,12 @@
   "collEssentialName": "Barcelona Essentials",
   "collEssentialDesc": "The must-see places in the city.",
   "collOtakuName": "Otaku BCN (example)",
-  "collOtakuDesc": "Temples of comics, manga and geek culture."
+  "collOtakuDesc": "Temples of comics, manga and geek culture.",
+
+  "collMuseumsName": "Barcelona Museums",
+  "collMuseumsDesc": "The city's great museums.",
+  "collTapasName": "Tapas Trail",
+  "collTapasDesc": "Barcelona's classic tapas bars.",
+  "collMichelinName": "Michelin Stars",
+  "collMichelinDesc": "Barcelona's starred fine dining."
 }

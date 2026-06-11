@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/content_l10n.dart';
 import '../l10n/l10n_ext.dart';
+import '../mission/mission_controller.dart';
 import '../poi/poi.dart';
 import '../poi/poi_collection.dart';
 import '../poi/poi_controller.dart';
@@ -35,6 +36,10 @@ IconData iconForCategory(PoiCategory c) {
       return Icons.location_city;
     case PoiCategory.tienda:
       return Icons.storefront;
+    case PoiCategory.michelin:
+      return Icons.restaurant;
+    case PoiCategory.tapas:
+      return Icons.tapas;
   }
 }
 
@@ -47,12 +52,31 @@ const Color _kBackground = Color(0xFF161A21);
 class PoiCollectionScreen extends StatelessWidget {
   final PoiController poiController;
   final PoiCollection collection;
+  final MissionController mission;
 
   const PoiCollectionScreen({
     super.key,
     required this.poiController,
     required this.collection,
+    required this.mission,
   });
+
+  // Fija/quita esta colección como misión activa y avisa.
+  void _toggleMission(BuildContext context) {
+    final pinned = mission.isPinned(collection.id);
+    mission.toggle(collection.id);
+    final l = context.l10n;
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(pinned
+          ? l.missionUnpinnedToast
+          : l.missionPinnedToast(localizedCollectionName(
+              l, collection.id, collection.name))),
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: Colors.black87,
+      duration: const Duration(seconds: 2),
+    ));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,6 +89,21 @@ class PoiCollectionScreen extends StatelessWidget {
         title: Text(
             localizedCollectionName(context.l10n, collection.id, collection.name)),
         actions: [
+          // Fijar/quitar misión: el icono refleja el estado (pin relleno si
+          // esta colección es la misión activa).
+          ListenableBuilder(
+            listenable: mission,
+            builder: (context, _) {
+              final pinned = mission.isPinned(collection.id);
+              return IconButton(
+                icon: Icon(pinned ? Icons.push_pin : Icons.push_pin_outlined),
+                color: pinned ? collection.accent : null,
+                tooltip:
+                    pinned ? context.l10n.unpinMission : context.l10n.pinMission,
+                onPressed: () => _toggleMission(context),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.leaderboard),
             tooltip: context.l10n.collectionLeaderboardTooltip,

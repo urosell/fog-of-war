@@ -149,6 +149,10 @@ class GlassIconButton extends StatelessWidget {
 
 /// Tarjeta de estadísticas: anillo con el % descubierto (el dato estrella) y,
 /// al lado, la ciudad con sus tres métricas (celdas, puntos y POIs).
+///
+/// Si hay una "misión" activa, el tercer indicador deja de mostrar los POIs
+/// globales y pasa a mostrar el progreso de la colección fijada (icono y color
+/// propios), y toda la tarjeta se vuelve tocable ([onTap]) para abrir esa lista.
 class HudStats extends StatelessWidget {
   final String cityName;
   final double percentage;
@@ -156,6 +160,17 @@ class HudStats extends StatelessWidget {
   final int points;
   final int poisDiscovered;
   final int poisTotal;
+
+  /// Misión activa (null = sin misión, se muestran los POIs globales).
+  final bool missionActive;
+  final int missionDiscovered;
+  final int missionTotal;
+  final Color? missionColor;
+  final IconData? missionIcon;
+  final String missionLabel;
+
+  /// Si no es null, la tarjeta es tocable (abre la misión fijada).
+  final VoidCallback? onTap;
 
   const HudStats({
     super.key,
@@ -165,12 +180,19 @@ class HudStats extends StatelessWidget {
     required this.points,
     required this.poisDiscovered,
     required this.poisTotal,
+    this.missionActive = false,
+    this.missionDiscovered = 0,
+    this.missionTotal = 0,
+    this.missionColor,
+    this.missionIcon,
+    this.missionLabel = '',
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
-    return GlassPanel(
+    final panel = GlassPanel(
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -207,18 +229,34 @@ class HudStats extends StatelessWidget {
                     label: l.hudPoints,
                   ),
                   const SizedBox(width: 16),
-                  _Stat(
-                    icon: Icons.place_rounded,
-                    color: kHudCoral,
-                    value: '$poisDiscovered/$poisTotal',
-                    label: l.hudPois,
-                  ),
+                  // Tercer indicador: misión fijada (su progreso, icono y
+                  // color) o, si no hay misión, los POIs globales.
+                  if (missionActive)
+                    _Stat(
+                      icon: missionIcon ?? Icons.flag_rounded,
+                      color: missionColor ?? kHudCoral,
+                      value: '$missionDiscovered/$missionTotal',
+                      label: missionLabel,
+                    )
+                  else
+                    _Stat(
+                      icon: Icons.place_rounded,
+                      color: kHudCoral,
+                      value: '$poisDiscovered/$poisTotal',
+                      label: l.hudPois,
+                    ),
                 ],
               ),
             ],
           ),
         ],
       ),
+    );
+    if (onTap == null) return panel;
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: panel,
     );
   }
 }

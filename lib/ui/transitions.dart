@@ -7,8 +7,12 @@
 import 'package:flutter/material.dart';
 
 /// Ruta con transición "deslizar desde abajo + fundido".
-PageRoute<T> appRoute<T>(Widget page) {
+///
+/// Con [opaque] = false la pantalla de debajo (p. ej. el mapa) se sigue
+/// pintando detrás, útil para pantallas con fondo semitransparente.
+PageRoute<T> appRoute<T>(Widget page, {bool opaque = true}) {
   return PageRouteBuilder<T>(
+    opaque: opaque,
     transitionDuration: const Duration(milliseconds: 280),
     reverseTransitionDuration: const Duration(milliseconds: 220),
     pageBuilder: (context, animation, secondaryAnimation) => page,

@@ -42,6 +42,12 @@
   "settingsLanguage": "Langue",
   "languageSystem": "Langue du système",
 
+  "hudMission": "Mission",
+  "pinMission": "Épingler comme mission",
+  "unpinMission": "Retirer la mission",
+  "missionPinnedToast": "📌 Mission : {name}",
+  "missionUnpinnedToast": "Mission retirée",
+
   "leaderboardTitle": "Classement",
   "rankHeadline": "Vous êtes nº {rank}",
   "globalSubtitle": "Votre score : {score} pts",
@@ -64,5 +70,12 @@
   "collEssentialName": "Incontournables de Barcelone",
   "collEssentialDesc": "Les lieux à ne pas manquer dans la ville.",
   "collOtakuName": "Otaku BCN (exemple)",
-  "collOtakuDesc": "Temples de la BD, du manga et de la culture geek."
+  "collOtakuDesc": "Temples de la BD, du manga et de la culture geek.",
+
+  "collMuseumsName": "Musées de Barcelone",
+  "collMuseumsDesc": "Les grands musées de la ville.",
+  "collTapasName": "Route des Tapas",
+  "collTapasDesc": "Les bars à tapas typiques de Barcelone.",
+  "collMichelinName": "Étoiles Michelin",
+  "collMichelinDesc": "La haute gastronomie étoilée de Barcelone."
 }
