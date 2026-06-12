@@ -16,7 +16,11 @@ const Color kFogColor = Color(0xE6404552);
 class FogLayer extends StatelessWidget {
   final FogController controller;
 
-  const FogLayer({super.key, required this.controller});
+  /// Color del velo de niebla. Por defecto, el gris azulado del juego; cada
+  /// estilo de mapa puede pasar el suyo para que pegue con el mapa de fondo.
+  final Color color;
+
+  const FogLayer({super.key, required this.controller, this.color = kFogColor});
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +29,7 @@ class FogLayer extends StatelessWidget {
     final camera = MapCamera.of(context);
     return CustomPaint(
       size: camera.nonRotatedSize,
-      painter: _FogPainter(camera: camera, controller: controller),
+      painter: _FogPainter(camera: camera, controller: controller, color: color),
     );
   }
 }
@@ -33,11 +37,15 @@ class FogLayer extends StatelessWidget {
 class _FogPainter extends CustomPainter {
   final MapCamera camera;
   final FogController controller;
+  final Color color;
 
   // Pasar el controller como 'repaint' hace que el painter se redibuje cuando
   // se descubren celdas nuevas (cuando llama a notifyListeners()).
-  _FogPainter({required this.camera, required this.controller})
-      : super(repaint: controller);
+  _FogPainter({
+    required this.camera,
+    required this.controller,
+    required this.color,
+  }) : super(repaint: controller);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -46,8 +54,8 @@ class _FogPainter extends CustomPainter {
     // saveLayer aísla el dibujo para poder "borrar" con BlendMode.clear.
     canvas.saveLayer(fullRect, Paint());
 
-    // 1) Velo gris cubriendo toda la pantalla.
-    canvas.drawRect(fullRect, Paint()..color = kFogColor);
+    // 1) Velo cubriendo toda la pantalla (color a juego con el estilo de mapa).
+    canvas.drawRect(fullRect, Paint()..color = color);
 
     // 2) Borrar cada celda descubierta que sea visible en pantalla.
     //

@@ -34,6 +34,8 @@
   "mapStyleOsm": "OSM classique",
   "mapStyleSatellite": "Satellite",
   "mapStyleTopographic": "Topographique",
+  "mapStyleExplorer": "Explorateur",
+  "mapStyleSepia": "Ambre",
 
   "settingsTitle": "Paramètres",
   "settingsIcon": "Icône",
@@ -55,6 +57,9 @@
   "unitPts": "pts",
   "unitPois": "POIs",
   "youSuffix": "{name} (vous)",
+
+  "citiesTitle": "Villes",
+  "citiesStats": "{cells} cellules · {discovered}/{total} POIs",
 
   "collectionsTitle": "Collections",
   "collectionLeaderboardTooltip": "Classement de cette collection",

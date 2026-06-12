@@ -264,6 +264,18 @@ abstract class AppLocalizations {
   /// **'Topographic'**
   String get mapStyleTopographic;
 
+  /// No description provided for @mapStyleExplorer.
+  ///
+  /// In en, this message translates to:
+  /// **'Explorer'**
+  String get mapStyleExplorer;
+
+  /// No description provided for @mapStyleSepia.
+  ///
+  /// In en, this message translates to:
+  /// **'Amber'**
+  String get mapStyleSepia;
+
   /// No description provided for @settingsTitle.
   ///
   /// In en, this message translates to:
@@ -371,6 +383,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{name} (you)'**
   String youSuffix(String name);
+
+  /// No description provided for @citiesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cities'**
+  String get citiesTitle;
+
+  /// No description provided for @citiesStats.
+  ///
+  /// In en, this message translates to:
+  /// **'{cells} cells · {discovered}/{total} POIs'**
+  String citiesStats(int cells, int discovered, int total);
 
   /// No description provided for @collectionsTitle.
   ///

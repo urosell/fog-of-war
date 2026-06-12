@@ -52,6 +52,8 @@
   "mapStyleOsm": "Classic OSM",
   "mapStyleSatellite": "Satellite",
   "mapStyleTopographic": "Topographic",
+  "mapStyleExplorer": "Explorer",
+  "mapStyleSepia": "Amber",
 
   "settingsTitle": "Settings",
   "settingsIcon": "Icon",
@@ -90,6 +92,16 @@
   "youSuffix": "{name} (you)",
   "@youSuffix": {
     "placeholders": { "name": { "type": "String" } }
+  },
+
+  "citiesTitle": "Cities",
+  "citiesStats": "{cells} cells · {discovered}/{total} POIs",
+  "@citiesStats": {
+    "placeholders": {
+      "cells": { "type": "int" },
+      "discovered": { "type": "int" },
+      "total": { "type": "int" }
+    }
   },
 
   "collectionsTitle": "Collections",

@@ -48,17 +48,19 @@ class AvatarMarker extends StatelessWidget {
         color: color,
         shape: BoxShape.circle,
         border: Border.all(color: Colors.white, width: size * 0.09),
+        // Sombras escaladas al tamaño: así, al achicar el marcador, el halo se
+        // achica con él (con un desenfoque fijo parecería igual de grande).
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.35),
-            blurRadius: 5,
-            offset: const Offset(0, 2),
+            blurRadius: size * 0.15,
+            offset: Offset(0, size * 0.06),
           ),
           // Halo tenue del propio color, para que "brille" sobre el mapa.
           BoxShadow(
             color: color.withValues(alpha: 0.5),
-            blurRadius: 10,
-            spreadRadius: -1,
+            blurRadius: size * 0.3,
+            spreadRadius: size * -0.03,
           ),
         ],
       ),

@@ -172,6 +172,12 @@ class HudStats extends StatelessWidget {
   /// Si no es null, la tarjeta es tocable (abre la misión fijada).
   final VoidCallback? onTap;
 
+  /// Si no es null, la pulsación larga la ejecuta (quitar la misión fijada).
+  final VoidCallback? onLongPress;
+
+  /// Si no es null, tocar el nombre de la ciudad lo ejecuta (abrir "Cities").
+  final VoidCallback? onCityTap;
+
   const HudStats({
     super.key,
     required this.cityName,
@@ -187,6 +193,8 @@ class HudStats extends StatelessWidget {
     this.missionIcon,
     this.missionLabel = '',
     this.onTap,
+    this.onLongPress,
+    this.onCityTap,
   });
 
   @override
@@ -202,15 +210,7 @@ class HudStats extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                cityName,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.2,
-                ),
-              ),
+              _CityName(name: cityName, onTap: onCityTap),
               const SizedBox(height: 8),
               Row(
                 mainAxisSize: MainAxisSize.min,
@@ -252,11 +252,48 @@ class HudStats extends StatelessWidget {
         ],
       ),
     );
-    if (onTap == null) return panel;
+    if (onTap == null && onLongPress == null) return panel;
+    return GestureDetector(
+      onTap: onTap,
+      onLongPress: onLongPress,
+      behavior: HitTestBehavior.opaque,
+      child: panel,
+    );
+  }
+}
+
+/// Nombre de la ciudad en el HUD. Si [onTap] no es null, se vuelve tocable
+/// (abre la lista de ciudades) y muestra un pequeño chevron como pista visual.
+class _CityName extends StatelessWidget {
+  final String name;
+  final VoidCallback? onTap;
+
+  const _CityName({required this.name, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    const style = TextStyle(
+      color: Colors.white,
+      fontSize: 16,
+      fontWeight: FontWeight.w800,
+      letterSpacing: 0.2,
+    );
+    if (onTap == null) return Text(name, style: style);
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: panel,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(name, style: style),
+          const SizedBox(width: 3),
+          Icon(
+            Icons.expand_more_rounded,
+            color: Colors.white.withValues(alpha: 0.7),
+            size: 18,
+          ),
+        ],
+      ),
     );
   }
 }

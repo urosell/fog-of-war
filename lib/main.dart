@@ -1,9 +1,9 @@
 // Fog of War — mapa con niebla que se desvela al moverte (GPS).
 //
-// Al arrancar pide permiso de ubicación y, si lo concedes, escucha tu posición:
-// cada vez que te mueves, pinta tu posición, centra el mapa en ti y desvela la
-// niebla a tu alrededor. Como respaldo (y para pruebas sin GPS), también puedes
-// desvelar tocando el mapa.
+// Al arrancar pide permiso de ubicación y, si lo concedes, salta a tu posición
+// actual de inmediato y luego escucha tus movimientos: cada vez que te mueves,
+// pinta tu posición, centra el mapa en ti y desvela la niebla a tu alrededor.
+// La niebla se desvela SOLO con el GPS (moviéndote), nunca tocando el mapa.
 
 import 'dart:async';
 
@@ -25,6 +25,7 @@ import 'map/map_style.dart';
 import 'mission/mission_controller.dart';
 import 'poi/poi.dart';
 import 'poi/poi_controller.dart';
+import 'ui/cities_screen.dart';
 import 'ui/hud.dart';
 import 'ui/leaderboard_screen.dart';
 import 'ui/poi_collection_screen.dart' show iconForCategory, PoiCollectionScreen;
@@ -112,7 +113,7 @@ class _MapScreenState extends State<MapScreen> {
   // Si está activo, el mapa sigue automáticamente al usuario al moverse.
   bool _seguir = true;
   // Índice del estilo de mapa actual dentro de kMapStyles.
-  int _styleIndex = 0;
+  int _styleIndex = kDefaultStyleIndex;
   // Modo de seguimiento del GPS (precisión vs batería).
   TrackingMode _modo = TrackingMode.exploracion;
 
@@ -155,7 +156,24 @@ class _MapScreenState extends State<MapScreen> {
       _mostrarAviso(context.l10n.permGrantedWhileInUse);
     }
 
+    // Salto inmediato a tu posición actual (en paralelo a abrir el stream): así
+    // el mapa no se queda en el centro de la ciudad esperando la primera lectura
+    // del flujo, que con el filtro de distancia puede tardar si no te mueves.
+    _irAPosicionInicial();
     _suscribirGps();
+  }
+
+  // Pide una sola lectura de GPS y la aplica como si fuera la primera posición
+  // del flujo (centra, desvela y comprueba POIs). Si el flujo se adelanta y ya
+  // hay posición, no hace nada. Si no hay fix disponible, falla en silencio.
+  Future<void> _irAPosicionInicial() async {
+    try {
+      final pos = await _location.currentPosition();
+      if (!mounted || _userPosition != null) return;
+      _onNuevaPosicion(pos);
+    } catch (_) {
+      // Sin fix inicial: seguimos esperando al flujo, sin molestar al usuario.
+    }
   }
 
   // (Re)suscribe al flujo de posiciones con el modo actual. Cancela la
@@ -280,6 +298,31 @@ class _MapScreenState extends State<MapScreen> {
     _mapController.move(elegido.location, 17);
   }
 
+  // Quita la misión fijada (pulsación larga sobre el HUD) y lo avisa.
+  void _quitarMision() {
+    _mission.setMission(null);
+    ScaffoldMessenger.of(context).clearSnackBars();
+    _mostrarAviso(context.l10n.missionUnpinnedToast);
+  }
+
+  // Abre la lista de ciudades (al tocar el nombre de la ciudad en el HUD). Si al
+  // cerrarla el usuario eligió una ciudad, centramos el mapa en ella.
+  Future<void> _abrirCiudades() async {
+    final elegida = await Navigator.of(context).push<City>(
+      appRoute(
+        CitiesScreen(
+          fogController: _fog,
+          poiController: _poi,
+          activeCityId: kBarcelona.id,
+        ),
+        opaque: false,
+      ),
+    );
+    if (elegida == null || !mounted) return;
+    setState(() => _seguir = false);
+    _mapController.move(elegida.center, 13);
+  }
+
   // Abre los Ajustes (personalización del marcador del jugador).
   void _abrirAjustes() {
     Navigator.of(context).push(
@@ -309,6 +352,25 @@ class _MapScreenState extends State<MapScreen> {
     }
     setState(() => _seguir = true);
     _mapController.move(pos, _mapController.camera.zoom);
+  }
+
+  // Construye la capa de tiles para [style], aplicando su filtro de color si lo
+  // tiene (los estilos "con carácter"). La key por URL evita re-descargar al
+  // alternar entre estilos que comparten tiles: solo cambia el filtro.
+  Widget _buildTileLayer(MapStyle style) {
+    final matrix = style.colorMatrix;
+    return TileLayer(
+      key: ValueKey(style.urlTemplate),
+      urlTemplate: style.urlTemplate,
+      subdomains: style.subdomains,
+      userAgentPackageName: 'com.fogofwar.fog_of_war',
+      tileBuilder: matrix == null
+          ? null
+          : (context, tileWidget, tile) => ColorFiltered(
+                colorFilter: ColorFilter.matrix(matrix),
+                child: tileWidget,
+              ),
+    );
   }
 
   // HUD: la interfaz de cristal que flota sobre el mapa.
@@ -342,6 +404,8 @@ class _MapScreenState extends State<MapScreen> {
                     missionIcon: mision?.icon,
                     missionLabel: l.hudMission,
                     onTap: mision != null ? _abrirMisionSeleccionada : null,
+                    onLongPress: mision != null ? _quitarMision : null,
+                    onCityTap: _abrirCiudades,
                   );
                 },
               ),
@@ -437,14 +501,13 @@ class _MapScreenState extends State<MapScreen> {
                 // Mapa base. El estilo lo elige el usuario con el botón de capas;
                 // se usa el estilo actual de kMapStyles. La clave (key) fuerza a
                 // flutter_map a recrear la capa al cambiar de estilo.
-                TileLayer(
-                  key: ValueKey(kMapStyles[_styleIndex].urlTemplate),
-                  urlTemplate: kMapStyles[_styleIndex].urlTemplate,
-                  subdomains: kMapStyles[_styleIndex].subdomains,
-                  userAgentPackageName: 'com.fogofwar.fog_of_war',
+                _buildTileLayer(kMapStyles[_styleIndex]),
+                // La niebla va encima de los tiles del mapa, con el color a
+                // juego con el estilo actual (o el del juego por defecto).
+                FogLayer(
+                  controller: _fog,
+                  color: kMapStyles[_styleIndex].fogColor ?? kFogColor,
                 ),
-                // La niebla va encima de los tiles del mapa.
-                FogLayer(controller: _fog),
                 // Marcadores de los POIs ya descubiertos (encima de la niebla).
                 MarkerLayer(
                   markers: [
@@ -466,11 +529,14 @@ class _MapScreenState extends State<MapScreen> {
                       markers: [
                         Marker(
                           point: _userPosition!,
-                          width: 34,
-                          height: 34,
+                          // Algo más grande que el avatar para que su halo no
+                          // se recorte.
+                          width: 42,
+                          height: 42,
                           child: AvatarMarker(
                             icon: _avatar.icon,
                             color: _avatar.color,
+                            size: 26,
                           ),
                         ),
                       ],

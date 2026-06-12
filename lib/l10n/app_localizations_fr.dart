@@ -102,6 +102,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get mapStyleTopographic => 'Topographique';
 
   @override
+  String get mapStyleExplorer => 'Explorateur';
+
+  @override
+  String get mapStyleSepia => 'Ambre';
+
+  @override
   String get settingsTitle => 'Paramètres';
 
   @override
@@ -163,6 +169,14 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String youSuffix(String name) {
     return '$name (vous)';
+  }
+
+  @override
+  String get citiesTitle => 'Villes';
+
+  @override
+  String citiesStats(int cells, int discovered, int total) {
+    return '$cells cellules · $discovered/$total POIs';
   }
 
   @override

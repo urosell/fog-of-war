@@ -23,6 +23,10 @@ String localizedMapStyleName(AppLocalizations l, int index, String fallback) {
       return l.mapStyleSatellite;
     case 5:
       return l.mapStyleTopographic;
+    case 6:
+      return l.mapStyleExplorer;
+    case 7:
+      return l.mapStyleSepia;
     default:
       return fallback;
   }

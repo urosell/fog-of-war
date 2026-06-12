@@ -72,6 +72,16 @@ class City {
     if (total == 0) return 0;
     return discoveredCount(discovered) / total * 100.0;
   }
+
+  /// Centro geográfico de la caja (para centrar el mapa en la ciudad).
+  LatLng get center => LatLng((south + north) / 2, (west + east) / 2);
+
+  /// ¿Cae esta coordenada dentro de la caja de la ciudad? (para contar POIs).
+  bool containsLatLng(LatLng p) =>
+      p.latitude >= south &&
+      p.latitude <= north &&
+      p.longitude >= west &&
+      p.longitude <= east;
 }
 
 /// Barcelona, con límites aproximados del término municipal y alrededores.
@@ -83,3 +93,35 @@ const City kBarcelona = City(
   north: 41.47,
   east: 2.23,
 );
+
+/// Todas las ciudades jugables. De momento solo Barcelona tiene POIs; el resto
+/// se incluyen para ver el progreso de exploración (celdas desveladas) y se irán
+/// poblando de POIs más adelante. Los límites son cajas aproximadas.
+const List<City> kCities = [
+  kBarcelona,
+  City(
+    id: 'madrid_es',
+    name: 'Madrid',
+    south: 40.31, west: -3.83, north: 40.51, east: -3.55,
+  ),
+  City(
+    id: 'valencia_es',
+    name: 'València',
+    south: 39.42, west: -0.42, north: 39.52, east: -0.30,
+  ),
+  City(
+    id: 'sevilla_es',
+    name: 'Sevilla',
+    south: 37.32, west: -6.04, north: 37.43, east: -5.92,
+  ),
+  City(
+    id: 'girona_es',
+    name: 'Girona',
+    south: 41.95, west: 2.79, north: 42.01, east: 2.86,
+  ),
+  City(
+    id: 'paris_fr',
+    name: 'París',
+    south: 48.815, west: 2.224, north: 48.902, east: 2.469,
+  ),
+];
