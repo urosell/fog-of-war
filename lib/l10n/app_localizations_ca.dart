@@ -108,6 +108,15 @@ class AppLocalizationsCa extends AppLocalizations {
   String get mapStyleSepia => 'Ambre';
 
   @override
+  String get mapStyleBright => 'Viu';
+
+  @override
+  String get mapStyleLiberty => 'Detallat';
+
+  @override
+  String get mapStyleGame => 'Joc';
+
+  @override
   String get settingsTitle => 'Configuració';
 
   @override

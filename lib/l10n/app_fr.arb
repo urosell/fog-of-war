@@ -36,6 +36,9 @@
   "mapStyleTopographic": "Topographique",
   "mapStyleExplorer": "Explorateur",
   "mapStyleSepia": "Ambre",
+  "mapStyleBright": "Vif",
+  "mapStyleLiberty": "Détaillé",
+  "mapStyleGame": "Jeu",
 
   "settingsTitle": "Paramètres",
   "settingsIcon": "Icône",

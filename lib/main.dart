@@ -10,6 +10,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:vector_map_tiles/vector_map_tiles.dart';
 
 import 'avatar/avatar.dart';
 import 'avatar/avatar_controller.dart';
@@ -21,6 +22,7 @@ import 'l10n/content_l10n.dart';
 import 'l10n/l10n_ext.dart';
 import 'locale/locale_controller.dart';
 import 'location/location_service.dart';
+import 'map/game_style.dart';
 import 'map/map_style.dart';
 import 'mission/mission_controller.dart';
 import 'poi/poi.dart';
@@ -93,6 +95,15 @@ class _MapScreenState extends State<MapScreen> {
   // Centro inicial del mapa mientras aún no tenemos posición GPS: Barcelona.
   static const LatLng _centroInicial = LatLng(41.3874, 2.1686);
 
+  // Caja a la que se limita la cámara: el término municipal de Barcelona (y
+  // alrededores). De momento solo Barcelona es jugable, así que encerramos el
+  // mapa aquí para que no se pueda desplazar/alejar a zonas sin contenido (y de
+  // paso evitar que flutter_map cargue tiles de medio mundo y se congele).
+  static final LatLngBounds _limiteBarcelona = LatLngBounds(
+    LatLng(kBarcelona.south, kBarcelona.west),
+    LatLng(kBarcelona.north, kBarcelona.east),
+  );
+
   // Controla el estado del fog (celdas descubiertas).
   final FogController _fog = FogController();
   // Controla el estado de los POIs (descubiertos y puntos).
@@ -114,6 +125,9 @@ class _MapScreenState extends State<MapScreen> {
   bool _seguir = true;
   // Índice del estilo de mapa actual dentro de kMapStyles.
   int _styleIndex = kDefaultStyleIndex;
+  // Estilos vectoriales ya cargados (clave = styleUri). Cargar un style JSON es
+  // asíncrono, así que lo cacheamos para no re-descargarlo al alternar estilos.
+  final Map<String, Style> _estilosVectoriales = {};
   // Modo de seguimiento del GPS (precisión vs batería).
   TrackingMode _modo = TrackingMode.exploracion;
 
@@ -125,6 +139,8 @@ class _MapScreenState extends State<MapScreen> {
     _poi.load();
     _avatar.load();
     _mission.load();
+    // Si el estilo inicial es vectorial, empezar a cargar su style JSON ya.
+    _asegurarEstiloVectorial(kMapStyles[_styleIndex]);
     _iniciarGps();
   }
 
@@ -258,13 +274,41 @@ class _MapScreenState extends State<MapScreen> {
   // Pasa al siguiente estilo de mapa (vuelve al primero tras el último) y
   // avisa con el nombre del estilo elegido.
   void _siguienteEstilo() {
-    setState(() => _styleIndex = (_styleIndex + 1) % kMapStyles.length);
+    final siguiente = (_styleIndex + 1) % kMapStyles.length;
+    setState(() => _styleIndex = siguiente);
+    final estilo = kMapStyles[siguiente];
+    // Si es vectorial, asegurarse de que su style JSON esté cargado.
+    _asegurarEstiloVectorial(estilo);
     // Quitar avisos en cola para que, al pulsar rápido, se vea siempre el
     // nombre del estilo actual y no los anteriores encolados.
     ScaffoldMessenger.of(context).clearSnackBars();
-    final nombre = localizedMapStyleName(
-        context.l10n, _styleIndex, kMapStyles[_styleIndex].name);
+    final nombre =
+        localizedMapStyleName(context.l10n, estilo.nameKey, estilo.name);
     _mostrarAviso(context.l10n.mapStatus(nombre));
+  }
+
+  // Carga (una sola vez) el style JSON de un estilo vectorial y lo cachea. Los
+  // estilos "custom" usan nuestra skin propia (game_style.dart); el resto, tal
+  // cual lo sirve el proveedor. Si falla la descarga, cae al primer estilo
+  // raster para no dejar el mapa en gris. No hace nada para estilos raster o ya
+  // cargados.
+  Future<void> _asegurarEstiloVectorial(MapStyle estilo) async {
+    final uri = estilo.styleUri;
+    if (uri == null || _estilosVectoriales.containsKey(uri)) return;
+    try {
+      final cargado =
+          estilo.custom ? await loadGameStyle() : await StyleReader(uri: uri).read();
+      if (!mounted) return;
+      setState(() => _estilosVectoriales[uri] = cargado);
+    } catch (_) {
+      if (!mounted) return;
+      // Sin red o estilo no disponible: caer a un mapa raster de respaldo.
+      setState(() => _styleIndex = kRasterFallbackIndex);
+      final raster = kMapStyles[kRasterFallbackIndex];
+      ScaffoldMessenger.of(context).clearSnackBars();
+      _mostrarAviso(context.l10n.mapStatus(
+          localizedMapStyleName(context.l10n, raster.nameKey, raster.name)));
+    }
   }
 
   // Abre el hub de colecciones de POIs. Si al cerrarlo el usuario tocó un POI
@@ -319,6 +363,10 @@ class _MapScreenState extends State<MapScreen> {
       ),
     );
     if (elegida == null || !mounted) return;
+    // La cámara está encerrada en Barcelona: solo tiene sentido centrar el mapa
+    // si la ciudad cae dentro de la caja. Las demás se listan por su progreso,
+    // pero todavía no son navegables.
+    if (!_limiteBarcelona.contains(elegida.center)) return;
     setState(() => _seguir = false);
     _mapController.move(elegida.center, 13);
   }
@@ -354,10 +402,24 @@ class _MapScreenState extends State<MapScreen> {
     _mapController.move(pos, _mapController.camera.zoom);
   }
 
-  // Construye la capa de tiles para [style], aplicando su filtro de color si lo
-  // tiene (los estilos "con carácter"). La key por URL evita re-descargar al
-  // alternar entre estilos que comparten tiles: solo cambia el filtro.
-  Widget _buildTileLayer(MapStyle style) {
+  // Construye la capa base del mapa para [style]: vectorial (nítida, vía
+  // vector_map_tiles) o raster (tiles PNG). Si el estilo vectorial aún no está
+  // cargado, devuelve una capa vacía: mientras tanto el mapa muestra el color de
+  // fondo de MapOptions (gris claro) y la carga ya está en marcha.
+  Widget _buildBaseLayer(MapStyle style) {
+    if (style.isVector) {
+      final cargado = _estilosVectoriales[style.styleUri];
+      if (cargado == null) return const SizedBox.shrink();
+      return VectorTileLayer(
+        // La key por id de estilo recrea la capa al cambiar de estilo vectorial.
+        key: ValueKey(style.styleUri),
+        tileProviders: cargado.providers,
+        theme: cargado.theme,
+        sprites: cargado.sprites,
+        tileOffset: TileOffset.DEFAULT,
+      );
+    }
+    // Estilo raster: tiles PNG, con filtro de color opcional.
     final matrix = style.colorMatrix;
     return TileLayer(
       key: ValueKey(style.urlTemplate),
@@ -489,6 +551,14 @@ class _MapScreenState extends State<MapScreen> {
               options: MapOptions(
                 initialCenter: _userPosition ?? _centroInicial,
                 initialZoom: 16,
+                // Topes de zoom: ni tan lejos que se vea medio mundo (y cargue
+                // miles de tiles) ni más cerca de lo que sirven los proveedores.
+                minZoom: 12,
+                maxZoom: 19,
+                // Encerramos la cámara en Barcelona: no se puede arrastrar ni
+                // alejar fuera de la caja. Esto es lo que evita la congelación.
+                cameraConstraint:
+                    CameraConstraint.contain(bounds: _limiteBarcelona),
                 // Si el usuario arrastra el mapa a mano, desactivamos el
                 // auto-seguir para no pelearnos con él.
                 onPositionChanged: (camera, hasGesture) {
@@ -501,7 +571,7 @@ class _MapScreenState extends State<MapScreen> {
                 // Mapa base. El estilo lo elige el usuario con el botón de capas;
                 // se usa el estilo actual de kMapStyles. La clave (key) fuerza a
                 // flutter_map a recrear la capa al cambiar de estilo.
-                _buildTileLayer(kMapStyles[_styleIndex]),
+                _buildBaseLayer(kMapStyles[_styleIndex]),
                 // La niebla va encima de los tiles del mapa, con el color a
                 // juego con el estilo actual (o el del juego por defecto).
                 FogLayer(

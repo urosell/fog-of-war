@@ -7,26 +7,32 @@
 
 import 'app_localizations.dart';
 
-/// Nombre traducido de un estilo de mapa por su índice en kMapStyles.
+/// Nombre traducido de un estilo de mapa por su clave estable (MapStyle.nameKey).
 /// [fallback] es el nombre original del dato (para estilos sin traducción).
-String localizedMapStyleName(AppLocalizations l, int index, String fallback) {
-  switch (index) {
-    case 0:
+String localizedMapStyleName(AppLocalizations l, String key, String fallback) {
+  switch (key) {
+    case 'voyager':
       return l.mapStyleVoyager;
-    case 1:
+    case 'light':
       return l.mapStyleLight;
-    case 2:
+    case 'dark':
       return l.mapStyleDark;
-    case 3:
+    case 'osm':
       return l.mapStyleOsm;
-    case 4:
+    case 'satellite':
       return l.mapStyleSatellite;
-    case 5:
+    case 'topographic':
       return l.mapStyleTopographic;
-    case 6:
+    case 'explorer':
       return l.mapStyleExplorer;
-    case 7:
+    case 'sepia':
       return l.mapStyleSepia;
+    case 'bright':
+      return l.mapStyleBright;
+    case 'liberty':
+      return l.mapStyleLiberty;
+    case 'game':
+      return l.mapStyleGame;
     default:
       return fallback;
   }

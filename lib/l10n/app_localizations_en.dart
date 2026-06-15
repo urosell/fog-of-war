@@ -108,6 +108,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mapStyleSepia => 'Amber';
 
   @override
+  String get mapStyleBright => 'Vivid';
+
+  @override
+  String get mapStyleLiberty => 'Detailed';
+
+  @override
+  String get mapStyleGame => 'Game';
+
+  @override
   String get settingsTitle => 'Settings';
 
   @override

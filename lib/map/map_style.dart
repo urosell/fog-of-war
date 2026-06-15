@@ -1,31 +1,45 @@
 // Estilos de mapa base disponibles en el juego.
 //
-// Cada estilo es simplemente un servidor de "tiles" (las imágenes del mapa) con
-// un aspecto distinto. Cambiar de estilo = cambiar la URL del TileLayer.
+// Hay dos tipos de estilo:
+//   • VECTORIAL: se describe con un "style JSON" (Mapbox GL) que vector_map_tiles
+//     renderiza nítido a cualquier zoom y con colores personalizables. Es el look
+//     moderno y "agradable" que buscamos. Usamos OpenFreeMap: gratis, sin clave
+//     de API y sin límites de uso.
+//   • RASTER: imágenes PNG servidas por un proveedor de tiles. Se ven algo
+//     borrosas entre niveles de zoom, pero no dependen del render por GPU. Los
+//     mantenemos como red de seguridad por si el render vectorial diera problemas
+//     en algún dispositivo.
 //
-// Todos estos estilos son de uso libre y NO necesitan clave de API, así que
-// valen para probar y para el MVP. Antes de publicar hay que mostrar la
+// Todos estos estilos son de uso libre. Antes de publicar hay que mostrar la
 // atribución (campo [attribution]) visible en pantalla, que es obligatoria.
 
 import 'dart:ui' show Color;
 
-/// Un estilo de mapa: nombre legible + de dónde se descargan sus tiles.
+/// Un estilo de mapa: nombre legible + de dónde se obtiene su aspecto.
 class MapStyle {
-  /// Nombre que se muestra al usuario (ej. "Satélite").
+  /// Nombre por defecto (fallback si no hay traducción). Ver [nameKey].
   final String name;
 
-  /// Plantilla de URL de los tiles, con {z}/{x}/{y} (y opcional {s}).
-  final String urlTemplate;
+  /// Clave estable para localizar el nombre (ver localizedMapStyleName). Es
+  /// estable aunque se reordene la lista, a diferencia de un índice.
+  final String nameKey;
 
-  /// Subdominios para repartir la carga (solo se usan si la URL tiene {s}).
+  /// Estilo VECTORIAL: URL del "style JSON" (Mapbox GL). Si no es null, este
+  /// estilo se renderiza con vector_map_tiles y [urlTemplate] se ignora.
+  final String? styleUri;
+
+  /// Estilo RASTER: plantilla de URL de los tiles, con {z}/{x}/{y} (y opcional
+  /// {s}). Solo se usa cuando [styleUri] es null.
+  final String? urlTemplate;
+
+  /// Subdominios para repartir la carga (solo raster, si la URL tiene {s}).
   final List<String> subdomains;
 
   /// Texto de atribución obligatorio para este proveedor.
   final String attribution;
 
-  /// Matriz de color 4x5 opcional (20 valores) que se aplica a cada tile para
-  /// darle un "humor" distinto (desaturar, oscurecer, teñir). Null = sin filtro,
-  /// el mapa se ve tal cual lo sirve el proveedor.
+  /// Matriz de color 4x5 opcional (20 valores) para teñir los tiles RASTER.
+  /// Null = sin filtro. (Los estilos vectoriales se tiñen desde su style JSON.)
   final List<double>? colorMatrix;
 
   /// Color del velo de niebla a juego con este estilo. Null = usa el color por
@@ -33,130 +47,71 @@ class MapStyle {
   /// que la sensación de "cuánto tapa la niebla" no cambie entre estilos.
   final Color? fogColor;
 
+  /// Si es true, el estilo se carga con una skin propia escrita desde cero
+  /// (ver game_style.dart) en vez de tal cual lo sirve el proveedor.
+  final bool custom;
+
   const MapStyle({
     required this.name,
-    required this.urlTemplate,
+    required this.nameKey,
+    this.styleUri,
+    this.urlTemplate,
     this.subdomains = const [],
     required this.attribution,
     this.colorMatrix,
     this.fogColor,
+    this.custom = false,
   });
+
+  /// ¿Es un estilo vectorial (style JSON) o raster (tiles PNG)?
+  bool get isVector => styleUri != null;
 }
 
-/// Construye una matriz de color 4x5 (para [ColorFilter.matrix]) que primero
-/// ajusta la [saturation] (1 = igual, 0 = gris) y el [brightness] (1 = igual),
-/// y luego suma un tinte fijo (offsets [tintR]/[tintG]/[tintB] en escala 0..255).
-/// Pensada para dar a los tiles un aspecto más "de videojuego" sin tocarlos.
-List<double> mapColorMatrix({
-  double saturation = 1.0,
-  double brightness = 1.0,
-  double tintR = 0,
-  double tintG = 0,
-  double tintB = 0,
-}) {
-  // Luminancia Rec. 709 (cuánto aporta cada canal al brillo percibido).
-  const lr = 0.2126, lg = 0.7152, lb = 0.0722;
-  final s = saturation, b = brightness;
-  final sr = (1 - s) * lr, sg = (1 - s) * lg, sb = (1 - s) * lb;
-  return <double>[
-    b * (sr + s), b * sg, b * sb, 0, tintR,
-    b * sr, b * (sg + s), b * sb, 0, tintG,
-    b * sr, b * sg, b * (sb + s), 0, tintB,
-    0, 0, 0, 1, 0,
-  ];
-}
+// --- Estilo vectorial (OpenFreeMap, recoloreado) ---
+const String _ofmAttribution =
+    '© OpenStreetMap, OpenFreeMap, OpenMapTiles';
 
-/// URL de los tiles base OSCUROS de CARTO, reutilizada por los estilos con
-/// tinte: parten de un mapa oscuro (legible, sin "lavar" de blanco) y solo
-/// cambian el filtro de color para darles un humor distinto.
+// --- Tiles raster de respaldo (CARTO oscuro) ---
 const String _darkUrl =
     'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png';
 const List<String> _cartoSubdomains = ['a', 'b', 'c', 'd'];
 const String _cartoAttribution = '© OpenStreetMap, © CARTO';
 
-/// Estilo por defecto al arrancar (índice en kMapStyles): el "Explorador", un
-/// mapa oscuro con un tinte frío para que no se vea plano ni demasiado claro.
-const int kDefaultStyleIndex = 6;
+/// Estilo por defecto al arrancar (índice en kMapStyles): "Juego", la skin
+/// vectorial propia estilo videojuego.
+const int kDefaultStyleIndex = 0;
 
-/// Lista de estilos entre los que el jugador puede ir rotando. Los seis primeros
-/// son proveedores tal cual; los dos últimos reaprovechan los tiles Voyager con
-/// un filtro de color para darles carácter (ver [kDefaultStyleIndex]).
-final List<MapStyle> kMapStyles = [
+/// Índice del primer estilo RASTER de la lista, usado como respaldo automático
+/// si el estilo vectorial no consigue cargar.
+const int kRasterFallbackIndex = 1;
+
+/// Lista de estilos entre los que el jugador puede ir rotando. El primero es el
+/// vectorial cálido (por defecto); los otros dos son raster de respaldo/variedad.
+const List<MapStyle> kMapStyles = [
+  // 0 — Juego: skin vectorial propia estilo Pokémon GO (ver game_style.dart). El
+  //     styleUri es solo el estilo base del que se toman los proveedores de
+  //     tiles; el aspecto lo define loadGameStyle(). Por defecto.
   MapStyle(
-    name: 'Voyager',
-    urlTemplate:
-        'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
-    subdomains: ['a', 'b', 'c', 'd'],
-    attribution: '© OpenStreetMap, © CARTO',
+    name: 'Juego',
+    nameKey: 'game',
+    styleUri: 'https://tiles.openfreemap.org/styles/liberty',
+    attribution: _ofmAttribution,
+    custom: true,
   ),
-  MapStyle(
-    name: 'Claro',
-    urlTemplate: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
-    subdomains: ['a', 'b', 'c', 'd'],
-    attribution: '© OpenStreetMap, © CARTO',
-  ),
-  MapStyle(
-    name: 'Oscuro',
-    urlTemplate: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-    subdomains: ['a', 'b', 'c', 'd'],
-    attribution: '© OpenStreetMap, © CARTO',
-  ),
-  MapStyle(
-    name: 'OSM clásico',
-    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-    attribution: '© OpenStreetMap',
-  ),
+  // 1 — Satélite: raster de imagen aérea (respaldo / variedad).
   MapStyle(
     name: 'Satélite',
+    nameKey: 'satellite',
     urlTemplate:
         'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     attribution: '© Esri, Maxar, Earthstar Geographics',
   ),
+  // 2 — Oscuro: raster oscuro de CARTO (respaldo).
   MapStyle(
-    name: 'Topográfico',
-    urlTemplate: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
-    subdomains: ['a', 'b', 'c'],
-    attribution: '© OpenStreetMap, © OpenTopoMap (CC-BY-SA)',
-  ),
-  // --- Estilos con carácter (tiles OSCUROS + filtro de color) ---
-  // Índice 6: "Explorador" — mapa oscuro con un tinte frío azul-verdoso que
-  // pega con la niebla y el acento turquesa. Por defecto (kDefaultStyleIndex).
-  MapStyle(
-    name: 'Explorador',
+    name: 'Oscuro',
+    nameKey: 'dark',
     urlTemplate: _darkUrl,
     subdomains: _cartoSubdomains,
     attribution: _cartoAttribution,
-    colorMatrix: mapColorMatrix(
-      saturation: 1.1,
-      brightness: 1.0,
-      tintR: -4,
-      tintG: 4,
-      tintB: 12,
-    ),
-    // Niebla azul fría a juego con el mapa noche.
-    fogColor: Color(0xE6384258),
-  ),
-  // Índice 7: "Ámbar" — mapa oscuro con tinte cálido, aire nocturno de farolas.
-  MapStyle(
-    name: 'Ámbar',
-    urlTemplate: _darkUrl,
-    subdomains: _cartoSubdomains,
-    attribution: _cartoAttribution,
-    colorMatrix: mapColorMatrix(
-      saturation: 1.1,
-      brightness: 1.0,
-      tintR: 16,
-      tintG: 6,
-      tintB: -10,
-    ),
-    // Niebla marrón cálida a juego con el mapa ámbar.
-    fogColor: Color(0xE6524636),
-  ),
-  // Topográfico de Esri (calles + relieve), distinto del OpenTopoMap de arriba.
-  MapStyle(
-    name: 'Esri Topo',
-    urlTemplate:
-        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
-    attribution: '© Esri',
   ),
 ];

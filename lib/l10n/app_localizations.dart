@@ -276,6 +276,24 @@ abstract class AppLocalizations {
   /// **'Amber'**
   String get mapStyleSepia;
 
+  /// No description provided for @mapStyleBright.
+  ///
+  /// In en, this message translates to:
+  /// **'Vivid'**
+  String get mapStyleBright;
+
+  /// No description provided for @mapStyleLiberty.
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed'**
+  String get mapStyleLiberty;
+
+  /// No description provided for @mapStyleGame.
+  ///
+  /// In en, this message translates to:
+  /// **'Game'**
+  String get mapStyleGame;
+
   /// No description provided for @settingsTitle.
   ///
   /// In en, this message translates to:

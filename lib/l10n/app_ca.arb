@@ -36,6 +36,9 @@
   "mapStyleTopographic": "Topogràfic",
   "mapStyleExplorer": "Explorador",
   "mapStyleSepia": "Ambre",
+  "mapStyleBright": "Viu",
+  "mapStyleLiberty": "Detallat",
+  "mapStyleGame": "Joc",
 
   "settingsTitle": "Configuració",
   "settingsIcon": "Icona",
