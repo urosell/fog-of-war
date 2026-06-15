@@ -84,6 +84,11 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String watchtowerSighted(String name, int count) {
+    return '🔭 $name : $count POI en vue';
+  }
+
+  @override
   String get mapStyleVoyager => 'Voyager';
 
   @override

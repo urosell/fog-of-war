@@ -45,6 +45,13 @@
       "points": { "type": "int" }
     }
   },
+  "watchtowerSighted": "🔭 {name}: {count} POIs in sight",
+  "@watchtowerSighted": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "count": { "type": "int" }
+    }
+  },
 
   "mapStyleVoyager": "Voyager",
   "mapStyleLight": "Light",

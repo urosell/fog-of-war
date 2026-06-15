@@ -84,6 +84,11 @@ class AppLocalizationsCa extends AppLocalizations {
   }
 
   @override
+  String watchtowerSighted(String name, int count) {
+    return '🔭 $name: $count punts albirats';
+  }
+
+  @override
   String get mapStyleVoyager => 'Voyager';
 
   @override

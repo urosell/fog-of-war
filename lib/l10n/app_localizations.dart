@@ -228,6 +228,12 @@ abstract class AppLocalizations {
   /// **'🏛️ {count} POIs discovered!  +{points} points'**
   String poiDiscoveredMultiple(int count, int points);
 
+  /// No description provided for @watchtowerSighted.
+  ///
+  /// In en, this message translates to:
+  /// **'🔭 {name}: {count} POIs in sight'**
+  String watchtowerSighted(String name, int count);
+
   /// No description provided for @mapStyleVoyager.
   ///
   /// In en, this message translates to:

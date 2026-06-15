@@ -34,6 +34,8 @@ import 'ui/poi_collection_screen.dart' show iconForCategory, PoiCollectionScreen
 import 'ui/poi_collections_screen.dart';
 import 'ui/settings_screen.dart';
 import 'ui/transitions.dart';
+import 'watchtower/watchtower.dart';
+import 'watchtower/watchtower_controller.dart';
 
 void main() {
   runApp(const FogOfWarApp());
@@ -112,6 +114,8 @@ class _MapScreenState extends State<MapScreen> {
   final AvatarController _avatar = AvatarController();
   // Misión activa (colección fijada) que rige el indicador de POIs del HUD.
   final MissionController _mission = MissionController();
+  // Atalayas: al alcanzarlas, avistan (revelan en gris) los POIs de su zona.
+  final WatchtowerController _watchtower = WatchtowerController();
   // Permite mover/leer la cámara del mapa (para centrar en el usuario).
   final MapController _mapController = MapController();
   // Acceso al GPS.
@@ -139,6 +143,7 @@ class _MapScreenState extends State<MapScreen> {
     _poi.load();
     _avatar.load();
     _mission.load();
+    _watchtower.load();
     // Si el estilo inicial es vectorial, empezar a cargar su style JSON ya.
     _asegurarEstiloVectorial(kMapStyles[_styleIndex]);
     _iniciarGps();
@@ -151,6 +156,7 @@ class _MapScreenState extends State<MapScreen> {
     _poi.dispose();
     _avatar.dispose();
     _mission.dispose();
+    _watchtower.dispose();
     super.dispose();
   }
 
@@ -223,6 +229,9 @@ class _MapScreenState extends State<MapScreen> {
     // ¿Has llegado a algún POI nuevo? Si es así, celébralo.
     final nuevos = _poi.checkDiscoveries(pos);
     if (nuevos.isNotEmpty) _celebrarPois(nuevos);
+    // ¿Has alcanzado alguna atalaya? Si es así, avista (revela) su zona.
+    final atalayas = _watchtower.checkActivations(pos);
+    if (atalayas.isNotEmpty) _avisarAtalayas(atalayas);
     // Si el modo "seguir" está activo, centrar el mapa en ti.
     if (_seguir) {
       _mapController.move(pos, _mapController.camera.zoom);
@@ -243,6 +252,22 @@ class _MapScreenState extends State<MapScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(texto),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.black87,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  // Anuncia que has activado una atalaya y cuántos POIs ha avistado en su zona.
+  void _avisarAtalayas(List<Watchtower> nuevas) {
+    final l = context.l10n;
+    // Si activas varias a la vez (raro), anunciamos la primera.
+    final t = nuevas.first;
+    final count = _watchtower.sightedCountFor(t);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(l.watchtowerSighted(t.name, count)),
         behavior: SnackBarBehavior.floating,
         backgroundColor: Colors.black87,
         duration: const Duration(seconds: 3),
@@ -578,17 +603,40 @@ class _MapScreenState extends State<MapScreen> {
                   controller: _fog,
                   color: kMapStyles[_styleIndex].fogColor ?? kFogColor,
                 ),
-                // Marcadores de los POIs ya descubiertos (encima de la niebla).
-                MarkerLayer(
-                  markers: [
-                    for (final poi in _poi.discoveredPois)
-                      Marker(
-                        point: poi.location,
-                        width: 40,
-                        height: 40,
-                        child: _PoiMarker(category: poi.category),
-                      ),
-                  ],
+                // Atalayas (siempre visibles) y POIs: avistados en gris,
+                // descubiertos en dorado. Se redibuja al activar una atalaya o
+                // descubrir un POI. Todo va encima de la niebla.
+                ListenableBuilder(
+                  listenable: Listenable.merge([_poi, _watchtower]),
+                  builder: (context, _) => MarkerLayer(
+                    markers: [
+                      // Atalayas: marcador propio, siempre visible.
+                      for (final tower in _watchtower.towers)
+                        Marker(
+                          point: tower.location,
+                          width: 44,
+                          height: 44,
+                          child: _WatchtowerMarker(
+                              activated: _watchtower.isActivated(tower)),
+                        ),
+                      // POIs: dorado si descubierto; gris si solo avistado.
+                      for (final poi in _poi.allPois)
+                        if (_poi.isDiscovered(poi))
+                          Marker(
+                            point: poi.location,
+                            width: 40,
+                            height: 40,
+                            child: _PoiMarker(category: poi.category),
+                          )
+                        else if (_watchtower.isSightedId(poi.id))
+                          Marker(
+                            point: poi.location,
+                            width: 36,
+                            height: 36,
+                            child: _GhostPoiMarker(category: poi.category),
+                          ),
+                    ],
+                  ),
                 ),
                 // Marcador de "estás aquí" (solo si ya tenemos posición). Se
                 // redibuja al cambiar el avatar en Ajustes.
@@ -641,6 +689,55 @@ class _PoiMarker extends StatelessWidget {
         ],
       ),
       child: Icon(iconForCategory(category), color: Colors.white, size: 22),
+    );
+  }
+}
+
+// Marcador de un POI AVISTADO (revelado por una atalaya) pero aún no descubierto:
+// gris y semitransparente, para que se lea como "sé que está aquí, pero todavía
+// no lo he visitado".
+class _GhostPoiMarker extends StatelessWidget {
+  final PoiCategory category;
+
+  const _GhostPoiMarker({required this.category});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xB3667084), // gris azulado semitransparente
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white70, width: 2),
+      ),
+      child: Icon(iconForCategory(category), color: Colors.white70, size: 18),
+    );
+  }
+}
+
+// Marcador de una ATALAYA: un mirador al que llegar para avistar la zona. Color
+// distinto al de los POIs (turquesa si ya la activaste, pizarra si no) con un
+// icono de "ojo/avistar".
+class _WatchtowerMarker extends StatelessWidget {
+  final bool activated;
+
+  const _WatchtowerMarker({required this.activated});
+
+  @override
+  Widget build(BuildContext context) {
+    final color =
+        activated ? const Color(0xFF1FB8C4) : const Color(0xFF566B8C);
+    return Container(
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 2.5),
+        boxShadow: const [BoxShadow(color: Colors.black45, blurRadius: 4)],
+      ),
+      child: Icon(
+        activated ? Icons.visibility : Icons.visibility_outlined,
+        color: Colors.white,
+        size: 22,
+      ),
     );
   }
 }
