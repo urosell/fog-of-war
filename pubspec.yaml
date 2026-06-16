@@ -43,6 +43,9 @@ dependencies:
   intl: any
   vector_map_tiles: 9.0.0-beta.8
   vector_tile_renderer: ^6.1.0
+  flutter_local_notifications: ^22.0.1
+  http: ^1.6.0
+  csv: ^8.0.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

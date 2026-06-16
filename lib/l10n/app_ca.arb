@@ -28,6 +28,7 @@
   "poiDiscoveredSingle": "🏛️ Has descobert {name}!  +{points} punts",
   "poiDiscoveredMultiple": "🏛️ {count} POIs descoberts!  +{points} punts",
   "watchtowerSighted": "🔭 {name}: {count} punts albirats",
+  "notifDiscoveryTitle": "Nou descobriment!",
 
   "mapStyleVoyager": "Voyager",
   "mapStyleLight": "Clar",

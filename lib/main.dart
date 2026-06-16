@@ -15,6 +15,7 @@ import 'package:vector_map_tiles/vector_map_tiles.dart';
 import 'avatar/avatar.dart';
 import 'avatar/avatar_controller.dart';
 import 'cities/city.dart';
+import 'content/content_controller.dart';
 import 'fog/fog_controller.dart';
 import 'fog/fog_layer.dart';
 import 'l10n/app_localizations.dart';
@@ -25,6 +26,7 @@ import 'location/location_service.dart';
 import 'map/game_style.dart';
 import 'map/map_style.dart';
 import 'mission/mission_controller.dart';
+import 'notify/notification_service.dart';
 import 'poi/poi.dart';
 import 'poi/poi_controller.dart';
 import 'ui/cities_screen.dart';
@@ -33,6 +35,7 @@ import 'ui/leaderboard_screen.dart';
 import 'ui/poi_collection_screen.dart' show iconForCategory, PoiCollectionScreen;
 import 'ui/poi_collections_screen.dart';
 import 'ui/settings_screen.dart';
+import 'ui/toast.dart';
 import 'ui/transitions.dart';
 import 'watchtower/watchtower.dart';
 import 'watchtower/watchtower_controller.dart';
@@ -93,7 +96,7 @@ class MapScreen extends StatefulWidget {
   State<MapScreen> createState() => _MapScreenState();
 }
 
-class _MapScreenState extends State<MapScreen> {
+class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   // Centro inicial del mapa mientras aún no tenemos posición GPS: Barcelona.
   static const LatLng _centroInicial = LatLng(41.3874, 2.1686);
 
@@ -116,6 +119,9 @@ class _MapScreenState extends State<MapScreen> {
   final MissionController _mission = MissionController();
   // Atalayas: al alcanzarlas, avistan (revelan en gris) los POIs de su zona.
   final WatchtowerController _watchtower = WatchtowerController();
+  // Contenido del juego (POIs y colecciones): semilla embebida o, si está
+  // configurada la hoja, lo descargado de ella (ver content/).
+  final ContentController _content = ContentController();
   // Permite mover/leer la cámara del mapa (para centrar en el usuario).
   final MapController _mapController = MapController();
   // Acceso al GPS.
@@ -134,30 +140,63 @@ class _MapScreenState extends State<MapScreen> {
   final Map<String, Style> _estilosVectoriales = {};
   // Modo de seguimiento del GPS (precisión vs batería).
   TrackingMode _modo = TrackingMode.exploracion;
+  // ¿La app está en primer plano (visible)? Si no, los descubrimientos se
+  // avisan con una notificación del sistema en vez del toast (que no se vería).
+  bool _enPrimerPlano = true;
+  // Contador para dar ids distintos a las notificaciones (no se pisan).
+  int _notifId = 0;
 
   @override
   void initState() {
     super.initState();
-    // Cargar el fog y los POIs guardados en disco (si los hay) y arrancar GPS.
+    WidgetsBinding.instance.addObserver(this);
     _fog.load();
-    _poi.load();
     _avatar.load();
-    _mission.load();
-    _watchtower.load();
+    // Preparar las notificaciones locales (el permiso se pide tras el de GPS).
+    NotificationService.instance.init();
     // Si el estilo inicial es vectorial, empezar a cargar su style JSON ya.
     _asegurarEstiloVectorial(kMapStyles[_styleIndex]);
+    // Cargar el contenido (POIs/colecciones) y, con él listo, arrancar el resto.
+    _inicializar();
+  }
+
+  // Carga el contenido (caché/semilla, al instante), lo aplica a los
+  // controladores, restaura su estado guardado (descubiertos/atalayas/misión),
+  // arranca el GPS y deja la hoja descargándose para el PRÓXIMO arranque.
+  Future<void> _inicializar() async {
+    await _content.loadInitial();
+    if (!mounted) return;
+    _aplicarContenido();
+    await Future.wait([_poi.load(), _watchtower.load(), _mission.load()]);
+    if (!mounted) return;
     _iniciarGps();
+    _content.refreshForNextLaunch();
+  }
+
+  // Vuelca el contenido cargado en los controladores que dependen de él.
+  void _aplicarContenido() {
+    _poi.setPois(_content.pois);
+    _watchtower.setPois(_content.pois);
+    _mission.setCollections(_content.collections);
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _posSub?.cancel();
     _fog.dispose();
     _poi.dispose();
     _avatar.dispose();
     _mission.dispose();
     _watchtower.dispose();
+    _content.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Solo "resumed" cuenta como visible; pausada/oculta/inactiva = minimizada.
+    _enPrimerPlano = state == AppLifecycleState.resumed;
   }
 
   // Pide permiso y, si se concede, empieza a escuchar la posición.
@@ -177,6 +216,10 @@ class _MapScreenState extends State<MapScreen> {
     if (resultado == LocationPermissionResult.grantedWhileInUse) {
       _mostrarAviso(context.l10n.permGrantedWhileInUse);
     }
+
+    // Pedir el permiso de notificaciones (para avisar de descubrimientos con la
+    // app minimizada). Va después del de ubicación para no apilar dos diálogos.
+    await NotificationService.instance.requestPermission();
 
     // Salto inmediato a tu posición actual (en paralelo a abrir el stream): así
     // el mapa no se queda en el centro de la ciudad esperando la primera lectura
@@ -238,25 +281,33 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-  // Muestra un aviso al descubrir uno o varios POIs.
+  // Muestra un aviso al descubrir uno o varios POIs. Con la app abierta usa el
+  // toast de cristal; minimizada, una notificación del sistema (el toast no se
+  // vería).
   void _celebrarPois(List<Poi> nuevos) {
     final l = context.l10n;
     final String texto;
+    final IconData icono;
     if (nuevos.length == 1) {
       final p = nuevos.first;
       texto = l.poiDiscoveredSingle(p.name, p.points);
+      icono = iconForCategory(p.category);
     } else {
       final puntos = nuevos.fold<int>(0, (s, p) => s + p.points);
       texto = l.poiDiscoveredMultiple(nuevos.length, puntos);
+      icono = Icons.celebration_rounded;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(texto),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.black87,
-        duration: const Duration(seconds: 3),
-      ),
-    );
+    if (_enPrimerPlano) {
+      // Ámbar: el color de los POIs descubiertos (el "tesoro").
+      showGameToast(context,
+          icon: icono, accent: const Color(0xFFFFB300), message: texto);
+    } else {
+      NotificationService.instance.showDiscovery(
+        id: _notifId++,
+        title: l.notifDiscoveryTitle,
+        body: texto,
+      );
+    }
   }
 
   // Anuncia que has activado una atalaya y cuántos POIs ha avistado en su zona.
@@ -265,14 +316,11 @@ class _MapScreenState extends State<MapScreen> {
     // Si activas varias a la vez (raro), anunciamos la primera.
     final t = nuevas.first;
     final count = _watchtower.sightedCountFor(t);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l.watchtowerSighted(t.name, count)),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.black87,
-        duration: const Duration(seconds: 3),
-      ),
-    );
+    // Turquesa: el color de "avistar" (atalaya activada).
+    showGameToast(context,
+        icon: Icons.visibility,
+        accent: const Color(0xFF1FB8C4),
+        message: l.watchtowerSighted(t.name, count));
   }
 
   // Mensaje legible según por qué no tenemos permiso/GPS.
@@ -341,7 +389,11 @@ class _MapScreenState extends State<MapScreen> {
   Future<void> _abrirColeccion() async {
     final elegido = await Navigator.of(context).push<Poi>(
       appRoute(
-        PoiCollectionsScreen(poiController: _poi, mission: _mission),
+        PoiCollectionsScreen(
+          poiController: _poi,
+          mission: _mission,
+          collections: _content.collections,
+        ),
         opaque: false,
       ),
     );

@@ -28,6 +28,12 @@ class PoiCollection {
   /// Deben existir en `kBarcelonaPois`.
   final List<String> poiIds;
 
+  /// Nombre y descripción por idioma (clave = código de idioma: 'es','en',...).
+  /// Vacíos en la semilla `const`; los rellena el contenido descargado de la
+  /// hoja. Si falta el idioma pedido, se cae a [name]/[description].
+  final Map<String, String> names;
+  final Map<String, String> descriptions;
+
   const PoiCollection({
     required this.id,
     required this.name,
@@ -35,7 +41,15 @@ class PoiCollection {
     required this.icon,
     required this.accent,
     required this.poiIds,
+    this.names = const {},
+    this.descriptions = const {},
   });
+
+  /// Nombre en el idioma [code], con fallback al nombre base.
+  String localizedName(String code) => names[code] ?? name;
+
+  /// Descripción en el idioma [code], con fallback a la descripción base.
+  String localizedDescription(String code) => descriptions[code] ?? description;
 
   /// Resuelve los IDs a objetos Poi reales, en el orden de [poiIds] y omitiendo
   /// los que no existan en el pozo. [byId] es un mapa id→Poi (lo da el
@@ -69,6 +83,18 @@ const List<PoiCollection> kPoiCollections = [
     id: 'gaudi',
     name: 'Ruta Gaudí',
     description: 'La obra modernista de Antoni Gaudí por Barcelona.',
+    names: {
+      'es': 'Ruta Gaudí',
+      'en': 'Gaudí Route',
+      'ca': 'Ruta Gaudí',
+      'fr': 'Route Gaudí',
+    },
+    descriptions: {
+      'es': 'La obra modernista de Antoni Gaudí por Barcelona.',
+      'en': "Antoni Gaudí's modernist work across Barcelona.",
+      'ca': "L'obra modernista d'Antoni Gaudí per Barcelona.",
+      'fr': "L'œuvre moderniste d'Antoni Gaudí à travers Barcelone.",
+    },
     icon: Icons.architecture,
     accent: Color(0xFF6BCB77), // verde modernista
     poiIds: [
@@ -85,6 +111,18 @@ const List<PoiCollection> kPoiCollections = [
     id: 'imprescindibles',
     name: 'Imprescindibles de Barcelona',
     description: 'Los lugares que no te puedes perder en la ciudad.',
+    names: {
+      'es': 'Imprescindibles de Barcelona',
+      'en': 'Barcelona Essentials',
+      'ca': 'Imprescindibles de Barcelona',
+      'fr': 'Incontournables de Barcelone',
+    },
+    descriptions: {
+      'es': 'Los lugares que no te puedes perder en la ciudad.',
+      'en': 'The must-see places in the city.',
+      'ca': "Els llocs que no et pots perdre a la ciutat.",
+      'fr': 'Les lieux à ne pas manquer dans la ville.',
+    },
     icon: Icons.star,
     accent: Color(0xFFFFB300), // ámbar "tesoro"
     poiIds: [
@@ -103,6 +141,18 @@ const List<PoiCollection> kPoiCollections = [
     id: 'otaku',
     name: 'Otaku BCN (ejemplo)',
     description: 'Templos del cómic, el manga y la cultura geek.',
+    names: {
+      'es': 'Otaku BCN (ejemplo)',
+      'en': 'Otaku BCN (example)',
+      'ca': 'Otaku BCN (exemple)',
+      'fr': 'Otaku BCN (exemple)',
+    },
+    descriptions: {
+      'es': 'Templos del cómic, el manga y la cultura geek.',
+      'en': 'Temples of comics, manga and geek culture.',
+      'ca': 'Temples del còmic, el manga i la cultura geek.',
+      'fr': 'Temples de la BD, du manga et de la culture geek.',
+    },
     icon: Icons.auto_awesome,
     accent: Color(0xFFE85D9E), // rosa "anime"
     poiIds: [
@@ -114,6 +164,18 @@ const List<PoiCollection> kPoiCollections = [
     id: 'museos',
     name: 'Museos de Barcelona',
     description: 'Los grandes museos de la ciudad.',
+    names: {
+      'es': 'Museos de Barcelona',
+      'en': 'Barcelona Museums',
+      'ca': 'Museus de Barcelona',
+      'fr': 'Musées de Barcelone',
+    },
+    descriptions: {
+      'es': 'Los grandes museos de la ciudad.',
+      'en': "The city's great museums.",
+      'ca': 'Els grans museus de la ciutat.',
+      'fr': 'Les grands musées de la ville.',
+    },
     icon: Icons.museum,
     accent: Color(0xFF5C8DF6), // azul "cultura"
     poiIds: [
@@ -130,6 +192,18 @@ const List<PoiCollection> kPoiCollections = [
     id: 'tapas',
     name: 'Ruta de Tapas',
     description: 'Bares de tapas con solera de Barcelona.',
+    names: {
+      'es': 'Ruta de Tapas',
+      'en': 'Tapas Trail',
+      'ca': 'Ruta de Tapes',
+      'fr': 'Route des Tapas',
+    },
+    descriptions: {
+      'es': 'Bares de tapas con solera de Barcelona.',
+      'en': "Barcelona's classic tapas bars.",
+      'ca': 'Bars de tapes amb solera de Barcelona.',
+      'fr': 'Les bars à tapas typiques de Barcelone.',
+    },
     icon: Icons.tapas,
     accent: Color(0xFFE8743B), // naranja "pimentón"
     poiIds: [
@@ -145,6 +219,18 @@ const List<PoiCollection> kPoiCollections = [
     id: 'michelins',
     name: 'Estrellas Michelin',
     description: 'Alta cocina con estrella en Barcelona.',
+    names: {
+      'es': 'Estrellas Michelin',
+      'en': 'Michelin Stars',
+      'ca': 'Estrelles Michelin',
+      'fr': 'Étoiles Michelin',
+    },
+    descriptions: {
+      'es': 'Alta cocina con estrella en Barcelona.',
+      'en': "Barcelona's starred fine dining.",
+      'ca': 'Alta cuina amb estrella a Barcelona.',
+      'fr': 'La haute gastronomie étoilée de Barcelone.',
+    },
     icon: Icons.restaurant,
     accent: Color(0xFFCE1A3B), // rojo "Michelin"
     poiIds: [

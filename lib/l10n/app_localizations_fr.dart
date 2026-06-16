@@ -89,6 +89,9 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get notifDiscoveryTitle => 'Nouvelle découverte !';
+
+  @override
   String get mapStyleVoyager => 'Voyager';
 
   @override

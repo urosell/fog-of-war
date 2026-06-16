@@ -17,7 +17,7 @@ import 'watchtower_storage.dart';
 class WatchtowerController extends ChangeNotifier {
   final WatchtowerStorage _storage;
   final List<Watchtower> _towers;
-  final List<Poi> _pois;
+  List<Poi> _pois;
   final Distance _distance = const Distance();
 
   final Set<String> _activatedIds = <String>{};
@@ -34,6 +34,14 @@ class WatchtowerController extends ChangeNotifier {
 
   /// Todas las atalayas (para dibujarlas en el mapa, siempre visibles).
   List<Watchtower> get towers => _towers;
+
+  /// Reemplaza el pozo de POIs (contenido cargado de la hoja) y recalcula qué
+  /// POIs quedan avistados por las atalayas ya activadas.
+  void setPois(List<Poi> pois) {
+    _pois = pois;
+    _recomputeSighted();
+    notifyListeners();
+  }
 
   bool get isLoaded => _loaded;
 

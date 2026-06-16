@@ -16,7 +16,7 @@ const double kPoiDiscoveryRadiusMeters = 30.0;
 
 class PoiController extends ChangeNotifier {
   final PoiStorage _storage;
-  final List<Poi> _allPois;
+  List<Poi> _allPois;
   final Distance _distance = const Distance();
 
   final Set<String> _discoveredIds = <String>{};
@@ -24,13 +24,27 @@ class PoiController extends ChangeNotifier {
 
   PoiController({PoiStorage? storage, List<Poi>? pois})
       : _storage = storage ?? PoiStorage(),
-        _allPois = pois ?? kBarcelonaPois;
+        _allPois = pois ?? kBarcelonaPois {
+    _rebuildIndex();
+  }
 
   /// Todos los POIs conocidos (descubiertos o no).
   List<Poi> get allPois => _allPois;
 
-  /// Mapa id→Poi, calculado una vez, para resolver colecciones por ID rápido.
-  late final Map<String, Poi> poiById = {for (final p in _allPois) p.id: p};
+  /// Mapa id→Poi, para resolver colecciones por ID rápido. Se recalcula al
+  /// cambiar el pozo de POIs (ver [setPois]).
+  Map<String, Poi> poiById = const {};
+
+  void _rebuildIndex() => poiById = {for (final p in _allPois) p.id: p};
+
+  /// Reemplaza el pozo de POIs (p. ej. con el contenido cargado de la hoja). El
+  /// conjunto de descubiertos (por id) se conserva: los ids que sigan existiendo
+  /// quedan descubiertos; los que ya no estén, simplemente no se muestran.
+  void setPois(List<Poi> pois) {
+    _allPois = pois;
+    _rebuildIndex();
+    notifyListeners();
+  }
 
   bool get isLoaded => _loaded;
   int get discoveredCount => _discoveredIds.length;

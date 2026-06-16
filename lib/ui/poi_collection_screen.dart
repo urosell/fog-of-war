@@ -9,7 +9,6 @@
 
 import 'package:flutter/material.dart';
 
-import '../l10n/content_l10n.dart';
 import '../l10n/l10n_ext.dart';
 import '../mission/mission_controller.dart';
 import '../poi/poi.dart';
@@ -66,12 +65,12 @@ class PoiCollectionScreen extends StatelessWidget {
     final pinned = mission.isPinned(collection.id);
     mission.toggle(collection.id);
     final l = context.l10n;
+    final code = Localizations.localeOf(context).languageCode;
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(pinned
           ? l.missionUnpinnedToast
-          : l.missionPinnedToast(localizedCollectionName(
-              l, collection.id, collection.name))),
+          : l.missionPinnedToast(collection.localizedName(code))),
       behavior: SnackBarBehavior.floating,
       backgroundColor: Colors.black87,
       duration: const Duration(seconds: 2),
@@ -86,8 +85,8 @@ class PoiCollectionScreen extends StatelessWidget {
         backgroundColor: _kBackground,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: Text(
-            localizedCollectionName(context.l10n, collection.id, collection.name)),
+        title: Text(collection
+            .localizedName(Localizations.localeOf(context).languageCode)),
         actions: [
           // Fijar/quitar misión: el icono refleja el estado (pin relleno si
           // esta colección es la misión activa).
@@ -195,8 +194,8 @@ class _Header extends StatelessWidget {
           Text(
             completa
                 ? context.l10n.collectionCompleted
-                : localizedCollectionDescription(
-                    context.l10n, collection.id, collection.description),
+                : collection.localizedDescription(
+                    Localizations.localeOf(context).languageCode),
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.70),
               fontSize: 14,

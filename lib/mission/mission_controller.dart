@@ -13,7 +13,7 @@ class MissionController extends ChangeNotifier {
   final MissionStorage _storage;
 
   /// Colecciones entre las que se puede elegir misión.
-  final List<PoiCollection> collections;
+  List<PoiCollection> collections;
 
   String? _selectedId;
 
@@ -21,6 +21,17 @@ class MissionController extends ChangeNotifier {
     MissionStorage? storage,
     this.collections = kPoiCollections,
   }) : _storage = storage ?? MissionStorage();
+
+  /// Reemplaza las colecciones disponibles (contenido cargado de la hoja). Si la
+  /// misión fijada ya no existe en el nuevo set, se desfija.
+  void setCollections(List<PoiCollection> next) {
+    collections = next;
+    if (_selectedId != null && !next.any((c) => c.id == _selectedId)) {
+      _selectedId = null;
+      _storage.save(null);
+    }
+    notifyListeners();
+  }
 
   /// Id de la colección fijada, o null si no hay misión.
   String? get selectedId => _selectedId;

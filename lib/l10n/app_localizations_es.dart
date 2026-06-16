@@ -89,6 +89,9 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get notifDiscoveryTitle => '¡Nuevo descubrimiento!';
+
+  @override
   String get mapStyleVoyager => 'Voyager';
 
   @override

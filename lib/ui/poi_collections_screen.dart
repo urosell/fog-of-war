@@ -9,7 +9,6 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import '../l10n/content_l10n.dart';
 import '../l10n/l10n_ext.dart';
 import '../mission/mission_controller.dart';
 import '../poi/poi.dart';
@@ -154,8 +153,8 @@ class _CollectionCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            localizedCollectionName(
-                                context.l10n, collection.id, collection.name),
+                            collection.localizedName(
+                                Localizations.localeOf(context).languageCode),
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 17,
@@ -164,8 +163,8 @@ class _CollectionCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            localizedCollectionDescription(context.l10n,
-                                collection.id, collection.description),
+                            collection.localizedDescription(
+                                Localizations.localeOf(context).languageCode),
                             style: TextStyle(
                               color: Colors.white.withValues(alpha: 0.60),
                               fontSize: 13,

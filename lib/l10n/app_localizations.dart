@@ -234,6 +234,12 @@ abstract class AppLocalizations {
   /// **'🔭 {name}: {count} POIs in sight'**
   String watchtowerSighted(String name, int count);
 
+  /// No description provided for @notifDiscoveryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New discovery!'**
+  String get notifDiscoveryTitle;
+
   /// No description provided for @mapStyleVoyager.
   ///
   /// In en, this message translates to:

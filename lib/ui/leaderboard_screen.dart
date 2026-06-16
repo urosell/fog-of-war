@@ -11,7 +11,6 @@
 import 'package:flutter/material.dart';
 
 import '../fog/fog_controller.dart';
-import '../l10n/content_l10n.dart';
 import '../l10n/l10n_ext.dart';
 import '../poi/poi_collection.dart';
 import '../poi/poi_controller.dart';
@@ -77,7 +76,8 @@ class CollectionLeaderboardScreen extends StatelessWidget {
     final l = context.l10n;
     final total = collection.poiIds.length;
     return _LeaderboardScaffold(
-      title: localizedCollectionName(l, collection.id, collection.name),
+      title: collection
+          .localizedName(Localizations.localeOf(context).languageCode),
       accent: collection.accent,
       listenable: poiController,
       buildBoard: () {

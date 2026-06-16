@@ -218,14 +218,14 @@ class HudStats extends StatelessWidget {
                   _Stat(
                     icon: Icons.grid_view_rounded,
                     color: kHudAccent,
-                    value: '$cells',
+                    value: cells,
                     label: l.hudCells,
                   ),
                   const SizedBox(width: 16),
                   _Stat(
                     icon: Icons.star_rounded,
                     color: kHudGold,
-                    value: '$points',
+                    value: points,
                     label: l.hudPoints,
                   ),
                   const SizedBox(width: 16),
@@ -235,14 +235,16 @@ class HudStats extends StatelessWidget {
                     _Stat(
                       icon: missionIcon ?? Icons.flag_rounded,
                       color: missionColor ?? kHudCoral,
-                      value: '$missionDiscovered/$missionTotal',
+                      value: missionDiscovered,
+                      total: missionTotal,
                       label: missionLabel,
                     )
                   else
                     _Stat(
                       icon: Icons.place_rounded,
                       color: kHudCoral,
-                      value: '$poisDiscovered/$poisTotal',
+                      value: poisDiscovered,
+                      total: poisTotal,
                       label: l.hudPois,
                     ),
                 ],
@@ -307,34 +309,42 @@ class _ProgressRing extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final reduced = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     return SizedBox(
       width: 52,
       height: 52,
-      child: CustomPaint(
-        painter: _RingPainter(percentage / 100.0),
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                percentage.toStringAsFixed(percentage < 10 ? 2 : 1),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  height: 1.0,
+      // Anima el arco Y el número desde su valor anterior hasta el nuevo, así
+      // el progreso "sube" en vez de saltar. Con reduced-motion salta directo.
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: percentage, end: percentage),
+        duration: Duration(milliseconds: reduced ? 0 : 700),
+        curve: Curves.easeOutCubic,
+        builder: (context, animPct, _) => CustomPaint(
+          painter: _RingPainter(animPct / 100.0),
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  animPct.toStringAsFixed(animPct < 10 ? 2 : 1),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    height: 1.0,
+                  ),
                 ),
-              ),
-              Text(
-                '%',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.6),
-                  fontSize: 8,
-                  fontWeight: FontWeight.w700,
-                  height: 1.2,
+                Text(
+                  '%',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.6),
+                    fontSize: 8,
+                    fontWeight: FontWeight.w700,
+                    height: 1.2,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -381,50 +391,154 @@ class _RingPainter extends CustomPainter {
 }
 
 /// Una métrica compacta: mini-icono de color + valor en blanco + etiqueta tenue.
-class _Stat extends StatelessWidget {
+///
+/// El [value] (la parte que cambia al jugar) se anima con un "count-up" y, al
+/// incrementarse, la métrica da un breve "pop" (escala + brillo del icono) para
+/// que el avance se sienta. Si hay un [total], se muestra "value/total" (los
+/// POIs y la misión), animando solo el numerador.
+class _Stat extends StatefulWidget {
   final IconData icon;
   final Color color;
-  final String value;
+  final int value;
+  final int? total;
   final String label;
 
   const _Stat({
     required this.icon,
     required this.color,
     required this.value,
+    this.total,
     required this.label,
   });
 
   @override
+  State<_Stat> createState() => _StatState();
+}
+
+class _StatState extends State<_Stat> with SingleTickerProviderStateMixin {
+  late final AnimationController _pop = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 380),
+  );
+  // Pulso 1 → 1.18 → 1: crece de golpe y vuelve, como un "latido".
+  late final Animation<double> _scale = TweenSequence<double>([
+    TweenSequenceItem(
+      tween: Tween(begin: 1.0, end: 1.18).chain(
+        CurveTween(curve: Curves.easeOut),
+      ),
+      weight: 40,
+    ),
+    TweenSequenceItem(
+      tween: Tween(begin: 1.18, end: 1.0).chain(
+        CurveTween(curve: Curves.easeIn),
+      ),
+      weight: 60,
+    ),
+  ]).animate(_pop);
+
+  @override
+  void didUpdateWidget(_Stat old) {
+    super.didUpdateWidget(old);
+    // Solo celebramos cuando el valor SUBE (no al cargar/reiniciar).
+    if (widget.value > old.value && !_reducedMotion) {
+      _pop.forward(from: 0);
+    }
+  }
+
+  bool get _reducedMotion =>
+      MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+
+  @override
+  void dispose() {
+    _pop.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: color, size: 14),
-            const SizedBox(width: 4),
-            Text(
-              value,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                height: 1.0,
+    return ScaleTransition(
+      scale: _scale,
+      alignment: Alignment.centerLeft,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // El icono gana un halo de su color durante el "pop".
+              AnimatedBuilder(
+                animation: _pop,
+                builder: (context, child) {
+                  final t = _pop.isAnimating ? _scale.value - 1.0 : 0.0;
+                  return DecoratedBox(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: t > 0
+                          ? [
+                              BoxShadow(
+                                color: widget.color
+                                    .withValues(alpha: (t * 3).clamp(0, 0.7)),
+                                blurRadius: 10,
+                                spreadRadius: 1,
+                              ),
+                            ]
+                          : const [],
+                    ),
+                    child: child,
+                  );
+                },
+                child: Icon(widget.icon, color: widget.color, size: 14),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.6),
-            fontSize: 11,
+              const SizedBox(width: 4),
+              _AnimatedCount(
+                value: widget.value,
+                reducedMotion: _reducedMotion,
+                suffix: widget.total == null ? '' : '/${widget.total}',
+              ),
+            ],
           ),
-        ),
-      ],
+          const SizedBox(height: 2),
+          Text(
+            widget.label,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.6),
+              fontSize: 11,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Número que "cuenta" suavemente desde su valor anterior hasta el nuevo, con
+/// un sufijo opcional (p. ej. "/36"). Con reduced-motion salta directo.
+class _AnimatedCount extends StatelessWidget {
+  final int value;
+  final String suffix;
+  final bool reducedMotion;
+
+  const _AnimatedCount({
+    required this.value,
+    this.suffix = '',
+    this.reducedMotion = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    const style = TextStyle(
+      color: Colors.white,
+      fontSize: 16,
+      fontWeight: FontWeight.w800,
+      height: 1.0,
+    );
+    if (reducedMotion) return Text('$value$suffix', style: style);
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: value.toDouble(), end: value.toDouble()),
+      duration: const Duration(milliseconds: 450),
+      curve: Curves.easeOutCubic,
+      builder: (context, v, _) => Text('${v.round()}$suffix', style: style),
     );
   }
 }

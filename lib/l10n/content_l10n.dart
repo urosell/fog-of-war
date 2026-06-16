@@ -1,9 +1,13 @@
 // Traducción de textos que viven en los datos (no en la UI): nombres de los
-// estilos de mapa y nombre/descripción de las colecciones temáticas.
+// estilos de mapa.
 //
-// Los datos (kMapStyles, kPoiCollections) siguen siendo la fuente de IDs y
-// aspecto; aquí solo resolvemos su TEXTO visible al idioma actual. Si aparece
-// un id/índice nuevo sin traducir, se cae al texto original del dato.
+// Los estilos (kMapStyles) siguen siendo la fuente de IDs y aspecto; aquí solo
+// resolvemos su TEXTO visible al idioma actual. Si aparece un id sin traducir,
+// se cae al texto original del dato.
+//
+// NOTA: las colecciones YA NO se traducen aquí. Ahora cada PoiCollection lleva
+// su texto por idioma en los propios datos (ver PoiCollection.localizedName/
+// localizedDescription), porque el contenido puede venir de la hoja externa.
 
 import 'app_localizations.dart';
 
@@ -33,47 +37,6 @@ String localizedMapStyleName(AppLocalizations l, String key, String fallback) {
       return l.mapStyleLiberty;
     case 'game':
       return l.mapStyleGame;
-    default:
-      return fallback;
-  }
-}
-
-/// Nombre traducido de una colección por su id. [fallback] = nombre del dato.
-String localizedCollectionName(AppLocalizations l, String id, String fallback) {
-  switch (id) {
-    case 'gaudi':
-      return l.collGaudiName;
-    case 'imprescindibles':
-      return l.collEssentialName;
-    case 'otaku':
-      return l.collOtakuName;
-    case 'museos':
-      return l.collMuseumsName;
-    case 'tapas':
-      return l.collTapasName;
-    case 'michelins':
-      return l.collMichelinName;
-    default:
-      return fallback;
-  }
-}
-
-/// Descripción traducida de una colección por su id. [fallback] = dato.
-String localizedCollectionDescription(
-    AppLocalizations l, String id, String fallback) {
-  switch (id) {
-    case 'gaudi':
-      return l.collGaudiDesc;
-    case 'imprescindibles':
-      return l.collEssentialDesc;
-    case 'otaku':
-      return l.collOtakuDesc;
-    case 'museos':
-      return l.collMuseumsDesc;
-    case 'tapas':
-      return l.collTapasDesc;
-    case 'michelins':
-      return l.collMichelinDesc;
     default:
       return fallback;
   }
