@@ -75,6 +75,13 @@
   "poiPointsEarned": "+{points} puntos",
   "poiToDiscover": "Por descubrir · {points} pts",
 
+  "poiSheetInCollections": "En estas colecciones",
+  "poiSheetNoCollections": "Todavía no está en ninguna colección.",
+  "poiSheetOpenInMaps": "Abrir en Google Maps",
+  "poiSheetUndiscoveredTitle": "Pendiente de descubrir",
+  "poiSheetUndiscoveredHint": "Acércate hasta este punto para descubrir qué se esconde aquí. ¡La aventura te espera! 🧭",
+  "poiSheetMapsError": "No se pudo abrir Google Maps.",
+
   "collGaudiName": "Ruta Gaudí",
   "collGaudiDesc": "La obra modernista de Antoni Gaudí por Barcelona.",
   "collEssentialName": "Imprescindibles de Barcelona",

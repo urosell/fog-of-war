@@ -1,37 +1,37 @@
-id,name,lat,lon,category
-sagrada_familia,Sagrada Família,41.4036,2.1744,iglesia
-park_guell,Park Güell,41.4145,2.1527,parque
-casa_batllo,Casa Batlló,41.3916,2.1649,monumento
-la_pedrera,La Pedrera (Casa Milà),41.3954,2.1619,monumento
-catedral_bcn,Catedral de Barcelona,41.3839,2.1762,iglesia
-placa_catalunya,Plaça de Catalunya,41.3870,2.1700,plaza
-arc_triomf,Arc de Triomf,41.3910,2.1806,monumento
-museu_picasso,Museu Picasso,41.3851,2.1807,museo
-mnac,Museu Nacional d'Art de Catalunya,41.3685,2.1533,museo
-parc_ciutadella,Parc de la Ciutadella,41.3884,2.1869,parque
-mirador_colom,Mirador de Colom,41.3759,2.1774,mirador
-bunkers_carmel,Bunkers del Carmel,41.4194,2.1622,mirador
-castell_montjuic,Castell de Montjuïc,41.3631,2.1656,monumento
-tibidabo,Tibidabo (Sagrat Cor),41.4225,2.1187,mirador
-casa_vicens,Casa Vicens,41.4036,2.1518,monumento
-palau_guell,Palau Güell,41.3793,2.1742,monumento
-torre_bellesguard,Torre Bellesguard,41.4186,2.1320,monumento
-norma_comics,Norma Cómics,41.3922,2.1806,tienda
-gigamesh,Llibreria Gigamesh,41.3908,2.1797,tienda
-fundacio_miro,Fundació Joan Miró,41.3686,2.1601,museo
-macba,MACBA,41.3831,2.1668,museo
-cccb,CCCB,41.3838,2.1663,museo
-cosmocaixa,CosmoCaixa,41.4112,2.1346,museo
-museu_maritim,Museu Marítim de Barcelona,41.3754,2.1759,museo
-cal_pep,Cal Pep,41.3839,2.1818,tapas
-el_xampanyet,El Xampanyet,41.3845,2.1812,tapas
-quimet_quimet,Quimet & Quimet,41.3733,2.1668,tapas
-bar_canete,Bar Cañete,41.3786,2.1709,tapas
-bar_del_pla,Bar del Pla,41.3856,2.1797,tapas
-la_cova_fumada,La Cova Fumada,41.3792,2.1893,tapas
-abac,ABaC,41.4106,2.1318,michelin
-lasarte,Lasarte,41.3935,2.1607,michelin
-disfrutar,Disfrutar,41.3856,2.1532,michelin
-moments,Moments,41.3923,2.1668,michelin
-cinc_sentits,Cinc Sentits,41.3855,2.1545,michelin
-enoteca_paco_perez,Enoteca Paco Pérez,41.3855,2.1960,michelin
+id,name,lat,lon,category,maps_url
+sagrada_familia,Sagrada Família,41.4036,2.1744,iglesia,https://maps.app.goo.gl/example
+park_guell,Park Güell,41.4145,2.1527,parque,
+casa_batllo,Casa Batlló,41.3916,2.1649,monumento,
+la_pedrera,La Pedrera (Casa Milà),41.3954,2.1619,monumento,
+catedral_bcn,Catedral de Barcelona,41.3839,2.1762,iglesia,
+placa_catalunya,Plaça de Catalunya,41.3870,2.1700,plaza,
+arc_triomf,Arc de Triomf,41.3910,2.1806,monumento,
+museu_picasso,Museu Picasso,41.3851,2.1807,museo,
+mnac,Museu Nacional d'Art de Catalunya,41.3685,2.1533,museo,
+parc_ciutadella,Parc de la Ciutadella,41.3884,2.1869,parque,
+mirador_colom,Mirador de Colom,41.3759,2.1774,mirador,
+bunkers_carmel,Bunkers del Carmel,41.4194,2.1622,mirador,
+castell_montjuic,Castell de Montjuïc,41.3631,2.1656,monumento,
+tibidabo,Tibidabo (Sagrat Cor),41.4225,2.1187,mirador,
+casa_vicens,Casa Vicens,41.4036,2.1518,monumento,
+palau_guell,Palau Güell,41.3793,2.1742,monumento,
+torre_bellesguard,Torre Bellesguard,41.4186,2.1320,monumento,
+norma_comics,Norma Cómics,41.3922,2.1806,tienda,
+gigamesh,Llibreria Gigamesh,41.3908,2.1797,tienda,
+fundacio_miro,Fundació Joan Miró,41.3686,2.1601,museo,
+macba,MACBA,41.3831,2.1668,museo,
+cccb,CCCB,41.3838,2.1663,museo,
+cosmocaixa,CosmoCaixa,41.4112,2.1346,museo,
+museu_maritim,Museu Marítim de Barcelona,41.3754,2.1759,museo,
+cal_pep,Cal Pep,41.3839,2.1818,tapas,
+el_xampanyet,El Xampanyet,41.3845,2.1812,tapas,
+quimet_quimet,Quimet & Quimet,41.3733,2.1668,tapas,
+bar_canete,Bar Cañete,41.3786,2.1709,tapas,
+bar_del_pla,Bar del Pla,41.3856,2.1797,tapas,
+la_cova_fumada,La Cova Fumada,41.3792,2.1893,tapas,
+abac,ABaC,41.4106,2.1318,michelin,
+lasarte,Lasarte,41.3935,2.1607,michelin,
+disfrutar,Disfrutar,41.3856,2.1532,michelin,
+moments,Moments,41.3923,2.1668,michelin,
+cinc_sentits,Cinc Sentits,41.3855,2.1545,michelin,
+enoteca_paco_perez,Enoteca Paco Pérez,41.3855,2.1960,michelin,

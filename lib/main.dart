@@ -34,6 +34,7 @@ import 'ui/hud.dart';
 import 'ui/leaderboard_screen.dart';
 import 'ui/poi_collection_screen.dart' show iconForCategory, PoiCollectionScreen;
 import 'ui/poi_collections_screen.dart';
+import 'ui/poi_detail_sheet.dart';
 import 'ui/settings_screen.dart';
 import 'ui/toast.dart';
 import 'ui/transitions.dart';
@@ -448,6 +449,20 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     _mapController.move(elegida.center, 13);
   }
 
+  // Abre el panel de detalle de un POI al tocar su marcador en el mapa. Resuelve
+  // a qué colecciones pertenece (filtrando las del contenido por su id).
+  void _abrirDetallePoi(Poi poi, {required bool descubierto}) {
+    final colecciones = _content.collections
+        .where((c) => c.poiIds.contains(poi.id))
+        .toList();
+    showPoiDetailSheet(
+      context: context,
+      poi: poi,
+      collections: colecciones,
+      discovered: descubierto,
+    );
+  }
+
   // Abre los Ajustes (personalización del marcador del jugador).
   void _abrirAjustes() {
     Navigator.of(context).push(
@@ -678,14 +693,22 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                             point: poi.location,
                             width: 40,
                             height: 40,
-                            child: _PoiMarker(category: poi.category),
+                            child: GestureDetector(
+                              onTap: () =>
+                                  _abrirDetallePoi(poi, descubierto: true),
+                              child: _PoiMarker(category: poi.category),
+                            ),
                           )
                         else if (_watchtower.isSightedId(poi.id))
                           Marker(
                             point: poi.location,
                             width: 36,
                             height: 36,
-                            child: _GhostPoiMarker(category: poi.category),
+                            child: GestureDetector(
+                              onTap: () =>
+                                  _abrirDetallePoi(poi, descubierto: false),
+                              child: _GhostPoiMarker(category: poi.category),
+                            ),
                           ),
                     ],
                   ),

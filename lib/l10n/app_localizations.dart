@@ -474,6 +474,42 @@ abstract class AppLocalizations {
   /// **'To discover · {points} pts'**
   String poiToDiscover(int points);
 
+  /// No description provided for @poiSheetInCollections.
+  ///
+  /// In en, this message translates to:
+  /// **'In these collections'**
+  String get poiSheetInCollections;
+
+  /// No description provided for @poiSheetNoCollections.
+  ///
+  /// In en, this message translates to:
+  /// **'Not part of any collection yet.'**
+  String get poiSheetNoCollections;
+
+  /// No description provided for @poiSheetOpenInMaps.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in Google Maps'**
+  String get poiSheetOpenInMaps;
+
+  /// No description provided for @poiSheetUndiscoveredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Yet to discover'**
+  String get poiSheetUndiscoveredTitle;
+
+  /// No description provided for @poiSheetUndiscoveredHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Get close to this spot to reveal what\'s hidden here. Adventure awaits! 🧭'**
+  String get poiSheetUndiscoveredHint;
+
+  /// No description provided for @poiSheetMapsError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open Google Maps.'**
+  String get poiSheetMapsError;
+
   /// No description provided for @collGaudiName.
   ///
   /// In en, this message translates to:

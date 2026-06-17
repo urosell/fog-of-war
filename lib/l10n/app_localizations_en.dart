@@ -229,6 +229,25 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get poiSheetInCollections => 'In these collections';
+
+  @override
+  String get poiSheetNoCollections => 'Not part of any collection yet.';
+
+  @override
+  String get poiSheetOpenInMaps => 'Open in Google Maps';
+
+  @override
+  String get poiSheetUndiscoveredTitle => 'Yet to discover';
+
+  @override
+  String get poiSheetUndiscoveredHint =>
+      'Get close to this spot to reveal what\'s hidden here. Adventure awaits! 🧭';
+
+  @override
+  String get poiSheetMapsError => 'Couldn\'t open Google Maps.';
+
+  @override
   String get collGaudiName => 'Gaudí Route';
 
   @override

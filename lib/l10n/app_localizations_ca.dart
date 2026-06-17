@@ -230,6 +230,25 @@ class AppLocalizationsCa extends AppLocalizations {
   }
 
   @override
+  String get poiSheetInCollections => 'En aquestes col·leccions';
+
+  @override
+  String get poiSheetNoCollections => 'Encara no és a cap col·lecció.';
+
+  @override
+  String get poiSheetOpenInMaps => 'Obre a Google Maps';
+
+  @override
+  String get poiSheetUndiscoveredTitle => 'Pendent de descobrir';
+
+  @override
+  String get poiSheetUndiscoveredHint =>
+      'Acosta\'t fins aquí per descobrir què s\'amaga en aquest punt. L\'aventura t\'espera! 🧭';
+
+  @override
+  String get poiSheetMapsError => 'No s\'ha pogut obrir Google Maps.';
+
+  @override
   String get collGaudiName => 'Ruta Gaudí';
 
   @override

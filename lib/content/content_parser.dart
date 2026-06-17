@@ -46,11 +46,13 @@ List<Poi> _parsePois(String csv) {
       _warn('POI con id duplicado, ignorado: $id');
       continue;
     }
+    final mapsUrl = _cell(row, col, 'maps_url');
     out.add(Poi(
       id: id,
       name: _cell(row, col, 'name'),
       location: LatLng(lat, lon),
       category: _category(_cell(row, col, 'category')),
+      customMapsUrl: mapsUrl.isEmpty ? null : mapsUrl,
     ));
   }
   return out;

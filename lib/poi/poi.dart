@@ -34,15 +34,29 @@ class Poi {
   final LatLng location;
   final PoiCategory category;
 
+  /// Enlace a Google Maps escrito a mano en la hoja (columna `maps_url`).
+  /// Si está vacío, [mapsUrl] se genera solo desde las coordenadas.
+  final String? customMapsUrl;
+
   const Poi({
     required this.id,
     required this.name,
     required this.location,
     required this.category,
+    this.customMapsUrl,
   });
 
   /// Puntos que otorga descubrir este POI (según su categoría).
   int get points => category.points;
+
+  /// Enlace a Google Maps para este lugar: el personalizado de la hoja si lo
+  /// hay, o uno generado desde lat/lon (búsqueda por coordenadas).
+  String get mapsUrl {
+    final custom = customMapsUrl?.trim();
+    if (custom != null && custom.isNotEmpty) return custom;
+    return 'https://www.google.com/maps/search/?api=1'
+        '&query=${location.latitude},${location.longitude}';
+  }
 }
 
 /// "Pozo" común de POIs: TODOS los lugares conocidos de Barcelona.

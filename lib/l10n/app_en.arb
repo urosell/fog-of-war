@@ -139,6 +139,13 @@
     "placeholders": { "points": { "type": "int" } }
   },
 
+  "poiSheetInCollections": "In these collections",
+  "poiSheetNoCollections": "Not part of any collection yet.",
+  "poiSheetOpenInMaps": "Open in Google Maps",
+  "poiSheetUndiscoveredTitle": "Yet to discover",
+  "poiSheetUndiscoveredHint": "Get close to this spot to reveal what's hidden here. Adventure awaits! 🧭",
+  "poiSheetMapsError": "Couldn't open Google Maps.",
+
   "collGaudiName": "Gaudí Route",
   "collGaudiDesc": "Antoni Gaudí's modernist work across Barcelona.",
   "collEssentialName": "Barcelona Essentials",

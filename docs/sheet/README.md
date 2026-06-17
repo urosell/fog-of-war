@@ -31,9 +31,20 @@ Una fila por lugar. Columnas (la cabecera debe llamarse exactamente así):
 |---|---|---|
 | `id` | Identificador único y estable (sin espacios) | `sagrada_familia` |
 | `name` | Nombre que se muestra (no se traduce) | `Sagrada Família` |
-| `lat` | Latitud (grados decimales) | `41.4036` |
-| `lon` | Longitud (grados decimales) | `2.1744` |
+| `lat` | Latitud (grados decimales, con **punto**) | `41.4036` |
+| `lon` | Longitud (grados decimales, con **punto**) | `2.1744` |
 | `category` | Categoría (fija los puntos), de la lista de abajo | `iglesia` |
+| `maps_url` | **Opcional.** Enlace a Google Maps del lugar. Si lo dejas vacío, la app genera uno solo desde `lat`/`lon`. | `https://maps.app.goo.gl/...` |
+
+> **Nota sobre los decimales:** la hoja debe estar en configuración regional
+> **Estados Unidos** (Archivo → Configuración → General) para que el punto `.`
+> sea el separador decimal. Si no, al importar se corrompen las coordenadas.
+
+> **El enlace `maps_url`:** al tocar un POI **ya descubierto** en el mapa se abre
+> un panel con su nombre, las colecciones a las que pertenece y un botón "Abrir
+> en Google Maps" que usa este enlace (o, si está vacío, uno generado con las
+> coordenadas). Para obtenerlo: busca el sitio en Google Maps → Compartir →
+> Copiar enlace.
 
 **Categorías y puntos:**
 

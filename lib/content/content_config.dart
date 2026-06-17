@@ -5,7 +5,7 @@
 // app funciona solo con el contenido semilla embebido (no intenta descargar).
 
 /// ID de la Google Sheet con el contenido. null = no descargar (usar semilla).
-const String? kSpreadsheetId = null;
+const String? kSpreadsheetId = '1oLCwYutbWWN6ANN6oRhr5PJqyZcYeFDOpThDtYN0WaE';
 
 /// Nombres de las pestañas dentro de la hoja.
 const String kPoisSheetName = 'POIs';
