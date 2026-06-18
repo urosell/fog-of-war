@@ -26,21 +26,20 @@ import 'package:vector_tile_renderer/vector_tile_renderer.dart' as vtr;
 /// Estilo base del que tomamos proveedores de tiles y sprites.
 const String kGameBaseStyleUri = 'https://tiles.openfreemap.org/styles/liberty';
 
-// --- Paleta (navegación clásica cálida) ---
-const String _land = '#ECE5D3'; // tierra: crema
-const String _building = '#CBBA94'; // edificios: caqui/tostado (la masa del mapa)
-const String _buildingLine = '#AE9C73'; // borde de edificio (relieve)
-const String _park = '#82C957'; // parques: verde vivo
-const String _parkLine = '#6BAE44'; // borde de parque
-const String _grassDark = '#74BE4D'; // bosque/pitch: verde algo más hondo
-const String _water = '#A6CBEA'; // agua: azul suave clásico
-const String _roadPrimary = '#F77E4C'; // vías principales: naranja
-const String _roadMajor = '#FBD24A'; // avenidas: amarillo
-const String _roadMinor = '#FFFFFF'; // calles menores: blanco
-const String _casingLight = '#FFFFFF'; // borde de avenidas amarillas/naranjas
-const String _casingMinor = '#D8D1BE'; // borde de calles blancas (gris cálido)
-const String _path = '#F0E9D6'; // senda peatonal
-const String _rail = '#BCA682'; // vía de tren
+// --- Paleta (navegación clásica cálida, más saturada y con cuerpo) ---
+const String _land = '#D4C18C'; // tierra: crema dorada más honda (menos clara)
+const String _building = '#B8975A'; // edificios: caqui tostado oscuro (la masa)
+const String _park = '#5DB52E'; // parques: verde vivo saturado
+const String _parkLine = '#43881E'; // borde de parque
+const String _grassDark = '#4DA522'; // bosque/pitch: verde algo más hondo
+const String _water = '#5AA6E0'; // agua: azul saturado clásico
+const String _roadPrimary = '#F25E22'; // vías principales: naranja vivo
+const String _roadMajor = '#F5B610'; // avenidas: amarillo dorado
+const String _roadMinor = '#F2EBD8'; // calles menores: crema claro (no blanco puro)
+const String _casingLight = '#FBF6E8'; // borde de avenidas amarillas/naranjas
+const String _casingMinor = '#BCAC80'; // borde de calles blancas (gris cálido)
+const String _path = '#E0CFA4'; // senda peatonal
+const String _rail = '#9C7E4E'; // vía de tren
 const String _label = '#574B36'; // texto de calle
 const String _labelStrong = '#3E3A2A'; // texto de barrio/zona
 const String _halo = '#FFFFFF';
@@ -87,6 +86,22 @@ Map<String, dynamic> _gameStyleJson() => {
           'id': 'background',
           'type': 'background',
           'paint': {'background-color': _land},
+        },
+        // 1b) Manzanas sólidas: relleno de uso de suelo urbano (residencial,
+        // comercial, industrial…) del mismo color que los edificios. Va debajo
+        // de vegetación/agua/calles, así rellena la manzana ENTERA (incluidos
+        // los patios interiores) y la deja como un bloque limpio, sin los huecos
+        // color tierra que dejaban los edificios sueltos.
+        {
+          'id': 'landuse_urban',
+          'type': 'fill',
+          'source': 'openmaptiles',
+          'source-layer': 'landuse',
+          'minzoom': 11,
+          'filter': ['match', ['get', 'class'],
+              ['residential', 'commercial', 'industrial', 'retail', 'garages'],
+              true, false],
+          'paint': {'fill-color': _building},
         },
         // 2) Vegetación.
         {
@@ -143,7 +158,10 @@ Map<String, dynamic> _gameStyleJson() => {
           'source-layer': 'waterway',
           'paint': {'line-color': _water, 'line-width': _byZoom([12, 0.6, 20, 6])},
         },
-        // 4) Edificios: bloque caqui con borde (desde z13, sin tope superior).
+        // 4) Edificios: masa caqui sólida por manzana (desde z13, sin tope
+        // superior). SIN borde por edificio: los edificios contiguos del mismo
+        // color se fusionan en un bloque limpio (estilo juego), evitando el
+        // ruido de dibujar cada parcela del Eixample con su línea.
         {
           'id': 'building',
           'type': 'fill',
@@ -152,7 +170,23 @@ Map<String, dynamic> _gameStyleJson() => {
           'minzoom': 13,
           'paint': {
             'fill-color': _building,
-            'fill-outline-color': _buildingLine,
+          },
+        },
+        // 4b) Dilatación de edificios: misma capa pintada como línea gruesa del
+        // color del edificio. Engorda cada polígono, fusiona los edificios
+        // contiguos y cierra los huecos pequeños entre ellos. Así las manzanas
+        // SIN dato de uso de suelo (que solo tienen edificios sueltos) quedan
+        // casi tan macizas como las que sí lo tienen → aspecto homogéneo.
+        {
+          'id': 'building_dilate',
+          'type': 'line',
+          'source': 'openmaptiles',
+          'source-layer': 'building',
+          'minzoom': 13,
+          'layout': {'line-join': 'round', 'line-cap': 'round'},
+          'paint': {
+            'line-color': _building,
+            'line-width': _byZoom([13, 1, 16, 5, 19, 12]),
           },
         },
         // 5) CASINGS (debajo de todas las calzadas): menor, avenida, principal.
@@ -160,15 +194,15 @@ Map<String, dynamic> _gameStyleJson() => {
             [13, 1.4, 16, 8, 20, 22],
             minzoom: 13),
         _roadLine('major_casing', _major, _casingLight,
-            [11, 2, 14, 6, 16, 13, 20, 26]),
+            [11, 1.4, 14, 4.2, 16, 9.5, 20, 19]),
         _roadLine('primary_casing', _primary, _casingLight,
-            [9, 2.5, 14, 8, 16, 17, 20, 32]),
+            [9, 1.8, 14, 5.6, 16, 12, 20, 24]),
         // 6) CALZADAS: menor (blanca), avenida (amarilla), principal (naranja).
         _roadLine('minor', _minor, _roadMinor, [13, 0.8, 16, 6, 20, 18],
             minzoom: 13),
-        _roadLine('major', _major, _roadMajor, [11, 1.2, 14, 4, 16, 10, 20, 20]),
+        _roadLine('major', _major, _roadMajor, [11, 0.9, 14, 2.8, 16, 7, 20, 14]),
         _roadLine('primary', _primary, _roadPrimary,
-            [9, 1.5, 14, 6, 16, 13, 20, 26]),
+            [9, 1.1, 14, 4.2, 16, 9, 20, 18]),
         {
           'id': 'path',
           'type': 'line',

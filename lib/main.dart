@@ -669,6 +669,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                 FogLayer(
                   controller: _fog,
                   color: kMapStyles[_styleIndex].fogColor ?? kFogColor,
+                  // Sin ribete por ahora (borderColor: kHudAccent lo reactiva
+                  // con el verde del HUD). El contorno suave del velo no depende
+                  // de esto.
                 ),
                 // Atalayas (siempre visibles) y POIs: avistados en gris,
                 // descubiertos en dorado. Se redibuja al activar una atalaya o
