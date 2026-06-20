@@ -27,11 +27,13 @@ import 'map/game_style.dart';
 import 'map/map_style.dart';
 import 'mission/mission_controller.dart';
 import 'notify/notification_service.dart';
+import 'onboarding/onboarding_storage.dart';
 import 'poi/poi.dart';
 import 'poi/poi_controller.dart';
 import 'ui/cities_screen.dart';
 import 'ui/hud.dart';
 import 'ui/leaderboard_screen.dart';
+import 'ui/onboarding_screen.dart';
 import 'ui/poi_collection_screen.dart' show iconForCategory, PoiCollectionScreen;
 import 'ui/poi_collections_screen.dart';
 import 'ui/poi_detail_sheet.dart';
@@ -127,11 +129,15 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   final MapController _mapController = MapController();
   // Acceso al GPS.
   final LocationService _location = LocationService();
+  // Recuerda si ya se mostró la introducción de bienvenida.
+  final OnboardingStorage _onboarding = OnboardingStorage();
 
   // Suscripción al flujo de posiciones; se cancela al cerrar la pantalla.
   StreamSubscription<LatLng>? _posSub;
-  // Última posición conocida del usuario (null hasta la primera lectura).
-  LatLng? _userPosition;
+  // Última posición conocida del usuario (null hasta la primera lectura). Es un
+  // ValueNotifier para que actualizar la posición en cada lectura del GPS solo
+  // redibuje el marcador del jugador, no todo el árbol del mapa (rendimiento).
+  final ValueNotifier<LatLng?> _userPosition = ValueNotifier<LatLng?>(null);
   // Si está activo, el mapa sigue automáticamente al usuario al moverse.
   bool _seguir = true;
   // Índice del estilo de mapa actual dentro de kMapStyles.
@@ -170,8 +176,20 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     _aplicarContenido();
     await Future.wait([_poi.load(), _watchtower.load(), _mission.load()]);
     if (!mounted) return;
+    // La primera vez, mostrar la intro ("¿de qué va el juego?") ANTES de pedir
+    // el GPS, para que se entienda por qué el juego necesita la ubicación.
+    await _mostrarIntroSiPrimeraVez();
+    if (!mounted) return;
     _iniciarGps();
     _content.refreshForNextLaunch();
+  }
+
+  // Si el usuario no ha visto nunca la introducción, la muestra a pantalla
+  // completa y espera a que la cierre; luego la marca como vista.
+  Future<void> _mostrarIntroSiPrimeraVez() async {
+    if (await _onboarding.hasSeen() || !mounted) return;
+    await Navigator.of(context).push(appRoute(const OnboardingScreen()));
+    await _onboarding.markSeen();
   }
 
   // Vuelca el contenido cargado en los controladores que dependen de él.
@@ -185,6 +203,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _posSub?.cancel();
+    _userPosition.dispose();
     _fog.dispose();
     _poi.dispose();
     _avatar.dispose();
@@ -235,7 +254,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   Future<void> _irAPosicionInicial() async {
     try {
       final pos = await _location.currentPosition();
-      if (!mounted || _userPosition != null) return;
+      if (!mounted || _userPosition.value != null) return;
       _onNuevaPosicion(pos);
     } catch (_) {
       // Sin fix inicial: seguimos esperando al flujo, sin molestar al usuario.
@@ -267,7 +286,10 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
 
   // Se ejecuta cada vez que el GPS nos da una posición nueva.
   void _onNuevaPosicion(LatLng pos) {
-    setState(() => _userPosition = pos);
+    // Solo actualiza el ValueNotifier: redibuja el marcador del jugador (vía su
+    // ValueListenableBuilder), no todo el árbol. El resto reacciona por su
+    // cuenta: la niebla y el HUD a sus controllers, el mapa al move() de abajo.
+    _userPosition.value = pos;
     // Desvelar la niebla a tu alrededor.
     _fog.reveal(pos);
     // ¿Has llegado a algún POI nuevo? Si es así, celébralo.
@@ -485,7 +507,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
 
   // Vuelve a centrar el mapa en el usuario y reactiva el auto-seguir.
   void _recentrar() {
-    final pos = _userPosition;
+    final pos = _userPosition.value;
     if (pos == null) {
       _mostrarAviso(context.l10n.noLocationYet);
       return;
@@ -641,7 +663,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
             child: FlutterMap(
               mapController: _mapController,
               options: MapOptions(
-                initialCenter: _userPosition ?? _centroInicial,
+                initialCenter: _userPosition.value ?? _centroInicial,
                 initialZoom: 16,
                 // Topes de zoom: ni tan lejos que se vea medio mundo (y cargue
                 // miles de tiles) ni más cerca de lo que sirven los proveedores.
@@ -717,27 +739,33 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                   ),
                 ),
                 // Marcador de "estás aquí" (solo si ya tenemos posición). Se
-                // redibuja al cambiar el avatar en Ajustes.
-                if (_userPosition != null)
-                  ListenableBuilder(
-                    listenable: _avatar,
-                    builder: (context, _) => MarkerLayer(
-                      markers: [
-                        Marker(
-                          point: _userPosition!,
-                          // Algo más grande que el avatar para que su halo no
-                          // se recorte.
-                          width: 42,
-                          height: 42,
-                          child: AvatarMarker(
-                            icon: _avatar.icon,
-                            color: _avatar.color,
-                            size: 26,
+                // redibuja al moverte (ValueNotifier) y al cambiar el avatar en
+                // Ajustes, sin reconstruir el resto del mapa.
+                ValueListenableBuilder<LatLng?>(
+                  valueListenable: _userPosition,
+                  builder: (context, pos, _) {
+                    if (pos == null) return const SizedBox.shrink();
+                    return ListenableBuilder(
+                      listenable: _avatar,
+                      builder: (context, _) => MarkerLayer(
+                        markers: [
+                          Marker(
+                            point: pos,
+                            // Algo más grande que el avatar para que su halo no
+                            // se recorte.
+                            width: 42,
+                            height: 42,
+                            child: AvatarMarker(
+                              icon: _avatar.icon,
+                              color: _avatar.color,
+                              size: 26,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ],
             ),
           ),

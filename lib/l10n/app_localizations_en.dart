@@ -12,6 +12,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'Fog of War';
 
   @override
+  String get onboardingSkip => 'Skip';
+
+  @override
+  String get onboardingNext => 'Next';
+
+  @override
+  String get onboardingStart => 'Start exploring!';
+
+  @override
+  String get onboardingWelcomeTitle => 'Your city, under the fog';
+
+  @override
+  String get onboardingWelcomeBody =>
+      'The whole map starts hidden by fog. Explore the real city to uncover it bit by bit and turn it into your own adventure.';
+
+  @override
+  String get onboardingMoveTitle => 'Move to clear the fog';
+
+  @override
+  String get onboardingMoveBody =>
+      'The fog only lifts as you walk around in real life. Your GPS reveals the area around you — there\'s no cheating from the couch!';
+
+  @override
+  String get onboardingDiscoverTitle => 'Discover places';
+
+  @override
+  String get onboardingDiscoverBody =>
+      'Reach points of interest to discover them and earn points. Each one tells you what it is and why it\'s worth a visit.';
+
+  @override
+  String get onboardingCollectTitle => 'Watchtowers & collections';
+
+  @override
+  String get onboardingCollectBody =>
+      'Climb to watchtowers to spot nearby places, and complete themed collections as you explore the city.';
+
+  @override
   String get hudCells => 'cells';
 
   @override

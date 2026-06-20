@@ -108,6 +108,72 @@ abstract class AppLocalizations {
   /// **'Fog of War'**
   String get appTitle;
 
+  /// No description provided for @onboardingSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get onboardingSkip;
+
+  /// No description provided for @onboardingNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get onboardingNext;
+
+  /// No description provided for @onboardingStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start exploring!'**
+  String get onboardingStart;
+
+  /// No description provided for @onboardingWelcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your city, under the fog'**
+  String get onboardingWelcomeTitle;
+
+  /// No description provided for @onboardingWelcomeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The whole map starts hidden by fog. Explore the real city to uncover it bit by bit and turn it into your own adventure.'**
+  String get onboardingWelcomeBody;
+
+  /// No description provided for @onboardingMoveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to clear the fog'**
+  String get onboardingMoveTitle;
+
+  /// No description provided for @onboardingMoveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The fog only lifts as you walk around in real life. Your GPS reveals the area around you — there\'s no cheating from the couch!'**
+  String get onboardingMoveBody;
+
+  /// No description provided for @onboardingDiscoverTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover places'**
+  String get onboardingDiscoverTitle;
+
+  /// No description provided for @onboardingDiscoverBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach points of interest to discover them and earn points. Each one tells you what it is and why it\'s worth a visit.'**
+  String get onboardingDiscoverBody;
+
+  /// No description provided for @onboardingCollectTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Watchtowers & collections'**
+  String get onboardingCollectTitle;
+
+  /// No description provided for @onboardingCollectBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Climb to watchtowers to spot nearby places, and complete themed collections as you explore the city.'**
+  String get onboardingCollectBody;
+
   /// No description provided for @hudCells.
   ///
   /// In en, this message translates to:

@@ -12,6 +12,43 @@ class AppLocalizationsEs extends AppLocalizations {
   String get appTitle => 'Fog of War';
 
   @override
+  String get onboardingSkip => 'Saltar';
+
+  @override
+  String get onboardingNext => 'Siguiente';
+
+  @override
+  String get onboardingStart => '¡A explorar!';
+
+  @override
+  String get onboardingWelcomeTitle => 'Tu ciudad, bajo la niebla';
+
+  @override
+  String get onboardingWelcomeBody =>
+      'Todo el mapa empieza cubierto de niebla. Explora la ciudad de verdad para irla desvelando poco a poco y convertirla en tu propia aventura.';
+
+  @override
+  String get onboardingMoveTitle => 'Muévete para desvelar';
+
+  @override
+  String get onboardingMoveBody =>
+      'La niebla solo se levanta cuando caminas en la vida real. Tu GPS desvela la zona a tu alrededor: ¡no vale hacer trampas desde el sofá!';
+
+  @override
+  String get onboardingDiscoverTitle => 'Descubre lugares';
+
+  @override
+  String get onboardingDiscoverBody =>
+      'Llega a los puntos de interés para descubrirlos y ganar puntos. Cada uno te cuenta qué es y por qué merece una visita.';
+
+  @override
+  String get onboardingCollectTitle => 'Atalayas y colecciones';
+
+  @override
+  String get onboardingCollectBody =>
+      'Sube a las atalayas para avistar los lugares cercanos y completa colecciones temáticas mientras recorres la ciudad.';
+
+  @override
   String get hudCells => 'celdas';
 
   @override

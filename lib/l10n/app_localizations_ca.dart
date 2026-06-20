@@ -12,6 +12,43 @@ class AppLocalizationsCa extends AppLocalizations {
   String get appTitle => 'Fog of War';
 
   @override
+  String get onboardingSkip => 'Omet';
+
+  @override
+  String get onboardingNext => 'Següent';
+
+  @override
+  String get onboardingStart => 'A explorar!';
+
+  @override
+  String get onboardingWelcomeTitle => 'La teva ciutat, sota la boira';
+
+  @override
+  String get onboardingWelcomeBody =>
+      'Tot el mapa comença cobert de boira. Explora la ciutat de veritat per anar-la desvelant a poc a poc i convertir-la en la teva pròpia aventura.';
+
+  @override
+  String get onboardingMoveTitle => 'Mou-te per desvelar';
+
+  @override
+  String get onboardingMoveBody =>
+      'La boira només s\'aixeca quan camines a la vida real. El teu GPS desvela la zona del teu voltant: no val fer trampes des del sofà!';
+
+  @override
+  String get onboardingDiscoverTitle => 'Descobreix llocs';
+
+  @override
+  String get onboardingDiscoverBody =>
+      'Arriba als punts d\'interès per descobrir-los i guanyar punts. Cadascun t\'explica què és i per què val la pena visitar-lo.';
+
+  @override
+  String get onboardingCollectTitle => 'Talaies i col·leccions';
+
+  @override
+  String get onboardingCollectBody =>
+      'Puja a les talaies per albirar els llocs propers i completa col·leccions temàtiques mentre recorres la ciutat.';
+
+  @override
   String get hudCells => 'cel·les';
 
   @override

@@ -3,6 +3,18 @@
 
   "appTitle": "Fog of War",
 
+  "onboardingSkip": "Omet",
+  "onboardingNext": "Següent",
+  "onboardingStart": "A explorar!",
+  "onboardingWelcomeTitle": "La teva ciutat, sota la boira",
+  "onboardingWelcomeBody": "Tot el mapa comença cobert de boira. Explora la ciutat de veritat per anar-la desvelant a poc a poc i convertir-la en la teva pròpia aventura.",
+  "onboardingMoveTitle": "Mou-te per desvelar",
+  "onboardingMoveBody": "La boira només s'aixeca quan camines a la vida real. El teu GPS desvela la zona del teu voltant: no val fer trampes des del sofà!",
+  "onboardingDiscoverTitle": "Descobreix llocs",
+  "onboardingDiscoverBody": "Arriba als punts d'interès per descobrir-los i guanyar punts. Cadascun t'explica què és i per què val la pena visitar-lo.",
+  "onboardingCollectTitle": "Talaies i col·leccions",
+  "onboardingCollectBody": "Puja a les talaies per albirar els llocs propers i completa col·leccions temàtiques mentre recorres la ciutat.",
+
   "hudCells": "cel·les",
   "hudPoints": "punts",
   "hudPois": "POIs",

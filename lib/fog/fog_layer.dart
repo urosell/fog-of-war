@@ -6,6 +6,8 @@
 // dibuja un ribete del color del jugador justo en el límite entre lo
 // descubierto y la niebla.
 
+import 'dart:ui' show ImageFilter, TileMode;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 
@@ -38,13 +40,18 @@ class FogLayer extends StatelessWidget {
     // MapCamera.of registra esta capa como dependiente de la cámara: cuando el
     // mapa se mueve o hace zoom, este build se vuelve a ejecutar.
     final camera = MapCamera.of(context);
-    return CustomPaint(
-      size: camera.nonRotatedSize,
-      painter: _FogPainter(
-        camera: camera,
-        controller: controller,
-        color: color,
-        borderColor: borderColor,
+    // RepaintBoundary: aísla el repintado de la niebla en su propia capa, para
+    // que sus redibujados (en cada movimiento de cámara) no obliguen a re-pintar
+    // a los hermanos (marcadores, etc.).
+    return RepaintBoundary(
+      child: CustomPaint(
+        size: camera.nonRotatedSize,
+        painter: _FogPainter(
+          camera: camera,
+          controller: controller,
+          color: color,
+          borderColor: borderColor,
+        ),
       ),
     );
   }
@@ -101,16 +108,20 @@ class _FogPainter extends CustomPainter {
       ));
     }
 
+    // Si no hay ninguna celda visible, todo es niebla: un simple rectángulo
+    // (sin capas ni desenfoques) y listo.
+    if (centers.isEmpty) {
+      canvas.drawRect(fullRect, Paint()..color = color);
+      return;
+    }
+
     // El contorno de la unión de celdas (un círculo por celda) sale
     // "festoneado": se notan las protuberancias de cada celda. Para un borde
-    // SUAVE y continuo usamos el efecto metaball/goo: se difuminan los círculos
-    // y se aplica un UMBRAL de opacidad (colorFilter) que vuelve a dar un borde
-    // nítido pero ya redondeado, fundido entre celdas vecinas. El umbral se
-    // aplica al componer la capa.
+    // SUAVE y continuo usamos el efecto metaball/goo: se difumina la unión de
+    // círculos y se aplica un UMBRAL de opacidad (colorFilter) que vuelve a dar
+    // un borde nítido pero ya redondeado, fundido entre celdas vecinas.
     final gooSigma = cellSidePx * 0.55;
     final metaRadius = cellSidePx * 0.70;
-    final blurPaint = Paint()
-      ..maskFilter = MaskFilter.blur(BlurStyle.normal, gooSigma);
     // Pendiente del umbral: alta = transición estrecha (borde definido).
     const slope = 26.0;
     // Opacidad a la que cae el borde del agujero. La versión erosionada (para el
@@ -118,54 +129,49 @@ class _FogPainter extends CustomPainter {
     const cutEdge = 0.5;
     const cutInner = 0.62;
 
-    // 1) Velo de niebla con agujeros de contorno suave.
+    // CLAVE DE RENDIMIENTO: en vez de un MaskFilter.blur por celda (cientos de
+    // desenfoques por frame), se dibujan los círculos NÍTIDOS en una capa y se
+    // desenfoca esa capa UNA sola vez (ImageFilter.blur). El umbral posterior
+    // recupera el mismo borde redondeado. Visualmente equivalente, mucho más
+    // barato. TileMode.decal trata el exterior de la capa como transparente
+    // (como el viejo MaskFilter), sin sangrado en los bordes de pantalla.
+    final blur = ImageFilter.blur(
+        sigmaX: gooSigma, sigmaY: gooSigma, tileMode: TileMode.decal);
+
+    // Compone en la capa actual la mancha metaball (unión nítida → 1 desenfoque
+    // → umbral). [composite] aporta blendMode/alpha; [cut] fija a qué opacidad
+    // cae el borde (más alto = mancha algo más pequeña / erosionada); [fill] es
+    // el color de los círculos (su RGB sobrevive al umbral).
+    void drawMetaball(Paint composite, double cut, Color fill) {
+      composite.colorFilter = _alphaThreshold(slope: slope, cut: cut);
+      canvas.saveLayer(fullRect, composite);
+      canvas.saveLayer(fullRect, Paint()..imageFilter = blur);
+      final circle = Paint()..color = fill;
+      for (final center in centers) {
+        canvas.drawCircle(center, metaRadius, circle);
+      }
+      canvas.restore();
+      canvas.restore();
+    }
+
+    // 1) Velo de niebla con agujeros de contorno suave (la mancha se RESTA del
+    // velo con dstOut; el color de los círculos da igual, solo cuenta su alpha).
     canvas.saveLayer(fullRect, Paint());
     canvas.drawRect(fullRect, Paint()..color = color);
-    // Capa "borrador": mancha difuminada → el umbral la vuelve sólida con borde
-    // redondeado → dstOut la recorta de la niebla.
-    canvas.saveLayer(
-      fullRect,
-      Paint()
-        ..blendMode = BlendMode.dstOut
-        ..colorFilter = _alphaThreshold(slope: slope, cut: cutEdge),
-    );
-    for (final center in centers) {
-      canvas.drawCircle(center, metaRadius, blurPaint);
-    }
-    canvas.restore();
+    drawMetaball(
+        Paint()..blendMode = BlendMode.dstOut, cutEdge, const Color(0xFFFFFFFF));
     canvas.restore();
 
     // 2) Ribete suave del color elegido en el límite descubierto/niebla.
     //
-    // Mismo metaball, pero como ANILLO: se pinta la mancha del color con el
-    // umbral del borde y se le RESTA una versión erosionada (umbral más alto =
-    // mancha algo menor). La diferencia es una línea de grosor uniforme que
-    // sigue el contorno suave.
-    if (borderColor != null && centers.isNotEmpty) {
+    // Mismo metaball, pero como ANILLO: la mancha del color menos una versión
+    // erosionada (umbral más alto = mancha algo menor). La diferencia es una
+    // línea de grosor uniforme que sigue el contorno suave.
+    if (borderColor != null) {
       canvas.saveLayer(fullRect, Paint());
-      // Mancha del color con contorno suave (coincide con el del agujero).
-      canvas.saveLayer(
-        fullRect,
-        Paint()..colorFilter = _alphaThreshold(slope: slope, cut: cutEdge),
-      );
-      final coloredBlur = Paint()
-        ..color = borderColor!
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, gooSigma);
-      for (final center in centers) {
-        canvas.drawCircle(center, metaRadius, coloredBlur);
-      }
-      canvas.restore();
-      // Restar la mancha erosionada (umbral más alto) → queda solo el anillo.
-      canvas.saveLayer(
-        fullRect,
-        Paint()
-          ..blendMode = BlendMode.dstOut
-          ..colorFilter = _alphaThreshold(slope: slope, cut: cutInner),
-      );
-      for (final center in centers) {
-        canvas.drawCircle(center, metaRadius, blurPaint);
-      }
-      canvas.restore();
+      drawMetaball(Paint(), cutEdge, borderColor!);
+      drawMetaball(Paint()..blendMode = BlendMode.dstOut, cutInner,
+          const Color(0xFFFFFFFF));
       canvas.restore();
     }
   }

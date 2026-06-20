@@ -3,6 +3,18 @@
 
   "appTitle": "Fog of War",
 
+  "onboardingSkip": "Saltar",
+  "onboardingNext": "Siguiente",
+  "onboardingStart": "¡A explorar!",
+  "onboardingWelcomeTitle": "Tu ciudad, bajo la niebla",
+  "onboardingWelcomeBody": "Todo el mapa empieza cubierto de niebla. Explora la ciudad de verdad para irla desvelando poco a poco y convertirla en tu propia aventura.",
+  "onboardingMoveTitle": "Muévete para desvelar",
+  "onboardingMoveBody": "La niebla solo se levanta cuando caminas en la vida real. Tu GPS desvela la zona a tu alrededor: ¡no vale hacer trampas desde el sofá!",
+  "onboardingDiscoverTitle": "Descubre lugares",
+  "onboardingDiscoverBody": "Llega a los puntos de interés para descubrirlos y ganar puntos. Cada uno te cuenta qué es y por qué merece una visita.",
+  "onboardingCollectTitle": "Atalayas y colecciones",
+  "onboardingCollectBody": "Sube a las atalayas para avistar los lugares cercanos y completa colecciones temáticas mientras recorres la ciudad.",
+
   "hudCells": "celdas",
   "hudPoints": "puntos",
   "hudPois": "POIs",

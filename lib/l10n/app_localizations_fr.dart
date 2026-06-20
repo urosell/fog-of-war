@@ -12,6 +12,43 @@ class AppLocalizationsFr extends AppLocalizations {
   String get appTitle => 'Fog of War';
 
   @override
+  String get onboardingSkip => 'Passer';
+
+  @override
+  String get onboardingNext => 'Suivant';
+
+  @override
+  String get onboardingStart => 'À l\'aventure !';
+
+  @override
+  String get onboardingWelcomeTitle => 'Ta ville, sous le brouillard';
+
+  @override
+  String get onboardingWelcomeBody =>
+      'Toute la carte est d\'abord cachée par le brouillard. Explore la vraie ville pour la dévoiler peu à peu et en faire ta propre aventure.';
+
+  @override
+  String get onboardingMoveTitle => 'Bouge pour dévoiler';
+
+  @override
+  String get onboardingMoveBody =>
+      'Le brouillard ne se lève que lorsque tu marches dans la vraie vie. Ton GPS dévoile la zone autour de toi : pas de triche depuis le canapé !';
+
+  @override
+  String get onboardingDiscoverTitle => 'Découvre des lieux';
+
+  @override
+  String get onboardingDiscoverBody =>
+      'Atteins les points d\'intérêt pour les découvrir et gagner des points. Chacun te dit ce que c\'est et pourquoi il vaut le détour.';
+
+  @override
+  String get onboardingCollectTitle => 'Tours de guet et collections';
+
+  @override
+  String get onboardingCollectBody =>
+      'Monte aux tours de guet pour repérer les lieux proches et complète des collections thématiques en parcourant la ville.';
+
+  @override
   String get hudCells => 'cellules';
 
   @override

@@ -3,6 +3,18 @@
 
   "appTitle": "Fog of War",
 
+  "onboardingSkip": "Passer",
+  "onboardingNext": "Suivant",
+  "onboardingStart": "À l'aventure !",
+  "onboardingWelcomeTitle": "Ta ville, sous le brouillard",
+  "onboardingWelcomeBody": "Toute la carte est d'abord cachée par le brouillard. Explore la vraie ville pour la dévoiler peu à peu et en faire ta propre aventure.",
+  "onboardingMoveTitle": "Bouge pour dévoiler",
+  "onboardingMoveBody": "Le brouillard ne se lève que lorsque tu marches dans la vraie vie. Ton GPS dévoile la zone autour de toi : pas de triche depuis le canapé !",
+  "onboardingDiscoverTitle": "Découvre des lieux",
+  "onboardingDiscoverBody": "Atteins les points d'intérêt pour les découvrir et gagner des points. Chacun te dit ce que c'est et pourquoi il vaut le détour.",
+  "onboardingCollectTitle": "Tours de guet et collections",
+  "onboardingCollectBody": "Monte aux tours de guet pour repérer les lieux proches et complète des collections thématiques en parcourant la ville.",
+
   "hudCells": "cellules",
   "hudPoints": "points",
   "hudPois": "POIs",
