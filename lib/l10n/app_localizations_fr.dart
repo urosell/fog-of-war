@@ -322,4 +322,102 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get collMichelinDesc => 'La haute gastronomie étoilée de Barcelone.';
+
+  @override
+  String get achievementsTitle => 'Succès';
+
+  @override
+  String achievementsUnlocked(int unlocked, int total) {
+    return '$unlocked sur $total débloqués';
+  }
+
+  @override
+  String get achievementFamilyDone => 'Tous les niveaux terminés ! 🏅';
+
+  @override
+  String achievementUnlockedToast(String name) {
+    return 'Succès débloqué : $name';
+  }
+
+  @override
+  String get achTierBronze => 'Bronze';
+
+  @override
+  String get achTierSilver => 'Argent';
+
+  @override
+  String get achTierGold => 'Or';
+
+  @override
+  String get achExplorerName => 'Explorateur';
+
+  @override
+  String achExplorerGoal(int count) {
+    return 'Dévoile $count cellules de brouillard';
+  }
+
+  @override
+  String get achTreasureName => 'Chasseur de trésors';
+
+  @override
+  String achTreasureGoal(int count) {
+    return 'Découvre $count POI';
+  }
+
+  @override
+  String get achCartographerName => 'Cartographe';
+
+  @override
+  String achCartographerGoal(int count) {
+    return 'Révèle $count% de Barcelone';
+  }
+
+  @override
+  String get achLookoutName => 'Guetteur';
+
+  @override
+  String achLookoutGoal(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tours de guet',
+      one: '1 tour de guet',
+    );
+    return 'Active $_temp0';
+  }
+
+  @override
+  String get achCollectorName => 'Collectionneur';
+
+  @override
+  String achCollectorGoal(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count collections',
+      one: '1 collection',
+    );
+    return 'Complète $_temp0';
+  }
+
+  @override
+  String get achExplorerTagline => 'Dévoile le brouillard sur ton passage';
+
+  @override
+  String get achTreasureTagline => 'Visite des points d\'intérêt';
+
+  @override
+  String get achCartographerTagline => 'Cartographie Barcelone';
+
+  @override
+  String get achLookoutTagline => 'Active les tours de guet';
+
+  @override
+  String get achCollectorTagline => 'Complète des collections';
+
+  @override
+  String get avatarTitle => 'Ton personnage';
+
+  @override
+  String get avatarRotateHint => 'Glisse pour tourner · pince pour zoomer';
 }

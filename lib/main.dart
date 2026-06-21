@@ -12,6 +12,8 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:vector_map_tiles/vector_map_tiles.dart';
 
+import 'achievement/achievement.dart';
+import 'achievement/achievement_controller.dart';
 import 'avatar/avatar.dart';
 import 'avatar/avatar_controller.dart';
 import 'cities/city.dart';
@@ -30,6 +32,8 @@ import 'notify/notification_service.dart';
 import 'onboarding/onboarding_storage.dart';
 import 'poi/poi.dart';
 import 'poi/poi_controller.dart';
+import 'ui/achievements_screen.dart';
+import 'ui/avatar_screen.dart';
 import 'ui/cities_screen.dart';
 import 'ui/hud.dart';
 import 'ui/leaderboard_screen.dart';
@@ -122,6 +126,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   final MissionController _mission = MissionController();
   // Atalayas: al alcanzarlas, avistan (revelan en gris) los POIs de su zona.
   final WatchtowerController _watchtower = WatchtowerController();
+  // Logros: medallas que se desbloquean al alcanzar hitos (celdas, POIs, etc.).
+  final AchievementController _achievements = AchievementController();
   // Contenido del juego (POIs y colecciones): semilla embebida o, si está
   // configurada la hoja, lo descargado de ella (ver content/).
   final ContentController _content = ContentController();
@@ -174,8 +180,17 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     await _content.loadInitial();
     if (!mounted) return;
     _aplicarContenido();
-    await Future.wait([_poi.load(), _watchtower.load(), _mission.load()]);
+    await Future.wait([
+      _poi.load(),
+      _watchtower.load(),
+      _mission.load(),
+      _achievements.load(),
+    ]);
     if (!mounted) return;
+    // Evaluación inicial SILENCIOSA: desbloquea retroactivamente los logros ya
+    // merecidos por la partida guardada (sin lanzar una ráfaga de toasts) y deja
+    // la "foto" de métricas al día para la pantalla de Logros.
+    _evaluarLogros(celebrar: false);
     // La primera vez, mostrar la intro ("¿de qué va el juego?") ANTES de pedir
     // el GPS, para que se entienda por qué el juego necesita la ubicación.
     await _mostrarIntroSiPrimeraVez();
@@ -209,6 +224,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     _avatar.dispose();
     _mission.dispose();
     _watchtower.dispose();
+    _achievements.dispose();
     _content.dispose();
     super.dispose();
   }
@@ -298,6 +314,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     // ¿Has alcanzado alguna atalaya? Si es así, avista (revela) su zona.
     final atalayas = _watchtower.checkActivations(pos);
     if (atalayas.isNotEmpty) _avisarAtalayas(atalayas);
+    // ¿Esta jugada ha desbloqueado algún logro? Comprobarlo y celebrarlo.
+    _evaluarLogros(celebrar: true);
     // Si el modo "seguir" está activo, centrar el mapa en ti.
     if (_seguir) {
       _mapController.move(pos, _mapController.camera.zoom);
@@ -344,6 +362,57 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         icon: Icons.visibility,
         accent: const Color(0xFF1FB8C4),
         message: l.watchtowerSighted(t.name, count));
+  }
+
+  // Recoge las métricas actuales del juego y se las pasa al controlador de
+  // logros. Si [celebrar] es true, anuncia los recién desbloqueados con un toast
+  // (o notificación si la app está en segundo plano).
+  void _evaluarLogros({required bool celebrar}) {
+    final nuevos = _achievements.evaluate(
+      cells: _fog.discoveredCount,
+      pois: _poi.discoveredCount,
+      cityPercent: kBarcelona.discoveryPercentage(_fog.discovered).floor(),
+      watchtowers: _watchtower.activatedCount,
+      collectionsComplete: _coleccionesCompletas(),
+    );
+    if (celebrar && nuevos.isNotEmpty) _celebrarLogros(nuevos);
+  }
+
+  // Cuántas colecciones están completas (todos sus POIs descubiertos). Las
+  // colecciones vacías no cuentan.
+  int _coleccionesCompletas() {
+    var n = 0;
+    for (final c in _content.collections) {
+      if (c.poiIds.isNotEmpty &&
+          c.discoveredCount(_poi.isDiscoveredId) == c.poiIds.length) {
+        n++;
+      }
+    }
+    return n;
+  }
+
+  // Celebra los logros recién desbloqueados. Anuncia uno a uno (lo normal es uno
+  // por jugada); con la app abierta usa el toast de cristal, minimizada una
+  // notificación del sistema. El acento es el color del nivel de la medalla.
+  void _celebrarLogros(List<Achievement> nuevos) {
+    final l = context.l10n;
+    for (final a in nuevos) {
+      final nombre = '${achievementFamilyName(l, a.metric)} · '
+          '${medalLabel(a.metric, a.threshold)}';
+      final texto = l.achievementUnlockedToast(nombre);
+      if (_enPrimerPlano) {
+        showGameToast(context,
+            icon: iconForMetric(a.metric),
+            accent: colorForAchievement(a),
+            message: texto);
+      } else {
+        NotificationService.instance.showDiscovery(
+          id: _notifId++,
+          title: l.achievementsTitle,
+          body: texto,
+        );
+      }
+    }
   }
 
   // Mensaje legible según por qué no tenemos permiso/GPS.
@@ -485,6 +554,11 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     );
   }
 
+  // Abre la pantalla del personaje 3D del jugador.
+  void _abrirAvatar() {
+    Navigator.of(context).push(appRoute(const AvatarScreen()));
+  }
+
   // Abre los Ajustes (personalización del marcador del jugador).
   void _abrirAjustes() {
     Navigator.of(context).push(
@@ -502,6 +576,13 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         fogController: _fog,
         poiController: _poi,
       )),
+    );
+  }
+
+  // Abre la vitrina de Logros (medallas).
+  void _abrirLogros() {
+    Navigator.of(context).push(
+      appRoute(AchievementsScreen(controller: _achievements), opaque: false),
     );
   }
 
@@ -610,6 +691,12 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                   ),
                   const SizedBox(height: 10),
                   GlassIconButton(
+                    icon: Icons.person,
+                    tooltip: l.avatarTitle,
+                    onPressed: _abrirAvatar,
+                  ),
+                  const SizedBox(height: 10),
+                  GlassIconButton(
                     icon: Icons.settings,
                     tooltip: l.tooltipSettings,
                     onPressed: _abrirAjustes,
@@ -627,6 +714,12 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                     icon: Icons.leaderboard,
                     tooltip: l.tooltipRanking,
                     onPressed: _abrirRanking,
+                  ),
+                  const SizedBox(height: 10),
+                  GlassIconButton(
+                    icon: Icons.military_tech,
+                    tooltip: l.achievementsTitle,
+                    onPressed: _abrirLogros,
                   ),
                   const SizedBox(height: 10),
                   GlassIconButton(

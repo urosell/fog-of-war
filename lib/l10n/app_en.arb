@@ -170,5 +170,42 @@
   "collTapasName": "Tapas Trail",
   "collTapasDesc": "Barcelona's classic tapas bars.",
   "collMichelinName": "Michelin Stars",
-  "collMichelinDesc": "Barcelona's starred fine dining."
+  "collMichelinDesc": "Barcelona's starred fine dining.",
+
+  "achievementsTitle": "Achievements",
+  "achievementsUnlocked": "{unlocked} of {total} unlocked",
+  "@achievementsUnlocked": {
+    "placeholders": { "unlocked": { "type": "int" }, "total": { "type": "int" } }
+  },
+  "achievementFamilyDone": "All levels complete! 🏅",
+  "achievementUnlockedToast": "Achievement unlocked: {name}",
+  "@achievementUnlockedToast": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "achTierBronze": "Bronze",
+  "achTierSilver": "Silver",
+  "achTierGold": "Gold",
+  "achExplorerName": "Explorer",
+  "achExplorerGoal": "Uncover {count} fog cells",
+  "@achExplorerGoal": { "placeholders": { "count": { "type": "int" } } },
+  "achTreasureName": "Treasure Hunter",
+  "achTreasureGoal": "Discover {count} POIs",
+  "@achTreasureGoal": { "placeholders": { "count": { "type": "int" } } },
+  "achCartographerName": "Cartographer",
+  "achCartographerGoal": "Reveal {count}% of Barcelona",
+  "@achCartographerGoal": { "placeholders": { "count": { "type": "int" } } },
+  "achLookoutName": "Lookout",
+  "achLookoutGoal": "Activate {count, plural, =1{1 watchtower} other{{count} watchtowers}}",
+  "@achLookoutGoal": { "placeholders": { "count": { "type": "int" } } },
+  "achCollectorName": "Collector",
+  "achCollectorGoal": "Complete {count, plural, =1{1 collection} other{{count} collections}}",
+  "@achCollectorGoal": { "placeholders": { "count": { "type": "int" } } },
+  "achExplorerTagline": "Uncover the fog as you go",
+  "achTreasureTagline": "Visit points of interest",
+  "achCartographerTagline": "Map out Barcelona",
+  "achLookoutTagline": "Activate the watchtowers",
+  "achCollectorTagline": "Complete collections",
+
+  "avatarTitle": "Your character",
+  "avatarRotateHint": "Drag to rotate · pinch to zoom"
 }

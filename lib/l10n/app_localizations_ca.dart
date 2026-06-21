@@ -322,4 +322,102 @@ class AppLocalizationsCa extends AppLocalizations {
 
   @override
   String get collMichelinDesc => 'Alta cuina amb estrella a Barcelona.';
+
+  @override
+  String get achievementsTitle => 'Assoliments';
+
+  @override
+  String achievementsUnlocked(int unlocked, int total) {
+    return '$unlocked de $total desbloquejats';
+  }
+
+  @override
+  String get achievementFamilyDone => 'Tots els nivells completats! 🏅';
+
+  @override
+  String achievementUnlockedToast(String name) {
+    return 'Assoliment desbloquejat! $name';
+  }
+
+  @override
+  String get achTierBronze => 'Bronze';
+
+  @override
+  String get achTierSilver => 'Plata';
+
+  @override
+  String get achTierGold => 'Or';
+
+  @override
+  String get achExplorerName => 'Explorador';
+
+  @override
+  String achExplorerGoal(int count) {
+    return 'Descobreix $count cel·les de boira';
+  }
+
+  @override
+  String get achTreasureName => 'Caçatresors';
+
+  @override
+  String achTreasureGoal(int count) {
+    return 'Visita $count POIs';
+  }
+
+  @override
+  String get achCartographerName => 'Cartògraf';
+
+  @override
+  String achCartographerGoal(int count) {
+    return 'Revela el $count% de Barcelona';
+  }
+
+  @override
+  String get achLookoutName => 'Vigia';
+
+  @override
+  String achLookoutGoal(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count talaies',
+      one: '1 talaia',
+    );
+    return 'Activa $_temp0';
+  }
+
+  @override
+  String get achCollectorName => 'Col·leccionista';
+
+  @override
+  String achCollectorGoal(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count col·leccions',
+      one: '1 col·lecció',
+    );
+    return 'Completa $_temp0';
+  }
+
+  @override
+  String get achExplorerTagline => 'Desvela la boira al teu pas';
+
+  @override
+  String get achTreasureTagline => 'Visita punts d\'interès';
+
+  @override
+  String get achCartographerTagline => 'Cartografia Barcelona';
+
+  @override
+  String get achLookoutTagline => 'Activa les talaies';
+
+  @override
+  String get achCollectorTagline => 'Completa col·leccions';
+
+  @override
+  String get avatarTitle => 'El teu personatge';
+
+  @override
+  String get avatarRotateHint => 'Arrossega per girar · pessiga per fer zoom';
 }

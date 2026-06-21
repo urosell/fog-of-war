@@ -647,6 +647,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Barcelona\'s starred fine dining.'**
   String get collMichelinDesc;
+
+  /// No description provided for @achievementsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Achievements'**
+  String get achievementsTitle;
+
+  /// No description provided for @achievementsUnlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'{unlocked} of {total} unlocked'**
+  String achievementsUnlocked(int unlocked, int total);
+
+  /// No description provided for @achievementFamilyDone.
+  ///
+  /// In en, this message translates to:
+  /// **'All levels complete! 🏅'**
+  String get achievementFamilyDone;
+
+  /// No description provided for @achievementUnlockedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Achievement unlocked: {name}'**
+  String achievementUnlockedToast(String name);
+
+  /// No description provided for @achTierBronze.
+  ///
+  /// In en, this message translates to:
+  /// **'Bronze'**
+  String get achTierBronze;
+
+  /// No description provided for @achTierSilver.
+  ///
+  /// In en, this message translates to:
+  /// **'Silver'**
+  String get achTierSilver;
+
+  /// No description provided for @achTierGold.
+  ///
+  /// In en, this message translates to:
+  /// **'Gold'**
+  String get achTierGold;
+
+  /// No description provided for @achExplorerName.
+  ///
+  /// In en, this message translates to:
+  /// **'Explorer'**
+  String get achExplorerName;
+
+  /// No description provided for @achExplorerGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Uncover {count} fog cells'**
+  String achExplorerGoal(int count);
+
+  /// No description provided for @achTreasureName.
+  ///
+  /// In en, this message translates to:
+  /// **'Treasure Hunter'**
+  String get achTreasureName;
+
+  /// No description provided for @achTreasureGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover {count} POIs'**
+  String achTreasureGoal(int count);
+
+  /// No description provided for @achCartographerName.
+  ///
+  /// In en, this message translates to:
+  /// **'Cartographer'**
+  String get achCartographerName;
+
+  /// No description provided for @achCartographerGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Reveal {count}% of Barcelona'**
+  String achCartographerGoal(int count);
+
+  /// No description provided for @achLookoutName.
+  ///
+  /// In en, this message translates to:
+  /// **'Lookout'**
+  String get achLookoutName;
+
+  /// No description provided for @achLookoutGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Activate {count, plural, =1{1 watchtower} other{{count} watchtowers}}'**
+  String achLookoutGoal(int count);
+
+  /// No description provided for @achCollectorName.
+  ///
+  /// In en, this message translates to:
+  /// **'Collector'**
+  String get achCollectorName;
+
+  /// No description provided for @achCollectorGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete {count, plural, =1{1 collection} other{{count} collections}}'**
+  String achCollectorGoal(int count);
+
+  /// No description provided for @achExplorerTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Uncover the fog as you go'**
+  String get achExplorerTagline;
+
+  /// No description provided for @achTreasureTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Visit points of interest'**
+  String get achTreasureTagline;
+
+  /// No description provided for @achCartographerTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Map out Barcelona'**
+  String get achCartographerTagline;
+
+  /// No description provided for @achLookoutTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Activate the watchtowers'**
+  String get achLookoutTagline;
+
+  /// No description provided for @achCollectorTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete collections'**
+  String get achCollectorTagline;
+
+  /// No description provided for @avatarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your character'**
+  String get avatarTitle;
+
+  /// No description provided for @avatarRotateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to rotate · pinch to zoom'**
+  String get avatarRotateHint;
 }
 
 class _AppLocalizationsDelegate

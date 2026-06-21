@@ -106,5 +106,31 @@
   "collTapasName": "Route des Tapas",
   "collTapasDesc": "Les bars à tapas typiques de Barcelone.",
   "collMichelinName": "Étoiles Michelin",
-  "collMichelinDesc": "La haute gastronomie étoilée de Barcelone."
+  "collMichelinDesc": "La haute gastronomie étoilée de Barcelone.",
+
+  "achievementsTitle": "Succès",
+  "achievementsUnlocked": "{unlocked} sur {total} débloqués",
+  "achievementFamilyDone": "Tous les niveaux terminés ! 🏅",
+  "achievementUnlockedToast": "Succès débloqué : {name}",
+  "achTierBronze": "Bronze",
+  "achTierSilver": "Argent",
+  "achTierGold": "Or",
+  "achExplorerName": "Explorateur",
+  "achExplorerGoal": "Dévoile {count} cellules de brouillard",
+  "achTreasureName": "Chasseur de trésors",
+  "achTreasureGoal": "Découvre {count} POI",
+  "achCartographerName": "Cartographe",
+  "achCartographerGoal": "Révèle {count}% de Barcelone",
+  "achLookoutName": "Guetteur",
+  "achLookoutGoal": "Active {count, plural, =1{1 tour de guet} other{{count} tours de guet}}",
+  "achCollectorName": "Collectionneur",
+  "achCollectorGoal": "Complète {count, plural, =1{1 collection} other{{count} collections}}",
+  "achExplorerTagline": "Dévoile le brouillard sur ton passage",
+  "achTreasureTagline": "Visite des points d'intérêt",
+  "achCartographerTagline": "Cartographie Barcelone",
+  "achLookoutTagline": "Active les tours de guet",
+  "achCollectorTagline": "Complète des collections",
+
+  "avatarTitle": "Ton personnage",
+  "avatarRotateHint": "Glisse pour tourner · pince pour zoomer"
 }

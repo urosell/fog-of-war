@@ -106,5 +106,31 @@
   "collTapasName": "Ruta de Tapas",
   "collTapasDesc": "Bares de tapas con solera de Barcelona.",
   "collMichelinName": "Estrellas Michelin",
-  "collMichelinDesc": "Alta cocina con estrella en Barcelona."
+  "collMichelinDesc": "Alta cocina con estrella en Barcelona.",
+
+  "achievementsTitle": "Logros",
+  "achievementsUnlocked": "{unlocked} de {total} desbloqueados",
+  "achievementFamilyDone": "¡Todos los niveles completados! 🏅",
+  "achievementUnlockedToast": "¡Logro desbloqueado! {name}",
+  "achTierBronze": "Bronce",
+  "achTierSilver": "Plata",
+  "achTierGold": "Oro",
+  "achExplorerName": "Explorador",
+  "achExplorerGoal": "Descubre {count} celdas de niebla",
+  "achTreasureName": "Cazatesoros",
+  "achTreasureGoal": "Visita {count} POIs",
+  "achCartographerName": "Cartógrafo",
+  "achCartographerGoal": "Revela el {count}% de Barcelona",
+  "achLookoutName": "Vigía",
+  "achLookoutGoal": "Activa {count, plural, =1{1 atalaya} other{{count} atalayas}}",
+  "achCollectorName": "Coleccionista",
+  "achCollectorGoal": "Completa {count, plural, =1{1 colección} other{{count} colecciones}}",
+  "achExplorerTagline": "Desvela la niebla a tu paso",
+  "achTreasureTagline": "Visita puntos de interés",
+  "achCartographerTagline": "Cartografía Barcelona",
+  "achLookoutTagline": "Activa las atalayas",
+  "achCollectorTagline": "Completa colecciones",
+
+  "avatarTitle": "Tu personaje",
+  "avatarRotateHint": "Arrastra para girar · pellizca para zoom"
 }

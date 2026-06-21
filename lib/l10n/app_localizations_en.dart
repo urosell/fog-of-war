@@ -320,4 +320,102 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get collMichelinDesc => 'Barcelona\'s starred fine dining.';
+
+  @override
+  String get achievementsTitle => 'Achievements';
+
+  @override
+  String achievementsUnlocked(int unlocked, int total) {
+    return '$unlocked of $total unlocked';
+  }
+
+  @override
+  String get achievementFamilyDone => 'All levels complete! 🏅';
+
+  @override
+  String achievementUnlockedToast(String name) {
+    return 'Achievement unlocked: $name';
+  }
+
+  @override
+  String get achTierBronze => 'Bronze';
+
+  @override
+  String get achTierSilver => 'Silver';
+
+  @override
+  String get achTierGold => 'Gold';
+
+  @override
+  String get achExplorerName => 'Explorer';
+
+  @override
+  String achExplorerGoal(int count) {
+    return 'Uncover $count fog cells';
+  }
+
+  @override
+  String get achTreasureName => 'Treasure Hunter';
+
+  @override
+  String achTreasureGoal(int count) {
+    return 'Discover $count POIs';
+  }
+
+  @override
+  String get achCartographerName => 'Cartographer';
+
+  @override
+  String achCartographerGoal(int count) {
+    return 'Reveal $count% of Barcelona';
+  }
+
+  @override
+  String get achLookoutName => 'Lookout';
+
+  @override
+  String achLookoutGoal(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count watchtowers',
+      one: '1 watchtower',
+    );
+    return 'Activate $_temp0';
+  }
+
+  @override
+  String get achCollectorName => 'Collector';
+
+  @override
+  String achCollectorGoal(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count collections',
+      one: '1 collection',
+    );
+    return 'Complete $_temp0';
+  }
+
+  @override
+  String get achExplorerTagline => 'Uncover the fog as you go';
+
+  @override
+  String get achTreasureTagline => 'Visit points of interest';
+
+  @override
+  String get achCartographerTagline => 'Map out Barcelona';
+
+  @override
+  String get achLookoutTagline => 'Activate the watchtowers';
+
+  @override
+  String get achCollectorTagline => 'Complete collections';
+
+  @override
+  String get avatarTitle => 'Your character';
+
+  @override
+  String get avatarRotateHint => 'Drag to rotate · pinch to zoom';
 }

@@ -45,6 +45,9 @@ class WatchtowerController extends ChangeNotifier {
 
   bool get isLoaded => _loaded;
 
+  /// Cuántas atalayas se han activado (para los logros).
+  int get activatedCount => _activatedIds.length;
+
   bool isActivated(Watchtower tower) => _activatedIds.contains(tower.id);
 
   /// ¿Está este POI avistado (revelado por una atalaya) por su ID?

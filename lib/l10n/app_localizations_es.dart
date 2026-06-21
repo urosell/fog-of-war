@@ -321,4 +321,102 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get collMichelinDesc => 'Alta cocina con estrella en Barcelona.';
+
+  @override
+  String get achievementsTitle => 'Logros';
+
+  @override
+  String achievementsUnlocked(int unlocked, int total) {
+    return '$unlocked de $total desbloqueados';
+  }
+
+  @override
+  String get achievementFamilyDone => '¡Todos los niveles completados! 🏅';
+
+  @override
+  String achievementUnlockedToast(String name) {
+    return '¡Logro desbloqueado! $name';
+  }
+
+  @override
+  String get achTierBronze => 'Bronce';
+
+  @override
+  String get achTierSilver => 'Plata';
+
+  @override
+  String get achTierGold => 'Oro';
+
+  @override
+  String get achExplorerName => 'Explorador';
+
+  @override
+  String achExplorerGoal(int count) {
+    return 'Descubre $count celdas de niebla';
+  }
+
+  @override
+  String get achTreasureName => 'Cazatesoros';
+
+  @override
+  String achTreasureGoal(int count) {
+    return 'Visita $count POIs';
+  }
+
+  @override
+  String get achCartographerName => 'Cartógrafo';
+
+  @override
+  String achCartographerGoal(int count) {
+    return 'Revela el $count% de Barcelona';
+  }
+
+  @override
+  String get achLookoutName => 'Vigía';
+
+  @override
+  String achLookoutGoal(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count atalayas',
+      one: '1 atalaya',
+    );
+    return 'Activa $_temp0';
+  }
+
+  @override
+  String get achCollectorName => 'Coleccionista';
+
+  @override
+  String achCollectorGoal(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count colecciones',
+      one: '1 colección',
+    );
+    return 'Completa $_temp0';
+  }
+
+  @override
+  String get achExplorerTagline => 'Desvela la niebla a tu paso';
+
+  @override
+  String get achTreasureTagline => 'Visita puntos de interés';
+
+  @override
+  String get achCartographerTagline => 'Cartografía Barcelona';
+
+  @override
+  String get achLookoutTagline => 'Activa las atalayas';
+
+  @override
+  String get achCollectorTagline => 'Completa colecciones';
+
+  @override
+  String get avatarTitle => 'Tu personaje';
+
+  @override
+  String get avatarRotateHint => 'Arrastra para girar · pellizca para zoom';
 }

@@ -106,5 +106,31 @@
   "collTapasName": "Ruta de Tapes",
   "collTapasDesc": "Bars de tapes amb solera de Barcelona.",
   "collMichelinName": "Estrelles Michelin",
-  "collMichelinDesc": "Alta cuina amb estrella a Barcelona."
+  "collMichelinDesc": "Alta cuina amb estrella a Barcelona.",
+
+  "achievementsTitle": "Assoliments",
+  "achievementsUnlocked": "{unlocked} de {total} desbloquejats",
+  "achievementFamilyDone": "Tots els nivells completats! 🏅",
+  "achievementUnlockedToast": "Assoliment desbloquejat! {name}",
+  "achTierBronze": "Bronze",
+  "achTierSilver": "Plata",
+  "achTierGold": "Or",
+  "achExplorerName": "Explorador",
+  "achExplorerGoal": "Descobreix {count} cel·les de boira",
+  "achTreasureName": "Caçatresors",
+  "achTreasureGoal": "Visita {count} POIs",
+  "achCartographerName": "Cartògraf",
+  "achCartographerGoal": "Revela el {count}% de Barcelona",
+  "achLookoutName": "Vigia",
+  "achLookoutGoal": "Activa {count, plural, =1{1 talaia} other{{count} talaies}}",
+  "achCollectorName": "Col·leccionista",
+  "achCollectorGoal": "Completa {count, plural, =1{1 col·lecció} other{{count} col·leccions}}",
+  "achExplorerTagline": "Desvela la boira al teu pas",
+  "achTreasureTagline": "Visita punts d'interès",
+  "achCartographerTagline": "Cartografia Barcelona",
+  "achLookoutTagline": "Activa les talaies",
+  "achCollectorTagline": "Completa col·leccions",
+
+  "avatarTitle": "El teu personatge",
+  "avatarRotateHint": "Arrossega per girar · pessiga per fer zoom"
 }
