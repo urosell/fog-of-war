@@ -162,6 +162,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mapStyleGame => 'Game';
 
   @override
+  String get mapStyleCorsair => 'Corsair';
+
+  @override
   String get settingsTitle => 'Settings';
 
   @override

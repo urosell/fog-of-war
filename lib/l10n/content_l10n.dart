@@ -37,6 +37,8 @@ String localizedMapStyleName(AppLocalizations l, String key, String fallback) {
       return l.mapStyleLiberty;
     case 'game':
       return l.mapStyleGame;
+    case 'corsair':
+      return l.mapStyleCorsair;
     default:
       return fallback;
   }

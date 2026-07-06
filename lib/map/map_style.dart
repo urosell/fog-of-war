@@ -47,9 +47,11 @@ class MapStyle {
   /// que la sensación de "cuánto tapa la niebla" no cambie entre estilos.
   final Color? fogColor;
 
-  /// Si es true, el estilo se carga con una skin propia escrita desde cero
-  /// (ver game_style.dart) en vez de tal cual lo sirve el proveedor.
-  final bool custom;
+  /// Si no es null, el estilo se carga con una skin propia escrita desde cero
+  /// (ver game_style.dart) en vez de tal cual lo sirve el proveedor. El valor
+  /// identifica la skin ('game', 'corsair'); main.dart elige el loader. También
+  /// hace de clave de caché: dos skins pueden compartir el mismo styleUri base.
+  final String? customSkin;
 
   const MapStyle({
     required this.name,
@@ -60,11 +62,18 @@ class MapStyle {
     required this.attribution,
     this.colorMatrix,
     this.fogColor,
-    this.custom = false,
+    this.customSkin,
   });
 
   /// ¿Es un estilo vectorial (style JSON) o raster (tiles PNG)?
   bool get isVector => styleUri != null;
+
+  /// ¿Lleva skin propia (game_style.dart)?
+  bool get custom => customSkin != null;
+
+  /// Clave única de este estilo para cachés y keys de widgets. OJO: el styleUri
+  /// NO vale (las skins custom comparten el mismo estilo base).
+  String get cacheKey => customSkin ?? styleUri ?? urlTemplate ?? name;
 }
 
 // --- Estilo vectorial (OpenFreeMap, recoloreado) ---
@@ -83,10 +92,10 @@ const int kDefaultStyleIndex = 0;
 
 /// Índice del primer estilo RASTER de la lista, usado como respaldo automático
 /// si el estilo vectorial no consigue cargar.
-const int kRasterFallbackIndex = 1;
+const int kRasterFallbackIndex = 2;
 
-/// Lista de estilos entre los que el jugador puede ir rotando. El primero es el
-/// vectorial cálido (por defecto); los otros dos son raster de respaldo/variedad.
+/// Lista de estilos entre los que el jugador puede ir rotando. Los dos primeros
+/// son skins vectoriales propias; los otros dos son raster de respaldo/variedad.
 const List<MapStyle> kMapStyles = [
   // 0 — Juego: skin vectorial propia estilo Pokémon GO (ver game_style.dart). El
   //     styleUri es solo el estilo base del que se toman los proveedores de
@@ -96,9 +105,21 @@ const List<MapStyle> kMapStyles = [
     nameKey: 'game',
     styleUri: 'https://tiles.openfreemap.org/styles/liberty',
     attribution: _ofmAttribution,
-    custom: true,
+    customSkin: 'game',
   ),
-  // 1 — Satélite: raster de imagen aérea (respaldo / variedad).
+  // 1 — Corsario: skin vectorial propia con la paleta "Assassin's Creed IV" de
+  //     Snazzy Maps (tierra verde grisácea, calles gris verdoso, mar casi
+  //     negro). Mismo dato y proveedores que "Juego", solo cambia la paleta.
+  MapStyle(
+    name: 'Corsario',
+    nameKey: 'corsair',
+    styleUri: 'https://tiles.openfreemap.org/styles/liberty',
+    attribution: _ofmAttribution,
+    customSkin: 'corsair',
+    // Velo a juego con el tema: mismo alfa que kFogColor, tono verde-negro.
+    fogColor: Color(0xEC1E2422),
+  ),
+  // 2 — Satélite: raster de imagen aérea (respaldo / variedad).
   MapStyle(
     name: 'Satélite',
     nameKey: 'satellite',
@@ -106,7 +127,7 @@ const List<MapStyle> kMapStyles = [
         'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     attribution: '© Esri, Maxar, Earthstar Geographics',
   ),
-  // 2 — Oscuro: raster oscuro de CARTO (respaldo).
+  // 3 — Oscuro: raster oscuro de CARTO (respaldo).
   MapStyle(
     name: 'Oscuro',
     nameKey: 'dark',

@@ -372,6 +372,12 @@ abstract class AppLocalizations {
   /// **'Game'**
   String get mapStyleGame;
 
+  /// No description provided for @mapStyleCorsair.
+  ///
+  /// In en, this message translates to:
+  /// **'Corsair'**
+  String get mapStyleCorsair;
+
   /// No description provided for @settingsTitle.
   ///
   /// In en, this message translates to:

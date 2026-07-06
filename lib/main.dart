@@ -462,12 +462,16 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   // cargados.
   Future<void> _asegurarEstiloVectorial(MapStyle estilo) async {
     final uri = estilo.styleUri;
-    if (uri == null || _estilosVectoriales.containsKey(uri)) return;
+    if (uri == null || _estilosVectoriales.containsKey(estilo.cacheKey)) return;
     try {
-      final cargado =
-          estilo.custom ? await loadGameStyle() : await StyleReader(uri: uri).read();
+      // Cada skin propia tiene su loader; sin skin, el estilo del proveedor.
+      final cargado = switch (estilo.customSkin) {
+        'game' => await loadGameStyle(),
+        'corsair' => await loadCorsairStyle(),
+        _ => await StyleReader(uri: uri).read(),
+      };
       if (!mounted) return;
-      setState(() => _estilosVectoriales[uri] = cargado);
+      setState(() => _estilosVectoriales[estilo.cacheKey] = cargado);
     } catch (_) {
       if (!mounted) return;
       // Sin red o estilo no disponible: caer a un mapa raster de respaldo.
@@ -626,11 +630,12 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   // fondo de MapOptions (gris claro) y la carga ya está en marcha.
   Widget _buildBaseLayer(MapStyle style) {
     if (style.isVector) {
-      final cargado = _estilosVectoriales[style.styleUri];
+      final cargado = _estilosVectoriales[style.cacheKey];
       if (cargado == null) return const SizedBox.shrink();
       return VectorTileLayer(
-        // La key por id de estilo recrea la capa al cambiar de estilo vectorial.
-        key: ValueKey(style.styleUri),
+        // La key por id de estilo recrea la capa al cambiar de estilo vectorial
+        // (cacheKey y no styleUri: las skins custom comparten el estilo base).
+        key: ValueKey(style.cacheKey),
         tileProviders: cargado.providers,
         theme: cargado.theme,
         sprites: cargado.sprites,

@@ -162,6 +162,9 @@ class AppLocalizationsCa extends AppLocalizations {
   String get mapStyleGame => 'Joc';
 
   @override
+  String get mapStyleCorsair => 'Corsari';
+
+  @override
   String get settingsTitle => 'Configuració';
 
   @override
