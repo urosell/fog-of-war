@@ -10,9 +10,10 @@ import 'package:latlong2/latlong.dart';
 import 'poi.dart';
 import 'poi_storage.dart';
 
-/// Radio (en metros) para descubrir un POI. Más pequeño que el del fog (50 m)
-/// para que haya que acercarse de verdad al sitio.
-const double kPoiDiscoveryRadiusMeters = 30.0;
+// El radio de descubrimiento es POR CATEGORÍA (PoiCategory.radiusMeters):
+// grande para lugares extensos (plazas, parques, monumentos) que se visitan
+// sin pasar por su coordenada central, y pequeño para puertas concretas
+// (bares, tiendas), que exigen acercarse de verdad.
 
 class PoiController extends ChangeNotifier {
   final PoiStorage _storage;
@@ -76,16 +77,16 @@ class PoiController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Comprueba si [position] cae dentro del radio de algún POI no descubierto.
+  /// Comprueba si [position] cae dentro del radio de algún POI no descubierto
+  /// (el radio depende de la categoría del POI).
   /// Marca los nuevos como descubiertos, guarda y devuelve la lista de recién
   /// descubiertos (para que la UI los celebre). Si no hay ninguno, no notifica.
-  List<Poi> checkDiscoveries(LatLng position,
-      {double radiusMeters = kPoiDiscoveryRadiusMeters}) {
+  List<Poi> checkDiscoveries(LatLng position) {
     final nuevos = <Poi>[];
     for (final poi in _allPois) {
       if (_discoveredIds.contains(poi.id)) continue;
       final metros = _distance.as(LengthUnit.Meter, position, poi.location);
-      if (metros <= radiusMeters) {
+      if (metros <= poi.category.radiusMeters) {
         _discoveredIds.add(poi.id);
         nuevos.add(poi);
       }

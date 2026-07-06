@@ -7,22 +7,34 @@
 
 import 'package:latlong2/latlong.dart';
 
-/// Categoría de un POI. Cada categoría da una cantidad de puntos distinta.
+/// Categoría de un POI. Cada categoría da una cantidad de puntos distinta y
+/// tiene su propio radio de descubrimiento.
+///
+/// El radio depende del TAMAÑO físico típico del lugar, porque la coordenada
+/// del POI suele ser su centro: una plaza o un parque se deben descubrir al
+/// cruzarlos por un borde (nadie pasa por el centro exacto), y la Sagrada
+/// Família desde la acera (~60 m del centroide). En cambio bares, tiendas y
+/// restaurantes son una puerta concreta: radio pequeño, que descubrirlos desde
+/// la calle paralela sin haber estado les quitaría la gracia.
 enum PoiCategory {
-  monumento(label: 'Monumento', points: 50),
-  iglesia(label: 'Iglesia', points: 45),
-  museo(label: 'Museo', points: 40),
-  parque(label: 'Parque', points: 30),
-  mirador(label: 'Mirador', points: 25),
-  plaza(label: 'Plaza', points: 20),
-  tienda(label: 'Tienda', points: 15),
-  michelin(label: 'Michelin', points: 60), // alta cocina con estrella
-  tapas(label: 'Tapas', points: 20); // bares de tapas
+  monumento(label: 'Monumento', points: 50, radiusMeters: 80),
+  iglesia(label: 'Iglesia', points: 45, radiusMeters: 80),
+  museo(label: 'Museo', points: 40, radiusMeters: 50),
+  parque(label: 'Parque', points: 30, radiusMeters: 120),
+  mirador(label: 'Mirador', points: 25, radiusMeters: 50),
+  plaza(label: 'Plaza', points: 20, radiusMeters: 100),
+  tienda(label: 'Tienda', points: 15, radiusMeters: 30),
+  michelin(label: 'Michelin', points: 60, radiusMeters: 30), // estrella
+  tapas(label: 'Tapas', points: 20, radiusMeters: 30); // bares de tapas
 
   final String label;
   final int points;
 
-  const PoiCategory({required this.label, required this.points});
+  /// Radio (en metros) para descubrir un POI de esta categoría al pasar cerca.
+  final double radiusMeters;
+
+  const PoiCategory(
+      {required this.label, required this.points, required this.radiusMeters});
 }
 
 /// Un punto de interés concreto en el mapa.

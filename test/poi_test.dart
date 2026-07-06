@@ -88,5 +88,27 @@ void main() {
       expect(c.discoveredCount, 2);
       expect(c.totalPoints, 90); // 50 + 40
     });
+
+    test('el radio depende de la categoría: 60 m descubre un monumento (80 m) '
+        'pero no una tienda (30 m)', () {
+      const monumento = Poi(
+        id: 'm',
+        name: 'M',
+        location: LatLng(41.4036, 2.1744),
+        category: PoiCategory.monumento,
+      );
+      const tienda = Poi(
+        id: 't',
+        name: 'T',
+        location: LatLng(41.4036, 2.1744), // mismo sitio, distinta categoría
+        category: PoiCategory.tienda,
+      );
+      final c = PoiController(
+          storage: _MemoryPoiStorage(), pois: const [monumento, tienda]);
+      // ~60 m al norte (0.00054° de latitud ≈ 60 m).
+      final nuevos = c.checkDiscoveries(const LatLng(41.40414, 2.1744));
+      expect(nuevos.map((p) => p.id), ['m']);
+      expect(c.isDiscovered(tienda), isFalse);
+    });
   });
 }
