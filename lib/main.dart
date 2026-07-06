@@ -34,7 +34,9 @@ import 'poi/poi.dart';
 import 'poi/poi_collection.dart';
 import 'poi/poi_controller.dart';
 import 'ui/achievements_screen.dart';
-import 'ui/avatar_screen.dart';
+// Avatar 3D desactivado temporalmente (no convence el look). Para reactivarlo:
+// descomentar este import, el método _abrirAvatar y su botón en la UI.
+// import 'ui/avatar_screen.dart';
 import 'ui/cities_screen.dart';
 import 'ui/hud.dart';
 import 'ui/leaderboard_screen.dart';
@@ -574,10 +576,11 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     _mapController.move(elegido.location, 17);
   }
 
-  // Abre la pantalla del personaje 3D del jugador.
-  void _abrirAvatar() {
-    Navigator.of(context).push(appRoute(const AvatarScreen()));
-  }
+  // Abre la pantalla del personaje 3D del jugador. Desactivado temporalmente
+  // (ver import de avatar_screen.dart y el botón en la UI).
+  // void _abrirAvatar() {
+  //   Navigator.of(context).push(appRoute(const AvatarScreen()));
+  // }
 
   // Abre los Ajustes (personalización del marcador del jugador).
   void _abrirAjustes() {
@@ -710,12 +713,15 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                     onPressed: _cambiarModo,
                   ),
                   const SizedBox(height: 10),
-                  GlassIconButton(
-                    icon: Icons.person,
-                    tooltip: l.avatarTitle,
-                    onPressed: _abrirAvatar,
-                  ),
-                  const SizedBox(height: 10),
+                  // Botón del personaje 3D desactivado temporalmente (no
+                  // convence el look). Para reactivarlo, descomentar esto y el
+                  // método _abrirAvatar + el import de avatar_screen.dart.
+                  // GlassIconButton(
+                  //   icon: Icons.person,
+                  //   tooltip: l.avatarTitle,
+                  //   onPressed: _abrirAvatar,
+                  // ),
+                  // const SizedBox(height: 10),
                   GlassIconButton(
                     icon: Icons.settings,
                     tooltip: l.tooltipSettings,
