@@ -77,6 +77,10 @@ flutter:
   assets:
     - assets/avatar/
 
+  # Fragment shader que pinta el velo de niebla con los agujeros (fog_layer.dart).
+  shaders:
+    - shaders/fog_veil.frag
+
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

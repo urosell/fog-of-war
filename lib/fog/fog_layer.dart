@@ -8,31 +8,33 @@
 //
 // CÓMO SE CONSIGUE QUE SEA FLUIDO
 //
-// El desenfoque que da el borde suave es lo más caro de la GPU, y regenerarlo
-// en cada frame mientras se arrastra o hace zoom es lo que atascaba la app.
-// La clave es NO regenerarlo por frame:
+// El trabajo caro se hace pocas veces; lo de cada frame es casi gratis:
 //
 //  1. La mancha difuminada se hornea UNA vez en una imagen (la "máscara"),
 //     anclada al grid de celdas y con un margen de sobrebarrido alrededor de
-//     lo visible. En cada frame solo se dibuja esa imagen desplazada/escalada
-//     (baratísimo). El umbral que convierte el difuminado en un borde nítido
-//     se aplica al vuelo a resolución de pantalla, así que el borde no se
-//     ablanda por reescalar la máscara. Solo se rehornea cuando se descubren
-//     celdas nuevas, cuando el arrastre se sale del sobrebarrido o cuando el
-//     zoom acerca tanto que hace falta más resolución.
+//     lo visible. Solo se rehornea cuando se descubren celdas nuevas, cuando
+//     el arrastre se sale del sobrebarrido o cuando el zoom acerca tanto que
+//     hace falta más resolución.
 //
-//  2. Para reunir las celdas de la máscara no se recorren todas las
+//  2. En cada frame, un fragment shader (shaders/fog_veil.frag) dibuja el
+//     velo entero en UNA pasada: por píxel muestrea la máscara, aplica el
+//     umbral que da el borde nítido (a resolución de pantalla, así que
+//     reescalar la máscara no lo ablanda) y emite directamente el color
+//     final del velo con los agujeros. Sin saveLayer, sin blur y sin modos
+//     de mezcla por frame.
+//
+//  3. Para reunir las celdas de la máscara no se recorren todas las
 //     descubiertas: el FogController las indexa por tile Z16 y aquí solo se
 //     visitan los tiles del área a hornear.
 //
-//  3. El grid de celdas es mercator puro, así que celda→pantalla es una
+//  4. El grid de celdas es mercator puro, así que celda→pantalla es una
 //     transformación afín: se proyectan 3 esquinas de una celda de referencia
 //     (vale también con el mapa rotado) y el resto son sumas, sin
 //     trigonometría por celda.
 
 import 'dart:math' as math;
 import 'dart:ui' as ui;
-import 'dart:ui' show ClipOp, ImageFilter, TileMode;
+import 'dart:ui' show ImageFilter, TileMode;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -97,12 +99,41 @@ class FogLayer extends StatefulWidget {
 }
 
 class _FogLayerState extends State<FogLayer> {
+  // El programa compilado se comparte entre instancias (cargarlo cuesta una
+  // vez); el FragmentShader (sus uniforms) es de cada capa.
+  static ui.FragmentProgram? _program;
+  static Future<ui.FragmentProgram>? _programFuture;
+
+  ui.FragmentShader? _shader;
+
   // La máscara horneada vive en el State para sobrevivir a los rebuilds que
   // provoca cada movimiento de cámara (el painter se recrea; la caché no).
   final _MaskCache _cache = _MaskCache();
 
   @override
+  void initState() {
+    super.initState();
+    if (_program != null) {
+      _shader = _program!.fragmentShader();
+    } else {
+      _programFuture ??=
+          ui.FragmentProgram.fromAsset('shaders/fog_veil.frag');
+      _programFuture!.then((program) {
+        _program = program;
+        if (mounted) {
+          setState(() => _shader = program.fragmentShader());
+        }
+      }, onError: (Object e, StackTrace st) {
+        // Sin shader la niebla se queda en velo plano: visible al instante en
+        // cualquier prueba, pero que quede rastro del porqué.
+        debugPrint('FogLayer: error cargando el shader: $e');
+      });
+    }
+  }
+
+  @override
   void dispose() {
+    _shader?.dispose();
     _cache.dispose();
     super.dispose();
   }
@@ -124,6 +155,7 @@ class _FogLayerState extends State<FogLayer> {
           color: widget.color,
           borderColor: widget.borderColor,
           cache: _cache,
+          shader: _shader,
         ),
       ),
     );
@@ -137,10 +169,6 @@ class _MaskCache {
 
   // Zona que cubre la imagen, en coordenadas de celda Z20.
   Rect cellRect = Rect.zero;
-
-  // Caja envolvente de los centros de las celdas dibujadas (en celdas), o
-  // null si no había ninguna celda descubierta en la zona.
-  Rect? contentCellRect;
 
   // Resolución real de la imagen (px por celda) y la ideal que se pidió al
   // hornear (puede ser mayor si hubo que recortar por el tope de tamaño).
@@ -165,6 +193,7 @@ class _FogPainter extends CustomPainter {
   final Color color;
   final Color? borderColor;
   final _MaskCache cache;
+  final ui.FragmentShader? shader;
 
   // Pasar el controller como 'repaint' hace que el painter se redibuje cuando
   // se descubren celdas nuevas (cuando llama a notifyListeners()).
@@ -173,6 +202,7 @@ class _FogPainter extends CustomPainter {
     required this.controller,
     required this.color,
     required this.cache,
+    required this.shader,
     this.borderColor,
   }) : super(repaint: controller);
 
@@ -225,98 +255,58 @@ class _FogPainter extends CustomPainter {
       _bakeMask(needed, idealPxPerCell);
     }
 
-    final fogPaint = Paint()..color = color;
-    final content = cache.contentCellRect;
-    if (content == null) {
-      // Nada descubierto por aquí: todo es niebla, un rectángulo y listo.
-      canvas.drawRect(fullRect, fogPaint);
+    // Sin celdas descubiertas por aquí (o shader aún cargando): velo plano.
+    final image = cache.image;
+    final shader = this.shader;
+    if (image == null || shader == null) {
+      canvas.drawRect(fullRect, Paint()..color = color);
       return;
     }
 
-    // Caja en pantalla que envuelve lo descubierto (más el alcance del borde):
-    // fuera de ella solo hay velo plano barato; dentro, la capa con agujeros.
-    final reach = content.inflate(_kReachCells);
-    final r1 = cellToScreen(reach.left, reach.top);
-    final r2 = cellToScreen(reach.right, reach.top);
-    final r3 = cellToScreen(reach.left, reach.bottom);
-    final r4 = cellToScreen(reach.right, reach.bottom);
-    final blobBounds = Rect.fromLTRB(
-      math.min(math.min(r1.dx, r2.dx), math.min(r3.dx, r4.dx)),
-      math.min(math.min(r1.dy, r2.dy), math.min(r3.dy, r4.dy)),
-      math.max(math.max(r1.dx, r2.dx), math.max(r3.dx, r4.dx)),
-      math.max(math.max(r1.dy, r2.dy), math.max(r3.dy, r4.dy)),
-    ).intersect(fullRect);
-    if (blobBounds.isEmpty) {
-      canvas.drawRect(fullRect, fogPaint);
-      return;
-    }
-
-    // 1) Fuera de la caja, velo plano sin agujeros (sin capas).
-    canvas.save();
-    canvas.clipRect(blobBounds, clipOp: ClipOp.difference);
-    canvas.drawRect(fullRect, fogPaint);
-    canvas.restore();
-
-    // Transformación para dibujar la máscara: el destino se expresa en
-    // unidades de celda relativas a la esquina de la máscara. La traslación se
-    // calcula en CPU (doble precisión) para que las coordenadas absolutas de
-    // celda (~10^5) no pasen por los floats de la GPU.
+    // Transformación pantalla→UV de la máscara para el shader: la inversa de
+    // la base afín, expresada respecto a la esquina de la máscara. Se calcula
+    // aquí en doble precisión para que las coordenadas absolutas de celda
+    // (~10^5) no pasen por los floats de la GPU.
     final maskOrigin = cellToScreen(cache.cellRect.left, cache.cellRect.top);
-    final matrix = Matrix4(
-      ux.dx, ux.dy, 0, 0, //
-      uy.dx, uy.dy, 0, 0, //
-      0, 0, 1, 0, //
-      maskOrigin.dx, maskOrigin.dy, 0, 1, //
-    );
-    final image = cache.image!;
-    final src =
-        Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble());
-    final dst = Rect.fromLTWH(
-        0, 0, image.width / cache.pxPerCell, image.height / cache.pxPerCell);
+    final det = ux.dx * uy.dy - uy.dx * ux.dy;
+    final inv00 = uy.dy / det, inv01 = -uy.dx / det;
+    final inv10 = -ux.dy / det, inv11 = ux.dx / det;
+    // Extensión de la imagen en celdas (el redondeo a píxel enteros hace que
+    // no coincida exactamente con cellRect.width/height).
+    final wCells = image.width / cache.pxPerCell;
+    final hCells = image.height / cache.pxPerCell;
 
-    // Dibuja la máscara cacheada dentro de un saveLayer cuyo Paint aplica el
-    // umbral (borde nítido a resolución de pantalla, por eso reescalar la
-    // máscara no lo ablanda) y el modo de mezcla al componer la capa. Es el
-    // mismo patrón que ya funcionaba antes: umbral + blend sobre una CAPA, no
-    // sobre la imagen directamente (Impeller no compone bien esto último).
-    void drawMask(BlendMode mode, double cut, {Color? tint}) {
-      canvas.saveLayer(
-        blobBounds,
-        Paint()
-          ..blendMode = mode
-          ..colorFilter = tint == null
-              ? _alphaThreshold(slope: _kSlope, cut: cut)
-              : _tintThreshold(tint: tint, slope: _kSlope, cut: cut),
-      );
-      canvas.transform(matrix.storage);
-      canvas.drawImageRect(
-          image, src, dst, Paint()..filterQuality = FilterQuality.medium);
-      canvas.restore();
-    }
+    final border = borderColor;
+    shader
+      ..setFloat(0, inv00 / wCells) // uUvPerX
+      ..setFloat(1, inv10 / hCells)
+      ..setFloat(2, inv01 / wCells) // uUvPerY
+      ..setFloat(3, inv11 / hCells)
+      ..setFloat(
+          4, -(inv00 * maskOrigin.dx + inv01 * maskOrigin.dy) / wCells)
+      ..setFloat(
+          5, -(inv10 * maskOrigin.dx + inv11 * maskOrigin.dy) / hCells)
+      ..setFloat(6, color.r) // uFogColor
+      ..setFloat(7, color.g)
+      ..setFloat(8, color.b)
+      ..setFloat(9, color.a)
+      ..setFloat(10, _kSlope)
+      ..setFloat(11, _kCutEdge)
+      ..setFloat(12, _kCutInner)
+      ..setFloat(13, border?.r ?? 0) // uBorderColor
+      ..setFloat(14, border?.g ?? 0)
+      ..setFloat(15, border?.b ?? 0)
+      ..setFloat(16, border?.a ?? 0)
+      ..setFloat(17, image.width.toDouble()) // uMaskSize
+      ..setFloat(18, image.height.toDouble())
+      ..setImageSampler(0, image);
 
-    // 2) Dentro de la caja, el velo con los agujeros restados: la máscara
-    // umbralizada se resta del velo (dstOut). El velo del parche usa el mismo
-    // color que el de fuera, así que el borde de la caja no se nota (cobertura
-    // única a ambos lados).
-    canvas.saveLayer(blobBounds, Paint());
-    canvas.drawRect(blobBounds, fogPaint);
-    drawMask(BlendMode.dstOut, _kCutEdge);
-    canvas.restore();
-
-    // 3) Ribete suave del color elegido en el límite descubierto/niebla: la
-    // mancha teñida menos su versión erosionada (umbral más alto) deja un
-    // anillo de grosor uniforme que sigue el contorno.
-    if (borderColor != null) {
-      canvas.saveLayer(blobBounds, Paint());
-      drawMask(BlendMode.srcOver, _kCutEdge, tint: borderColor);
-      drawMask(BlendMode.dstOut, _kCutInner);
-      canvas.restore();
-    }
+    canvas.drawRect(fullRect, Paint()..shader = shader);
   }
 
   // Hornea la máscara: círculos blancos nítidos (uno por celda descubierta)
-  // difuminados UNA vez con un solo blur. Sin umbral: ese se aplica al dibujar,
-  // a resolución de pantalla.
+  // difuminados UNA vez con un solo blur. Sin umbral: ese se aplica en el
+  // shader al dibujar, a resolución de pantalla.
   void _bakeMask(Rect needed, double idealPxPerCell) {
     // Sobrebarrido alrededor de lo necesario, redondeado a celdas enteras.
     final rect = Rect.fromLTRB(
@@ -350,14 +340,12 @@ class _FogPainter extends CustomPainter {
       ..isAntiAlias = true;
 
     // Solo se visitan los tiles Z16 que tocan la máscara; de cada uno, sus
-    // celdas descubiertas. De paso se acumula la caja envolvente del contenido.
+    // celdas descubiertas.
     final byTile = controller.discoveredByTile;
     final minTileX = (rect.left / kCellsPerTileSide).floor();
     final maxTileX = ((rect.right - 1) / kCellsPerTileSide).floor();
     final minTileY = (rect.top / kCellsPerTileSide).floor();
     final maxTileY = ((rect.bottom - 1) / kCellsPerTileSide).floor();
-    var minX = double.infinity, minY = double.infinity;
-    var maxX = double.negativeInfinity, maxY = double.negativeInfinity;
     var any = false;
     for (var ty = minTileY; ty <= maxTileY; ty++) {
       for (var tx = minTileX; tx <= maxTileX; tx++) {
@@ -373,10 +361,6 @@ class _FogPainter extends CustomPainter {
             continue;
           }
           any = true;
-          if (cx < minX) minX = cx;
-          if (cx > maxX) maxX = cx;
-          if (cy < minY) minY = cy;
-          if (cy > maxY) maxY = cy;
           maskCanvas.drawCircle(
             Offset((cx - rect.left) * pxPerCell, (cy - rect.top) * pxPerCell),
             _kMetaRadiusCells * pxPerCell,
@@ -391,8 +375,6 @@ class _FogPainter extends CustomPainter {
     cache.image?.dispose();
     cache.image = any ? picture.toImageSync(w, h) : null;
     picture.dispose();
-    cache.contentCellRect =
-        any ? Rect.fromLTRB(minX, minY, maxX, maxY) : null;
     cache.cellRect = rect;
     cache.pxPerCell = pxPerCell;
     cache.idealPxPerCell = idealPxPerCell;
@@ -411,28 +393,3 @@ bool _covers(Rect outer, Rect inner) =>
     outer.top <= inner.top &&
     outer.right >= inner.right &&
     outer.bottom >= inner.bottom;
-
-/// ColorFilter que convierte una mancha difuminada en una forma sólida de borde
-/// nítido (efecto metaball): alpha_out = slope·(alpha − cut). Con [slope] alto
-/// la transición es estrecha (borde definido); [cut] elige a qué opacidad cae el
-/// borde (más alto = forma más pequeña / erosionada). Mantiene el color RGB.
-ColorFilter _alphaThreshold({required double slope, required double cut}) {
-  return ColorFilter.matrix(<double>[
-    1, 0, 0, 0, 0, //
-    0, 1, 0, 0, 0, //
-    0, 0, 1, 0, 0, //
-    0, 0, 0, slope, -slope * cut * 255, //
-  ]);
-}
-
-/// Igual que [_alphaThreshold], pero además pinta la forma del color [tint]
-/// (para el ribete: la máscara horneada es blanca y aquí se tiñe al dibujar).
-ColorFilter _tintThreshold(
-    {required Color tint, required double slope, required double cut}) {
-  return ColorFilter.matrix(<double>[
-    0, 0, 0, 0, tint.r * 255, //
-    0, 0, 0, 0, tint.g * 255, //
-    0, 0, 0, 0, tint.b * 255, //
-    0, 0, 0, slope, -slope * cut * 255, //
-  ]);
-}
