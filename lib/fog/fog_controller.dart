@@ -35,6 +35,16 @@ class FogController extends ChangeNotifier {
   // desvelar la misma celda dos veces no cambia nada (operación idempotente).
   final Set<CellId> _discovered = <CellId>{};
 
+  // Las mismas celdas, agrupadas por su tile de almacenamiento Z16 (16x16
+  // celdas por tile). Es el índice espacial que usa la capa de niebla para
+  // recorrer SOLO las celdas de la zona visible, en vez de todas las
+  // descubiertas en cada frame.
+  final Map<TileId, List<CellId>> _byTile = <TileId, List<CellId>>{};
+
+  // Contador que sube con cada cambio en las celdas. La capa de niebla lo usa
+  // para saber si su máscara cacheada sigue valiendo o hay que rehacerla.
+  int _revision = 0;
+
   Timer? _saveTimer;
   bool _loaded = false;
 
@@ -43,17 +53,38 @@ class FogController extends ChangeNotifier {
   /// Vista de solo lectura de las celdas descubiertas (para dibujarlas).
   Set<CellId> get discovered => _discovered;
 
+  /// Celdas descubiertas agrupadas por tile Z16 (índice espacial de dibujo).
+  Map<TileId, List<CellId>> get discoveredByTile => _byTile;
+
+  /// Sube en cada cambio del conjunto de celdas (para invalidar cachés).
+  int get revision => _revision;
+
   /// Cuántas celdas se han descubierto en total.
   int get discoveredCount => _discovered.length;
 
   /// True una vez que se han cargado los datos guardados.
   bool get isLoaded => _loaded;
 
+  // Añade una celda al Set y al índice por tiles a la vez, para que nunca se
+  // desincronicen. Devuelve true si la celda era nueva.
+  bool _addCell(CellId cell) {
+    if (!_discovered.add(cell)) return false;
+    _byTile.putIfAbsent(tileForCell(cell), () => <CellId>[]).add(cell);
+    return true;
+  }
+
+  void _addCells(Iterable<CellId> cells) {
+    for (final cell in cells) {
+      _addCell(cell);
+    }
+  }
+
   /// Carga las celdas guardadas en disco. Llamar una vez al arrancar.
   Future<void> load() async {
     final guardadas = await _storage.load();
-    _discovered.addAll(guardadas);
+    _addCells(guardadas);
     _loaded = true;
+    _revision++;
     notifyListeners();
   }
 
@@ -64,7 +95,7 @@ class FogController extends ChangeNotifier {
       {double radiusMeters = kDefaultRevealRadiusMeters}) {
     final nuevas = cellsWithinRadius(position, radiusMeters);
     final antes = _discovered.length;
-    _discovered.addAll(nuevas);
+    _addCells(nuevas);
     // Si se descubrió algo nuevo, rellenar microhuecos que hayan podido quedar
     // encerrados alrededor.
     if (_discovered.length != antes) {
@@ -72,6 +103,7 @@ class FogController extends ChangeNotifier {
     }
     final huboCambios = _discovered.length != antes;
     if (huboCambios) {
+      _revision++;
       _scheduleSave();
       notifyListeners();
     }
@@ -103,13 +135,15 @@ class FogController extends ChangeNotifier {
       maxY: maxY + margin,
       maxHoleCells: kMaxAutoFillHoleCells,
     );
-    _discovered.addAll(huecos);
+    _addCells(huecos);
   }
 
   /// Borra todo lo descubierto (útil para pruebas).
   void clear() {
     if (_discovered.isEmpty) return;
     _discovered.clear();
+    _byTile.clear();
+    _revision++;
     _scheduleSave();
     notifyListeners();
   }
