@@ -31,6 +31,7 @@ import 'mission/mission_controller.dart';
 import 'notify/notification_service.dart';
 import 'onboarding/onboarding_storage.dart';
 import 'poi/poi.dart';
+import 'poi/poi_collection.dart';
 import 'poi/poi_controller.dart';
 import 'ui/achievements_screen.dart';
 import 'ui/avatar_screen.dart';
@@ -541,7 +542,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   }
 
   // Abre el panel de detalle de un POI al tocar su marcador en el mapa. Resuelve
-  // a qué colecciones pertenece (filtrando las del contenido por su id).
+  // a qué colecciones pertenece (filtrando las del contenido por su id). Al tocar
+  // una de esas colecciones se abre su pantalla (solo si el POI está descubierto:
+  // en modo teaser no se listan colecciones).
   void _abrirDetallePoi(Poi poi, {required bool descubierto}) {
     final colecciones = _content.collections
         .where((c) => c.poiIds.contains(poi.id))
@@ -551,7 +554,24 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       poi: poi,
       collections: colecciones,
       discovered: descubierto,
+      onCollectionTap: descubierto ? _abrirDetalleColeccion : null,
     );
+  }
+
+  // Abre la pantalla de una colección concreta (desde un chip del detalle de un
+  // POI). Si dentro tocas un POI descubierto, la pantalla se cierra devolviéndolo
+  // y centramos el mapa en él (igual que la misión fijada).
+  Future<void> _abrirDetalleColeccion(PoiCollection coleccion) async {
+    final elegido = await Navigator.of(context).push<Poi>(
+      appRoute(PoiCollectionScreen(
+        poiController: _poi,
+        collection: coleccion,
+        mission: _mission,
+      )),
+    );
+    if (elegido == null || !mounted) return;
+    setState(() => _seguir = false);
+    _mapController.move(elegido.location, 17);
   }
 
   // Abre la pantalla del personaje 3D del jugador.

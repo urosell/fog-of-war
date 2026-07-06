@@ -21,12 +21,15 @@ const Color _kGhost = Color(0xFF8A93A6); // gris azulado del marcador avistado
 
 /// Abre el panel de detalle de [poi]. [collections] son SOLO las colecciones a
 /// las que pertenece este POI (las calcula quien llama). [discovered] decide el
-/// modo (detalle completo vs. teaser).
+/// modo (detalle completo vs. teaser). [onCollectionTap], si se pasa, hace que
+/// los chips de colección sean tocables: se cierra el panel y quien llama abre
+/// la pantalla de esa colección.
 Future<void> showPoiDetailSheet({
   required BuildContext context,
   required Poi poi,
   required List<PoiCollection> collections,
   required bool discovered,
+  void Function(PoiCollection collection)? onCollectionTap,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -36,6 +39,7 @@ Future<void> showPoiDetailSheet({
       poi: poi,
       collections: collections,
       discovered: discovered,
+      onCollectionTap: onCollectionTap,
     ),
   );
 }
@@ -44,11 +48,13 @@ class _PoiDetailSheet extends StatelessWidget {
   final Poi poi;
   final List<PoiCollection> collections;
   final bool discovered;
+  final void Function(PoiCollection collection)? onCollectionTap;
 
   const _PoiDetailSheet({
     required this.poi,
     required this.collections,
     required this.discovered,
+    this.onCollectionTap,
   });
 
   @override
@@ -136,7 +142,7 @@ class _PoiDetailSheet extends StatelessWidget {
           spacing: 8,
           runSpacing: 8,
           children: [
-            for (final c in collections) _collectionChip(c, code),
+            for (final c in collections) _collectionChip(context, c, code),
           ],
         ),
       const SizedBox(height: 24),
@@ -229,8 +235,9 @@ class _PoiDetailSheet extends StatelessWidget {
     );
   }
 
-  Widget _collectionChip(PoiCollection c, String code) {
-    return Container(
+  Widget _collectionChip(BuildContext context, PoiCollection c, String code) {
+    final tappable = onCollectionTap != null;
+    final chip = Container(
       padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
       decoration: BoxDecoration(
         color: c.accent.withValues(alpha: 0.16),
@@ -251,8 +258,23 @@ class _PoiDetailSheet extends StatelessWidget {
               decoration: TextDecoration.none,
             ),
           ),
+          // Chevron sutil que indica que el chip lleva a la colección.
+          if (tappable) ...[
+            const SizedBox(width: 4),
+            Icon(Icons.chevron_right, color: c.accent, size: 16),
+          ],
         ],
       ),
+    );
+    if (!tappable) return chip;
+    // Cierra el panel y delega la navegación a quien abrió el sheet.
+    return InkWell(
+      borderRadius: BorderRadius.circular(20),
+      onTap: () {
+        Navigator.of(context).pop();
+        onCollectionTap!(c);
+      },
+      child: chip,
     );
   }
 
