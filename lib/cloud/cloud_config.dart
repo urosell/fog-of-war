@@ -9,13 +9,14 @@
 // seguridad la pone Row Level Security en el servidor (ver
 // supabase/schema.sql).
 
-/// URL del proyecto de Supabase (p. ej. https://abcdefgh.supabase.co).
-/// Vacío = nube desactivada.
-const String kSupabaseUrl = '';
+/// URL del proyecto de Supabase (la base, sin /rest/v1: la librería añade
+/// cada ruta). Vacío = nube desactivada.
+const String kSupabaseUrl = 'https://oizgsxwkbsvmgroypfyr.supabase.co';
 
 /// Clave pública del proyecto: la "publishable key" (sb_publishable_…); la
 /// "anon key" legacy también funciona. Vacío = nube desactivada.
-const String kSupabasePublishableKey = '';
+const String kSupabasePublishableKey =
+    'sb_publishable_LQ4f45bKFK2vr3FwfIMYTw_AJ7tlxwf';
 
 /// ¿Hay backend configurado? Si es false, no se inicializa Supabase y los
 /// botones de cuenta no se muestran.
