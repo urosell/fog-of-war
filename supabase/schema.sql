@@ -101,10 +101,23 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------------
+-- Privilegios del Data API. Con "Automatically expose new tables" DESACTIVADO
+-- al crear el proyecto (lo recomendado), las tablas nuevas no se exponen a la
+-- API: hay que conceder los permisos a mano, aquí. Solo al rol authenticated
+-- (con sesión iniciada); el rol anon no recibe nada. RLS sigue mandando por
+-- encima de estos GRANTs: aun con permiso de tabla, cada uno solo ve lo suyo.
+grant usage on schema public to authenticated;
+grant select, insert, update, delete
+  on public.fog_tiles, public.discovered_pois, public.watchtowers_activated,
+     public.achievements_unlocked, public.user_settings
+  to authenticated;
+
+-- ---------------------------------------------------------------------------
 -- Puntuación calculada EN SERVIDOR (germen del leaderboard real): celdas
 -- descubiertas (bits a 1 de todos los bitmaps) y POIs. Los puntos por POI
 -- según categoría se sumarán cuando el contenido viva en una tabla; de
--- momento el ranking del cliente sigue siendo local/simulado.
+-- momento el ranking del cliente sigue siendo local/simulado. SIN grant a
+-- los clientes a propósito: lee auth.users y se reharé con el leaderboard.
 create or replace view public.user_scores
 with (security_invoker = true) as
 select

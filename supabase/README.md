@@ -8,6 +8,9 @@ El código del cliente ya está (`lib/cloud/`), pero queda inerte hasta rellenar
 1. https://supabase.com → **Start your project** → entrar (con GitHub o Google).
 2. **New project**: nombre `fog-of-war`, región `eu-west` (o la más cercana),
    contraseña de base de datos cualquiera fuerte (apúntala, casi nunca hace falta).
+   Opciones de seguridad del asistente: **Enable Data API = SÍ** (la app la usa),
+   **Automatically expose new tables = NO** (schema.sql concede los permisos a
+   mano), **Enable automatic RLS = SÍ**.
 3. Al terminar, en **Project Settings → API Keys**: copiar la **Project URL** y
    la **publishable key** (`sb_publishable_…`).
 
