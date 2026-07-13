@@ -45,9 +45,17 @@ app.*.map.json
 /android/app/release
 run.pid
 
+# Firma de release: credenciales y keystore JAMÁS al repositorio
+/android/key.properties
+*.jks
+*.keystore
+
 # Memoria interna de Claude y plan privado (no subir a GitHub)
 /memory/
 /BLUEPRINT.md
 
 # Skill de UI/UX (herramienta local, no es parte de la app)
 /ui-ux-pro-max-skill/
+
+# Resultados de las mediciones de rendimiento del mapa (tool/perf)
+/tool/perf/results/

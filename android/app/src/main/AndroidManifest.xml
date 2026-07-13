@@ -18,10 +18,14 @@
     <!-- Notificaciones: avisar al descubrir un POI con la app minimizada
          (Android 13 / API 33+ exige pedir este permiso en tiempo de ejecución). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- usesCleartextTraffic=false: bloquea cualquier conexión http:// sin
+         cifrar (todos nuestros proveedores van por https). En API 28+ ya es el
+         valor por defecto; esto lo garantiza también en dispositivos viejos. -->
     <application
-        android:label="fog_of_war"
+        android:label="Fog of War"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="false">
         <activity
             android:name=".MainActivity"
             android:exported="true"
