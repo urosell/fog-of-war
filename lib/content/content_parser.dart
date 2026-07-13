@@ -46,16 +46,62 @@ List<Poi> _parsePois(String csv) {
       _warn('POI con id duplicado, ignorado: $id');
       continue;
     }
-    final mapsUrl = _cell(row, col, 'maps_url');
+    // Descripción de marketing por idioma (columnas desc_es, desc_en...).
+    final descriptions = <String, String>{};
+    for (final loc in kContentLocales) {
+      final d = _cell(row, col, 'desc_$loc');
+      if (d.isNotEmpty) descriptions[loc] = d;
+    }
+
     out.add(Poi(
       id: id,
       name: _cell(row, col, 'name'),
       location: LatLng(lat, lon),
       category: _category(_cell(row, col, 'category')),
-      customMapsUrl: mapsUrl.isEmpty ? null : mapsUrl,
+      customMapsUrl: _safeHttpsUrl(_cell(row, col, 'maps_url'), 'maps_url'),
+      imageUrl: _safeHttpsUrl(_cell(row, col, 'image_url'), 'image_url'),
+      neighborhood: _optional(_cell(row, col, 'neighborhood')),
+      rating: _tryDouble(_cell(row, col, 'rating')),
+      visitMinutes: _tryInt(_cell(row, col, 'visit_min')),
+      exploredCount: _tryInt(_cell(row, col, 'explored')),
+      descriptions: descriptions,
     ));
   }
   return out;
+}
+
+/// Texto opcional: `null` si la celda está vacía.
+String? _optional(String raw) => raw.isEmpty ? null : raw;
+
+/// Número decimal tolerante con la coma (la hoja puede venir en locale
+/// europeo: "4,8"). `null` si la celda está vacía o no es un número.
+double? _tryDouble(String raw) {
+  if (raw.trim().isEmpty) return null;
+  final v = double.tryParse(raw.trim().replaceAll(',', '.'));
+  if (v == null) _warn('Número inválido "$raw", ignorado');
+  return v;
+}
+
+int? _tryInt(String raw) {
+  if (raw.trim().isEmpty) return null;
+  final v = int.tryParse(raw.trim());
+  if (v == null) _warn('Entero inválido "$raw", ignorado');
+  return v;
+}
+
+/// Valida un enlace de la hoja antes de aceptarlo. La hoja es contenido
+/// externo: si alguien la manipulase, un enlace `intent://`, `javascript:` o
+/// `file://` se lanzaría/cargaría tal cual en el móvil del jugador. Solo
+/// aceptamos https con host; lo demás se descarta (con aviso) y la app cae al
+/// comportamiento por defecto (enlace desde coordenadas / degradado sin foto).
+String? _safeHttpsUrl(String raw, String what) {
+  if (raw.isEmpty) return null;
+  final uri = Uri.tryParse(raw);
+  if (uri == null || uri.scheme != 'https' || uri.host.isEmpty) {
+    _warn('$what no https, ignorado: $raw');
+    return null;
+  }
+  return raw;
 }
 
 PoiCategory _category(String raw) {
@@ -115,9 +161,17 @@ List<PoiCollection> _parseCollections(String csv) {
       poiIds: poiIds,
       names: names,
       descriptions: descriptions,
+      featured: _truthy(_cell(row, col, 'featured')),
     ));
   }
   return out;
+}
+
+/// Booleano tolerante para celdas de la hoja: "true", "1", "sí", "yes", "x"...
+/// Cualquier otra cosa (incluida celda vacía) es falso.
+bool _truthy(String raw) {
+  const yes = {'true', '1', 'si', 'sí', 'yes', 'x', 'verdadero'};
+  return yes.contains(raw.trim().toLowerCase());
 }
 
 /// Color desde hex ("#RRGGBB", "RRGGBB" o "0xFFRRGGBB"). Gris si es inválido.

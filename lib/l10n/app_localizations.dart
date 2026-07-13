@@ -582,6 +582,54 @@ abstract class AppLocalizations {
   /// **'Couldn\'t open Google Maps.'**
   String get poiSheetMapsError;
 
+  /// No description provided for @poiSheetDistanceAway.
+  ///
+  /// In en, this message translates to:
+  /// **'{distance} from you'**
+  String poiSheetDistanceAway(String distance);
+
+  /// No description provided for @poiSheetStatRating.
+  ///
+  /// In en, this message translates to:
+  /// **'rating'**
+  String get poiSheetStatRating;
+
+  /// No description provided for @poiSheetStatVisit.
+  ///
+  /// In en, this message translates to:
+  /// **'visit'**
+  String get poiSheetStatVisit;
+
+  /// No description provided for @poiSheetStatExplored.
+  ///
+  /// In en, this message translates to:
+  /// **'explored'**
+  String get poiSheetStatExplored;
+
+  /// No description provided for @poiSheetAppearsIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Appears in'**
+  String get poiSheetAppearsIn;
+
+  /// No description provided for @poiSheetProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} completed'**
+  String poiSheetProgress(int done, int total);
+
+  /// No description provided for @poiSheetStops.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} stops'**
+  String poiSheetStops(int count);
+
+  /// No description provided for @poiSheetDirections.
+  ///
+  /// In en, this message translates to:
+  /// **'Get directions'**
+  String get poiSheetDirections;
+
   /// No description provided for @collGaudiName.
   ///
   /// In en, this message translates to:

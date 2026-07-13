@@ -65,6 +65,61 @@ void main() {
     test('CSV vacío lanza (para no cachear basura)', () {
       expect(() => parseContent('', ''), throwsFormatException);
     });
+
+    test('maps_url solo acepta https; otros esquemas se descartan', () {
+      const pois = 'id,name,lat,lon,category,maps_url\n'
+          'ok,Con https,41.4,2.1,museo,https://maps.app.goo.gl/abc\n'
+          'mal1,Intent,41.4,2.1,museo,intent://evil#Intent;end\n'
+          'mal2,Js,41.4,2.1,museo,javascript:alert(1)\n'
+          'mal3,Http plano,41.4,2.1,museo,http://example.com\n';
+      const colls = 'id,icon,color,poi_ids,name_es,desc_es\n'
+          'c,star,#FFB300,"ok","N","D"\n';
+
+      final content = parseContent(pois, colls);
+      final byId = {for (final p in content.pois) p.id: p};
+
+      expect(byId['ok']!.customMapsUrl, 'https://maps.app.goo.gl/abc');
+      // Los inválidos no rompen el parseo: caen al enlace generado por coords.
+      for (final id in ['mal1', 'mal2', 'mal3']) {
+        expect(byId[id]!.customMapsUrl, isNull, reason: 'maps_url de $id');
+        expect(byId[id]!.mapsUrl, startsWith('https://www.google.com/maps/'));
+      }
+    });
+
+    test('campos de la ficha: foto, barrio, rating, visita, explored y desc', () {
+      const pois =
+          'id,name,lat,lon,category,image_url,neighborhood,rating,visit_min,explored,desc_es,desc_en\n'
+          'a,Sitio A,41.4,2.1,museo,https://cdn.example.com/a.jpg,Eixample,"4,8",120,1200,Hola,Hello\n'
+          'b,Sitio B,41.5,2.2,parque,http://plano.example.com/b.jpg,,nope,,,,\n';
+      const colls = 'id,icon,color,poi_ids,name_es,desc_es,featured\n'
+          'dorada,star,#FFB300,"a","Dorada","D",TRUE\n'
+          'normal,museum,#5C8DF6,"b","Normal","D",\n';
+
+      final content = parseContent(pois, colls);
+      final byId = {for (final p in content.pois) p.id: p};
+
+      final a = byId['a']!;
+      expect(a.imageUrl, 'https://cdn.example.com/a.jpg');
+      expect(a.neighborhood, 'Eixample');
+      expect(a.rating, 4.8); // coma decimal tolerada
+      expect(a.visitMinutes, 120);
+      expect(a.exploredCount, 1200);
+      expect(a.localizedDescription('en'), 'Hello');
+      expect(a.localizedDescription('fr'), 'Hola'); // sin fr → fallback a es
+
+      final b = byId['b']!;
+      expect(b.imageUrl, isNull); // http plano descartado
+      expect(b.neighborhood, isNull);
+      expect(b.rating, isNull); // "nope" no es número
+      expect(b.visitMinutes, isNull);
+      expect(b.exploredCount, isNull);
+      expect(b.localizedDescription('es'), isNull);
+
+      final dorada = content.collections.firstWhere((c) => c.id == 'dorada');
+      final normal = content.collections.firstWhere((c) => c.id == 'normal');
+      expect(dorada.featured, isTrue);
+      expect(normal.featured, isFalse);
+    });
   });
 
   group('plantilla docs/sheet', () {

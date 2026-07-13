@@ -1,4 +1,4 @@
-id,name,lat,lon,category,maps_url
+id,name,lat,lon,category,maps_url,image_url,neighborhood,rating,visit_min,explored,desc_es,desc_en,desc_ca,desc_fr
 sagrada_familia,Sagrada Família,41.4036,2.1744,iglesia,https://maps.app.goo.gl/example
 park_guell,Park Güell,41.4145,2.1527,parque,
 casa_batllo,Casa Batlló,41.3916,2.1649,monumento,

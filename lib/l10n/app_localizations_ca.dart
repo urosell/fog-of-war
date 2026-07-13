@@ -289,6 +289,36 @@ class AppLocalizationsCa extends AppLocalizations {
   String get poiSheetMapsError => 'No s\'ha pogut obrir Google Maps.';
 
   @override
+  String poiSheetDistanceAway(String distance) {
+    return 'A $distance de tu';
+  }
+
+  @override
+  String get poiSheetStatRating => 'valoració';
+
+  @override
+  String get poiSheetStatVisit => 'visita';
+
+  @override
+  String get poiSheetStatExplored => 'han explorat';
+
+  @override
+  String get poiSheetAppearsIn => 'Apareix a';
+
+  @override
+  String poiSheetProgress(int done, int total) {
+    return '$done de $total completats';
+  }
+
+  @override
+  String poiSheetStops(int count) {
+    return '$count parades';
+  }
+
+  @override
+  String get poiSheetDirections => 'Com arribar-hi';
+
+  @override
   String get collGaudiName => 'Ruta Gaudí';
 
   @override

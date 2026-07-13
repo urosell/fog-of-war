@@ -288,6 +288,36 @@ class AppLocalizationsEs extends AppLocalizations {
   String get poiSheetMapsError => 'No se pudo abrir Google Maps.';
 
   @override
+  String poiSheetDistanceAway(String distance) {
+    return 'A $distance de ti';
+  }
+
+  @override
+  String get poiSheetStatRating => 'valoración';
+
+  @override
+  String get poiSheetStatVisit => 'visita';
+
+  @override
+  String get poiSheetStatExplored => 'exploraron';
+
+  @override
+  String get poiSheetAppearsIn => 'Aparece en';
+
+  @override
+  String poiSheetProgress(int done, int total) {
+    return '$done de $total completados';
+  }
+
+  @override
+  String poiSheetStops(int count) {
+    return '$count paradas';
+  }
+
+  @override
+  String get poiSheetDirections => 'Cómo llegar';
+
+  @override
   String get collGaudiName => 'Ruta Gaudí';
 
   @override

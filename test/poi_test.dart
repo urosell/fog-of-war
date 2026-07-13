@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:latlong2/latlong.dart';
 
+import 'package:fog_of_war/fog/tile_math.dart';
 import 'package:fog_of_war/poi/poi.dart';
 import 'package:fog_of_war/poi/poi_controller.dart';
 import 'package:fog_of_war/poi/poi_storage.dart';
@@ -87,6 +88,32 @@ void main() {
       c.checkDiscoveries(_poiB.location);
       expect(c.discoveredCount, 2);
       expect(c.totalPoints, 90); // 50 + 40
+    });
+
+    test('el índice espacial no pierde POIs al otro lado del borde de un tile '
+        'Z16 (usuario y POI en tiles distintos pero a pocos metros)', () {
+      // Borde este del tile Z16 del punto base: la longitud donde empieza el
+      // tile vecino. Colocamos al usuario justo al oeste y al POI justo al
+      // este (~3 m entre ambos), en tiles distintos.
+      const base = LatLng(41.3874, 2.1686);
+      final tile = tileForCell(cellForLatLng(base));
+      final bordeLon = (tile.x + 1) / (1 << 16) * 360.0 - 180.0;
+      final usuario = LatLng(base.latitude, bordeLon - 0.00002);
+      final poiLoc = LatLng(base.latitude, bordeLon + 0.00002);
+
+      // Comprobación del propio test: de verdad caen en tiles distintos.
+      expect(tileForCell(cellForLatLng(usuario)),
+          isNot(tileForCell(cellForLatLng(poiLoc))));
+
+      final poi = Poi(
+        id: 'borde',
+        name: 'Borde',
+        location: poiLoc,
+        category: PoiCategory.monumento, // radio 80 m
+      );
+      final c = PoiController(storage: _MemoryPoiStorage(), pois: [poi]);
+      final nuevos = c.checkDiscoveries(usuario);
+      expect(nuevos.map((p) => p.id), ['borde']);
     });
 
     test('el radio depende de la categoría: 60 m descubre un monumento (80 m) '

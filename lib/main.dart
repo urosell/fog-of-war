@@ -18,6 +18,7 @@ import 'avatar/avatar.dart';
 import 'avatar/avatar_controller.dart';
 import 'cities/city.dart';
 import 'content/content_controller.dart';
+import 'debug/frame_stats.dart';
 import 'fog/fog_controller.dart';
 import 'fog/fog_layer.dart';
 import 'l10n/app_localizations.dart';
@@ -51,11 +52,29 @@ import 'watchtower/watchtower.dart';
 import 'watchtower/watchtower_controller.dart';
 
 void main() {
-  runApp(const FogOfWarApp());
+  // Solo para capturas/depuración manual (tool/perf): arrancar directamente
+  // en un estilo concreto, p. ej. --dart-define=MAP_PERF_STYLE=12. En el
+  // binario normal no se define y queda en el estilo por defecto.
+  const styleOverride = int.fromEnvironment('MAP_PERF_STYLE', defaultValue: -1);
+  runApp(FogOfWarApp(
+    initialStyleIndex: styleOverride >= 0 ? styleOverride : null,
+  ));
 }
 
 class FogOfWarApp extends StatefulWidget {
-  const FogOfWarApp({super.key});
+  // Ganchos SOLO para tests (integration_test/map_perf_test.dart): inyectar el
+  // controlador de cámara, arrancar en un estilo concreto y saltarse la intro.
+  // En el arranque normal (main) van todos por defecto y no cambian nada.
+  final MapController? mapController;
+  final int? initialStyleIndex;
+  final bool skipOnboarding;
+
+  const FogOfWarApp({
+    super.key,
+    this.mapController,
+    this.initialStyleIndex,
+    this.skipOnboarding = false,
+  });
 
   @override
   State<FogOfWarApp> createState() => _FogOfWarAppState();
@@ -91,7 +110,12 @@ class _FogOfWarAppState extends State<FogOfWarApp> {
         locale: _locale.locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: MapScreen(localeController: _locale),
+        home: MapScreen(
+          localeController: _locale,
+          mapController: widget.mapController,
+          initialStyleIndex: widget.initialStyleIndex,
+          skipOnboarding: widget.skipOnboarding,
+        ),
       ),
     );
   }
@@ -100,7 +124,18 @@ class _FogOfWarAppState extends State<FogOfWarApp> {
 class MapScreen extends StatefulWidget {
   final LocaleController localeController;
 
-  const MapScreen({super.key, required this.localeController});
+  // Ganchos de test; ver FogOfWarApp.
+  final MapController? mapController;
+  final int? initialStyleIndex;
+  final bool skipOnboarding;
+
+  const MapScreen({
+    super.key,
+    required this.localeController,
+    this.mapController,
+    this.initialStyleIndex,
+    this.skipOnboarding = false,
+  });
 
   @override
   State<MapScreen> createState() => _MapScreenState();
@@ -134,8 +169,10 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   // Contenido del juego (POIs y colecciones): semilla embebida o, si está
   // configurada la hoja, lo descargado de ella (ver content/).
   final ContentController _content = ContentController();
-  // Permite mover/leer la cámara del mapa (para centrar en el usuario).
-  final MapController _mapController = MapController();
+  // Permite mover/leer la cámara del mapa (para centrar en el usuario). El
+  // test de rendimiento inyecta el suyo para guiar la cámara desde fuera.
+  late final MapController _mapController =
+      widget.mapController ?? MapController();
   // Acceso al GPS.
   final LocationService _location = LocationService();
   // Recuerda si ya se mostró la introducción de bienvenida.
@@ -161,17 +198,24 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   bool _enPrimerPlano = true;
   // Contador para dar ids distintos a las notificaciones (no se pisan).
   int _notifId = 0;
+  // Modo admin: pinta TODOS los POIs en el mapa (coloreados por categoría) para
+  // ver su distribución por la ciudad. Es SOLO visual: no los marca como
+  // descubiertos ni afecta a puntos/logros. Al desactivarlo, todo vuelve a la
+  // vista normal (descubiertos/avistados).
+  bool _adminMostrarTodos = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // Estilo inicial: el del gancho de test si lo hay; si no, el por defecto.
+    _styleIndex = widget.initialStyleIndex ?? kDefaultStyleIndex;
     _fog.load();
     _avatar.load();
     // Preparar las notificaciones locales (el permiso se pide tras el de GPS).
     NotificationService.instance.init();
     // Si el estilo inicial es vectorial, empezar a cargar su style JSON ya.
-    _asegurarEstiloVectorial(kMapStyles[_styleIndex]);
+    _asegurarEstiloVectorial(kActiveMapStyles[_styleIndex]);
     // Cargar el contenido (POIs/colecciones) y, con él listo, arrancar el resto.
     _inicializar();
   }
@@ -205,6 +249,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   // Si el usuario no ha visto nunca la introducción, la muestra a pantalla
   // completa y espera a que la cierre; luego la marca como vista.
   Future<void> _mostrarIntroSiPrimeraVez() async {
+    // El test de rendimiento la salta (arranca con datos limpios cada vez).
+    if (widget.skipOnboarding) return;
     if (await _onboarding.hasSeen() || !mounted) return;
     await Navigator.of(context).push(appRoute(const OnboardingScreen()));
     await _onboarding.markSeen();
@@ -236,6 +282,11 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // Solo "resumed" cuenta como visible; pausada/oculta/inactiva = minimizada.
     _enPrimerPlano = state == AppLifecycleState.resumed;
+    // Al minimizar, volcar a disco la niebla pendiente de guardar (debounce):
+    // si Android mata el proceso en segundo plano, no se pierde lo último.
+    if (state == AppLifecycleState.paused) {
+      _fog.flush();
+    }
   }
 
   // Pide permiso y, si se concede, empieza a escuchar la posición.
@@ -374,7 +425,11 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     final nuevos = _achievements.evaluate(
       cells: _fog.discoveredCount,
       pois: _poi.discoveredCount,
-      cityPercent: kBarcelona.discoveryPercentage(_fog.discovered).floor(),
+      // Contador incremental por ciudad: O(1) en cada tick de GPS, en vez de
+      // recorrer todas las celdas descubiertas.
+      cityPercent: kBarcelona
+          .percentageFromCount(_fog.discoveredCountInCity(kBarcelona.id))
+          .floor(),
       watchtowers: _watchtower.activatedCount,
       collectionsComplete: _coleccionesCompletas(),
     );
@@ -442,9 +497,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   // Pasa al siguiente estilo de mapa (vuelve al primero tras el último) y
   // avisa con el nombre del estilo elegido.
   void _siguienteEstilo() {
-    final siguiente = (_styleIndex + 1) % kMapStyles.length;
+    final siguiente = (_styleIndex + 1) % kActiveMapStyles.length;
     setState(() => _styleIndex = siguiente);
-    final estilo = kMapStyles[siguiente];
+    final estilo = kActiveMapStyles[siguiente];
     // Si es vectorial, asegurarse de que su style JSON esté cargado.
     _asegurarEstiloVectorial(estilo);
     // Quitar avisos en cola para que, al pulsar rápido, se vea siempre el
@@ -465,9 +520,11 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     if (uri == null || _estilosVectoriales.containsKey(estilo.cacheKey)) return;
     try {
       // Cada skin propia tiene su loader; sin skin, el estilo del proveedor.
+      // Las skins 'exp_*' son variantes de medición (solo binario de perf).
       final cargado = switch (estilo.customSkin) {
         'game' => await loadGameStyle(),
         'corsair' => await loadCorsairStyle(),
+        final skin? => await loadExperimentStyle(skin),
         _ => await StyleReader(uri: uri).read(),
       };
       if (!mounted) return;
@@ -476,7 +533,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       if (!mounted) return;
       // Sin red o estilo no disponible: caer a un mapa raster de respaldo.
       setState(() => _styleIndex = kRasterFallbackIndex);
-      final raster = kMapStyles[kRasterFallbackIndex];
+      final raster = kActiveMapStyles[kRasterFallbackIndex];
       ScaffoldMessenger.of(context).clearSnackBars();
       _mostrarAviso(context.l10n.mapStatus(
           localizedMapStyleName(context.l10n, raster.nameKey, raster.name)));
@@ -560,6 +617,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       poi: poi,
       collections: colecciones,
       discovered: descubierto,
+      userPosition: _userPosition.value,
+      cityName: kBarcelona.name,
+      isDiscoveredId: _poi.isDiscoveredId,
       onCollectionTap: descubierto ? _abrirDetalleColeccion : null,
     );
   }
@@ -613,6 +673,16 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     );
   }
 
+  // Alterna el modo admin (mostrar todos los POIs). Solo visual; ver
+  // [_adminMostrarTodos].
+  void _alternarAdmin() {
+    setState(() => _adminMostrarTodos = !_adminMostrarTodos);
+    ScaffoldMessenger.of(context).clearSnackBars();
+    _mostrarAviso(_adminMostrarTodos
+        ? 'Admin: los ${_poi.totalCount} POIs como descubiertos (vista previa)'
+        : 'Admin: vista normal');
+  }
+
   // Vuelve a centrar el mapa en el usuario y reactiva el auto-seguir.
   void _recentrar() {
     final pos = _userPosition.value;
@@ -632,6 +702,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     if (style.isVector) {
       final cargado = _estilosVectoriales[style.cacheKey];
       if (cargado == null) return const SizedBox.shrink();
+      // Ajustes finos del render (nulos = defaults de vector_map_tiles); los
+      // fijan los experimentos de rendimiento y, tras medir, la config final.
+      final tuning = style.tuning;
       return VectorTileLayer(
         // La key por id de estilo recrea la capa al cambiar de estilo vectorial
         // (cacheKey y no styleUri: las skins custom comparten el estilo base).
@@ -639,7 +712,20 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         tileProviders: cargado.providers,
         theme: cargado.theme,
         sprites: cargado.sprites,
-        tileOffset: TileOffset.DEFAULT,
+        tileOffset: tuning?.zoomOffset == null
+            ? TileOffset.DEFAULT
+            : TileOffset(zoomOffset: tuning!.zoomOffset!),
+        concurrency:
+            tuning?.concurrency ?? VectorTileLayer.defaultConcurrency,
+        maximumZoom: tuning?.maximumZoom,
+        memoryTileCacheMaxSize: tuning?.memoryTileCacheMaxSize ??
+            VectorTileLayer.defaultTileCacheMaxSize,
+        memoryTileDataCacheMaxSize: tuning?.memoryTileDataCacheMaxSize ??
+            VectorTileLayer.defaultTileDataCacheMaxSize,
+        fileCacheMaximumSizeInBytes: tuning?.fileCacheMaximumSizeInBytes ??
+            VectorTileLayer.defaultCacheMaxSize,
+        textCacheMaxSize:
+            tuning?.textCacheMaxSize ?? VectorTileLayer.defaultTextCacheMaxSize,
       );
     }
     // Estilo raster: tiles PNG, con filtro de color opcional.
@@ -676,7 +762,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                   final mision = _mission.selected;
                   return HudStats(
                     cityName: kBarcelona.name,
-                    percentage: kBarcelona.discoveryPercentage(_fog.discovered),
+                    percentage: kBarcelona.percentageFromCount(
+                        _fog.discoveredCountInCity(kBarcelona.id)),
                     cells: _fog.discoveredCount,
                     points: _poi.totalPoints,
                     poisDiscovered: _poi.discoveredCount,
@@ -732,6 +819,16 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                     tooltip: l.tooltipSettings,
                     onPressed: _abrirAjustes,
                   ),
+                  const SizedBox(height: 10),
+                  // Admin (solo desarrollo): muestra todos los POIs del mapa
+                  // como si estuvieran descubiertos (vista previa). No los
+                  // descubre de verdad; ver [_adminMostrarTodos].
+                  GlassIconButton(
+                    icon: Icons.pin_drop,
+                    tooltip: 'Admin: mostrar todos los POIs',
+                    active: _adminMostrarTodos,
+                    onPressed: _alternarAdmin,
+                  ),
                 ],
               ),
             ),
@@ -771,6 +868,13 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                 onPressed: _recentrar,
               ),
             ),
+            // Métricas de frames en vivo (solo en modo admin): para comprobar
+            // en el móvil, con APK release, si el mapa da tirones y cuánto.
+            if (_adminMostrarTodos)
+              const Align(
+                alignment: Alignment.bottomCenter,
+                child: FrameStatsOverlay(),
+              ),
           ],
         ),
       ),
@@ -807,24 +911,43 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
               ),
               children: [
                 // Mapa base. El estilo lo elige el usuario con el botón de capas;
-                // se usa el estilo actual de kMapStyles. La clave (key) fuerza a
-                // flutter_map a recrear la capa al cambiar de estilo.
-                _buildBaseLayer(kMapStyles[_styleIndex]),
+                // se usa el estilo actual de kActiveMapStyles. La clave (key)
+                // fuerza a flutter_map a recrear la capa al cambiar de estilo.
+                _buildBaseLayer(kActiveMapStyles[_styleIndex]),
                 // La niebla va encima de los tiles del mapa, con el color a
                 // juego con el estilo actual (o el del juego por defecto).
-                FogLayer(
-                  controller: _fog,
-                  color: kMapStyles[_styleIndex].fogColor ?? kFogColor,
-                  // Sin ribete por ahora (borderColor: kHudAccent lo reactiva
-                  // con el verde del HUD). El contorno suave del velo no depende
-                  // de esto.
-                ),
+                // MAP_PERF_NO_FOG (solo capturas de tool/perf): la oculta para
+                // poder comparar el mapa base; jamás se define en producción.
+                if (!const bool.fromEnvironment('MAP_PERF_NO_FOG'))
+                  FogLayer(
+                    controller: _fog,
+                    color: kActiveMapStyles[_styleIndex].fogColor ?? kFogColor,
+                    // Sin ribete por ahora (borderColor: kHudAccent lo
+                    // reactiva con el verde del HUD). El contorno suave del
+                    // velo no depende de esto.
+                  ),
                 // Atalayas (siempre visibles) y POIs: avistados en gris,
-                // descubiertos en dorado. Se redibuja al activar una atalaya o
-                // descubrir un POI. Todo va encima de la niebla.
+                // descubiertos en dorado. Se redibuja al activar una atalaya,
+                // descubrir un POI o cambiar la misión fijada. Todo va encima
+                // de la niebla.
                 ListenableBuilder(
-                  listenable: Listenable.merge([_poi, _watchtower]),
-                  builder: (context, _) => MarkerLayer(
+                  listenable: Listenable.merge([_poi, _watchtower, _mission]),
+                  builder: (context, _) {
+                    // Con una misión (colección) fijada y fuera del modo admin,
+                    // el mapa se enfoca en esa colección: solo se pintan sus
+                    // POIs. El modo admin (ver todos) tiene prioridad.
+                    final mision =
+                        _adminMostrarTodos ? null : _mission.selected;
+                    final soloIds = mision?.poiIds.toSet();
+                    final pois = soloIds == null
+                        ? _poi.allPois
+                        : _poi.allPois
+                            .where((p) => soloIds.contains(p.id))
+                            .toList();
+                    return MarkerLayer(
+                    // Mantener los marcadores en vertical aunque se gire el
+                    // mapa (flutter_map los contrarrota respecto a la cámara).
+                    rotate: true,
                     markers: [
                       // Atalayas: marcador propio, siempre visible.
                       for (final tower in _watchtower.towers)
@@ -835,9 +958,13 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                           child: _WatchtowerMarker(
                               activated: _watchtower.isActivated(tower)),
                         ),
-                      // POIs: dorado si descubierto; gris si solo avistado.
-                      for (final poi in _poi.allPois)
-                        if (_poi.isDiscovered(poi))
+                      // POIs: dorado si descubierto; gris si solo avistado. En
+                      // modo admin, TODOS se muestran como descubiertos (dorado
+                      // + ficha completa): es solo una vista previa, no suma
+                      // puntos ni se guarda; al salir de admin vuelve el
+                      // progreso real.
+                      for (final poi in pois)
+                        if (_poi.isDiscovered(poi) || _adminMostrarTodos)
                           Marker(
                             point: poi.location,
                             width: 40,
@@ -860,7 +987,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                             ),
                           ),
                     ],
-                  ),
+                    );
+                  },
                 ),
                 // Marcador de "estás aquí" (solo si ya tenemos posición). Se
                 // redibuja al moverte (ValueNotifier) y al cambiar el avatar en
@@ -872,6 +1000,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                     return ListenableBuilder(
                       listenable: _avatar,
                       builder: (context, _) => MarkerLayer(
+                        // El avatar también se mantiene en vertical al girar.
+                        rotate: true,
                         markers: [
                           Marker(
                             point: pos,

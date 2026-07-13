@@ -34,6 +34,10 @@ class PoiCollection {
   final Map<String, String> names;
   final Map<String, String> descriptions;
 
+  /// Colección "destacada" (columna `featured` de la hoja): en la ficha de un
+  /// POI se pinta como card dorada con el progreso, por encima del resto.
+  final bool featured;
+
   const PoiCollection({
     required this.id,
     required this.name,
@@ -43,6 +47,7 @@ class PoiCollection {
     required this.poiIds,
     this.names = const {},
     this.descriptions = const {},
+    this.featured = false,
   });
 
   /// Nombre en el idioma [code], con fallback al nombre base.
@@ -125,6 +130,7 @@ const List<PoiCollection> kPoiCollections = [
     },
     icon: Icons.star,
     accent: Color(0xFFFFB300), // ámbar "tesoro"
+    featured: true,
     poiIds: [
       'sagrada_familia',
       'park_guell',

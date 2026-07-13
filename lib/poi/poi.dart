@@ -50,13 +50,48 @@ class Poi {
   /// Si está vacío, [mapsUrl] se genera solo desde las coordenadas.
   final String? customMapsUrl;
 
+  // --- Ficha "marketiniana" (todo opcional; la UI degrada si falta) ---
+
+  /// Foto de cabecera (columna `image_url`, solo https). Sin foto, la ficha
+  /// pinta un degradado de la categoría.
+  final String? imageUrl;
+
+  /// Barrio para la línea "EIXAMPLE · BARCELONA" (columna `neighborhood`).
+  final String? neighborhood;
+
+  /// Valoración 0-5 escrita a mano en la hoja (columna `rating`).
+  final double? rating;
+
+  /// Duración estimada de la visita en minutos (columna `visit_min`).
+  final int? visitMinutes;
+
+  /// Cuánta gente lo exploró (columna `explored`). De momento manual; cuando
+  /// haya backend será el contador real de jugadores.
+  final int? exploredCount;
+
+  /// Descripción evocadora por idioma (columnas `desc_es`, `desc_en`...).
+  final Map<String, String> descriptions;
+
   const Poi({
     required this.id,
     required this.name,
     required this.location,
     required this.category,
     this.customMapsUrl,
+    this.imageUrl,
+    this.neighborhood,
+    this.rating,
+    this.visitMinutes,
+    this.exploredCount,
+    this.descriptions = const {},
   });
+
+  /// Descripción en el idioma [code], con fallback a español o al primer
+  /// idioma disponible. `null` si no hay ninguna (la UI omite el párrafo).
+  String? localizedDescription(String code) =>
+      descriptions[code] ??
+      descriptions['es'] ??
+      (descriptions.isNotEmpty ? descriptions.values.first : null);
 
   /// Puntos que otorga descubrir este POI (según su categoría).
   int get points => category.points;

@@ -5,6 +5,9 @@
 // app funciona solo con el contenido semilla embebido (no intenta descargar).
 
 /// ID de la Google Sheet con el contenido. null = no descargar (usar semilla).
+// El tipo es String? a propósito: poner null aquí es el interruptor documentado
+// para desactivar la descarga (el analizador sugiere String al ver un valor).
+// ignore: unnecessary_nullable_for_final_variable_declarations
 const String? kSpreadsheetId = '1oLCwYutbWWN6ANN6oRhr5PJqyZcYeFDOpThDtYN0WaE';
 
 /// Nombres de las pestañas dentro de la hoja.

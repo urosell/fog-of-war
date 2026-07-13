@@ -158,6 +158,23 @@
   "poiSheetUndiscoveredTitle": "Yet to discover",
   "poiSheetUndiscoveredHint": "Get close to this spot to reveal what's hidden here. Adventure awaits! 🧭",
   "poiSheetMapsError": "Couldn't open Google Maps.",
+  "poiSheetDistanceAway": "{distance} from you",
+  "@poiSheetDistanceAway": {
+    "placeholders": { "distance": { "type": "String" } }
+  },
+  "poiSheetStatRating": "rating",
+  "poiSheetStatVisit": "visit",
+  "poiSheetStatExplored": "explored",
+  "poiSheetAppearsIn": "Appears in",
+  "poiSheetProgress": "{done} of {total} completed",
+  "@poiSheetProgress": {
+    "placeholders": { "done": { "type": "int" }, "total": { "type": "int" } }
+  },
+  "poiSheetStops": "{count} stops",
+  "@poiSheetStops": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "poiSheetDirections": "Get directions",
 
   "collGaudiName": "Gaudí Route",
   "collGaudiDesc": "Antoni Gaudí's modernist work across Barcelona.",
