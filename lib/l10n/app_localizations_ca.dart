@@ -183,6 +183,32 @@ class AppLocalizationsCa extends AppLocalizations {
   String get languageSystem => 'Idioma del sistema';
 
   @override
+  String get settingsAccount => 'Compte';
+
+  @override
+  String get accountBenefit =>
+      'Desa el teu progrés al núvol i recupera\'l a qualsevol mòbil.';
+
+  @override
+  String get accountSignIn => 'Inicia la sessió amb Google';
+
+  @override
+  String get accountSignOut => 'Tanca la sessió';
+
+  @override
+  String get accountSyncing => 'Sincronitzant…';
+
+  @override
+  String get accountSynced => 'Progrés sincronitzat';
+
+  @override
+  String get accountSyncError =>
+      'No s\'ha pogut sincronitzar; es reintentarà sol';
+
+  @override
+  String get accountSignInFailed => 'No s\'ha pogut obrir l\'inici de sessió';
+
+  @override
   String get hudMission => 'Missió';
 
   @override

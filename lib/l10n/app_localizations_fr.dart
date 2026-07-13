@@ -183,6 +183,32 @@ class AppLocalizationsFr extends AppLocalizations {
   String get languageSystem => 'Langue du système';
 
   @override
+  String get settingsAccount => 'Compte';
+
+  @override
+  String get accountBenefit =>
+      'Sauvegardez votre progression dans le cloud et récupérez-la sur n\'importe quel téléphone.';
+
+  @override
+  String get accountSignIn => 'Se connecter avec Google';
+
+  @override
+  String get accountSignOut => 'Se déconnecter';
+
+  @override
+  String get accountSyncing => 'Synchronisation…';
+
+  @override
+  String get accountSynced => 'Progression synchronisée';
+
+  @override
+  String get accountSyncError =>
+      'Échec de la synchronisation ; nouvelle tentative automatique';
+
+  @override
+  String get accountSignInFailed => 'Impossible d\'ouvrir la page de connexion';
+
+  @override
   String get hudMission => 'Mission';
 
   @override

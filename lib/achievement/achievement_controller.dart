@@ -45,6 +45,23 @@ class AchievementController extends ChangeNotifier {
   /// Valor actual (último evaluado) de una métrica, para el progreso en la UI.
   int currentFor(AchievementMetric metric) => _snapshot[metric] ?? 0;
 
+  /// IDs desbloqueados (copia; para el sync en la nube).
+  Set<String> get unlockedIds => Set<String>.of(_unlockedIds);
+
+  /// Une logros venidos de la nube con los locales, en silencio (como el
+  /// desbloqueo retroactivo al cargar: sin toast). Devuelve cuántos eran
+  /// nuevos.
+  int mergeUnlocked(Iterable<String> ids) {
+    final antes = _unlockedIds.length;
+    _unlockedIds.addAll(ids);
+    final nuevos = _unlockedIds.length - antes;
+    if (nuevos > 0) {
+      _storage.save(Set<String>.of(_unlockedIds));
+      notifyListeners();
+    }
+    return nuevos;
+  }
+
   /// Carga los logros desbloqueados guardados. Llamar una vez al arrancar.
   Future<void> load() async {
     _unlockedIds.addAll(await _storage.load());

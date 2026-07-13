@@ -183,6 +183,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get languageSystem => 'System default';
 
   @override
+  String get settingsAccount => 'Account';
+
+  @override
+  String get accountBenefit =>
+      'Back up your progress to the cloud and restore it on any phone.';
+
+  @override
+  String get accountSignIn => 'Sign in with Google';
+
+  @override
+  String get accountSignOut => 'Sign out';
+
+  @override
+  String get accountSyncing => 'Syncing…';
+
+  @override
+  String get accountSynced => 'Progress synced';
+
+  @override
+  String get accountSyncError => 'Couldn\'t sync; it will retry on its own';
+
+  @override
+  String get accountSignInFailed => 'Couldn\'t open the sign-in page';
+
+  @override
   String get hudMission => 'Mission';
 
   @override

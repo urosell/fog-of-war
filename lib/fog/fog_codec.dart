@@ -25,6 +25,36 @@ const int kFogFormatVersion = 1;
 /// Bytes que ocupa el bitmap de un tile (256 celdas / 8 bits = 32 bytes).
 const int kTileBitmapBytes = 32;
 
+/// Bitmap de 32 bytes de UN tile a partir de sus celdas descubiertas.
+/// Es el mismo formato por-tile del archivo local, y también lo que sube el
+/// sync a la tabla `fog_tiles` (una fila por tile; ver lib/cloud/).
+Uint8List encodeTileBitmap(Iterable<CellId> cellsOfTile) {
+  final bitmap = Uint8List(kTileBitmapBytes);
+  for (final cell in cellsOfTile) {
+    final bit = bitIndexForCell(cell);
+    bitmap[bit >> 3] |= (1 << (bit & 7));
+  }
+  return bitmap;
+}
+
+/// Celdas de UN tile a partir de su bitmap de 32 bytes (inversa de
+/// [encodeTileBitmap]). Un bitmap corto/corrupto devuelve solo lo legible.
+Set<CellId> decodeTileBitmap(TileId tile, Uint8List bitmap) {
+  final result = <CellId>{};
+  final len =
+      bitmap.length < kTileBitmapBytes ? bitmap.length : kTileBitmapBytes;
+  for (var byteIdx = 0; byteIdx < len; byteIdx++) {
+    final b = bitmap[byteIdx];
+    if (b == 0) continue;
+    for (var bit = 0; bit < 8; bit++) {
+      if ((b & (1 << bit)) != 0) {
+        result.add(cellFromTileAndBit(tile, (byteIdx << 3) + bit));
+      }
+    }
+  }
+  return result;
+}
+
 /// Serializa las celdas descubiertas a bytes.
 Uint8List encodeFog(Set<CellId> cells) {
   // Agrupar celdas por tile Z16, construyendo el bitmap de cada uno.

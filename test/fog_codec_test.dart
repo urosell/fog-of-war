@@ -56,4 +56,26 @@ void main() {
       expect(decodeFog(bytes), isEmpty);
     });
   });
+
+  group('bitmap por tile (formato del sync en la nube)', () {
+    test('ida y vuelta conserva las celdas de un tile', () {
+      // Celdas variadas del mismo tile (bits 0, 7, 128 y 255).
+      const tile = TileId(32000, 24000);
+      final cells = {
+        cellFromTileAndBit(tile, 0),
+        cellFromTileAndBit(tile, 7),
+        cellFromTileAndBit(tile, 128),
+        cellFromTileAndBit(tile, 255),
+      };
+      final bitmap = encodeTileBitmap(cells);
+      expect(bitmap.length, kTileBitmapBytes);
+      expect(decodeTileBitmap(tile, bitmap), cells);
+    });
+
+    test('bitmap vacío = sin celdas; corto/corrupto no lanza', () {
+      const tile = TileId(1, 1);
+      expect(decodeTileBitmap(tile, Uint8List(kTileBitmapBytes)), isEmpty);
+      expect(decodeTileBitmap(tile, Uint8List(3)), isEmpty);
+    });
+  });
 }

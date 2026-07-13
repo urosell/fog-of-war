@@ -62,6 +62,15 @@
   "settingsLanguage": "Idioma",
   "languageSystem": "Idioma del sistema",
 
+  "settingsAccount": "Cuenta",
+  "accountBenefit": "Guarda tu progreso en la nube y recupéralo en cualquier móvil.",
+  "accountSignIn": "Iniciar sesión con Google",
+  "accountSignOut": "Cerrar sesión",
+  "accountSyncing": "Sincronizando…",
+  "accountSynced": "Progreso sincronizado",
+  "accountSyncError": "No se pudo sincronizar; se reintentará solo",
+  "accountSignInFailed": "No se pudo abrir el inicio de sesión",
+
   "hudMission": "Misión",
   "pinMission": "Fijar como misión",
   "unpinMission": "Quitar misión",

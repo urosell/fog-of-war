@@ -48,6 +48,10 @@ dependencies:
   csv: ^8.0.0
   url_launcher: ^6.3.1
   flutter_cube: ^0.1.1
+  # Backend (cuenta de Google + progreso en la nube): Supabase Auth + Postgres
+  # con RLS. La app funciona igual sin sesión (sigue siendo local-first); ver
+  # lib/cloud/.
+  supabase_flutter: ^2.16.0
 
 # Copia local de vector_map_tiles 9.0.0-beta.8 con parches MÍNIMOS de manejo
 # de errores (futures cancelados sin dueño que ensucian el log y matan los

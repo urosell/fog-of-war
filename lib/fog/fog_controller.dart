@@ -14,6 +14,7 @@ import 'package:flutter/foundation.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../cities/city.dart';
+import 'fog_codec.dart';
 import 'fog_holes.dart';
 import 'fog_storage.dart';
 import 'tile_math.dart';
@@ -65,6 +66,12 @@ class FogController extends ChangeNotifier {
   // de GPS (con años de juego serían cientos de miles de celdas).
   final List<_CityCellCounter> _cityCounters;
 
+  // Tiles con cambios aún no subidos a la nube. Lo alimenta _addCell y lo
+  // drena el sync (takeDirtyTiles); si la subida falla, el sync los re-marca
+  // con markTilesDirty para reintentar. Sin sesión iniciada simplemente crece
+  // con los tiles tocados (son pocos y baratos: solo TileIds).
+  final Set<TileId> _dirtyTiles = <TileId>{};
+
   // Contador que sube con cada cambio en las celdas. La capa de niebla lo usa
   // para saber si su máscara cacheada sigue valiendo o hay que rehacerla.
   int _revision = 0;
@@ -106,11 +113,49 @@ class FogController extends ChangeNotifier {
   // a la vez, para que nunca se desincronicen. Devuelve true si era nueva.
   bool _addCell(CellId cell) {
     if (!_discovered.add(cell)) return false;
-    _byTile.putIfAbsent(tileForCell(cell), () => <CellId>[]).add(cell);
+    final tile = tileForCell(cell);
+    _byTile.putIfAbsent(tile, () => <CellId>[]).add(cell);
+    _dirtyTiles.add(tile);
     for (final counter in _cityCounters) {
       if (counter.contains(cell)) counter.count++;
     }
     return true;
+  }
+
+  // --- Apoyo del sync en la nube (lib/cloud/cloud_sync.dart) ---
+
+  /// Devuelve los tiles con cambios pendientes de subir y los desmarca.
+  /// Si la subida falla, devuélvelos con [markTilesDirty].
+  Set<TileId> takeDirtyTiles() {
+    final tiles = Set<TileId>.of(_dirtyTiles);
+    _dirtyTiles.clear();
+    return tiles;
+  }
+
+  /// Re-marca tiles como pendientes de subir (subida fallida o merge inicial).
+  void markTilesDirty(Iterable<TileId> tiles) => _dirtyTiles.addAll(tiles);
+
+  /// Marca TODOS los tiles con celdas como pendientes: se usa tras el merge de
+  /// iniciar sesión para que el estado local completo (la unión) suba una vez.
+  void markAllTilesDirty() => _dirtyTiles.addAll(_byTile.keys);
+
+  /// Bitmap de 32 bytes del [tile] (el formato de la tabla `fog_tiles`).
+  Uint8List bitmapForTile(TileId tile) =>
+      encodeTileBitmap(_byTile[tile] ?? const []);
+
+  /// Une celdas venidas de la nube con las locales. Devuelve cuántas eran
+  /// nuevas; si hubo alguna, persiste y notifica (la niebla se redibuja).
+  int mergeRemoteCells(Iterable<CellId> cells) {
+    var nuevas = 0;
+    for (final cell in cells) {
+      if (_addCell(cell)) nuevas++;
+    }
+    if (nuevas > 0) {
+      _revision++;
+      _scheduleSave();
+      notifyListeners();
+    }
+    return nuevas;
   }
 
   void _addCells(Iterable<CellId> cells) {
@@ -183,6 +228,7 @@ class FogController extends ChangeNotifier {
     if (_discovered.isEmpty) return;
     _discovered.clear();
     _byTile.clear();
+    _dirtyTiles.clear();
     for (final counter in _cityCounters) {
       counter.count = 0;
     }

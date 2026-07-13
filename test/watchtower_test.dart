@@ -94,5 +94,17 @@ void main() {
       expect(c.isSightedId('near'), isTrue);
       expect(c.isSightedId('far'), isFalse);
     });
+
+    test('mergeActivated (sync nube) activa sin anuncio y recalcula avistados',
+        () {
+      final c = build();
+      final nuevas = c.mergeActivated({'t'});
+      expect(nuevas, 1);
+      expect(c.isActivated(_tower), isTrue);
+      expect(c.isSightedId('near'), isTrue); // avistados recalculados
+      // Idempotente.
+      expect(c.mergeActivated({'t'}), 0);
+      expect(c.activatedIds, {'t'});
+    });
   });
 }

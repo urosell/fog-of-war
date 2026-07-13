@@ -53,6 +53,24 @@ class WatchtowerController extends ChangeNotifier {
   /// ¿Está este POI avistado (revelado por una atalaya) por su ID?
   bool isSightedId(String poiId) => _sightedPoiIds.contains(poiId);
 
+  /// IDs de atalayas activadas (copia; para el sync en la nube).
+  Set<String> get activatedIds => Set<String>.of(_activatedIds);
+
+  /// Une activaciones venidas de la nube con las locales, sin anuncio (se
+  /// activaron en otro móvil). Recalcula los avistados. Devuelve cuántas
+  /// eran nuevas.
+  int mergeActivated(Iterable<String> ids) {
+    final antes = _activatedIds.length;
+    _activatedIds.addAll(ids);
+    final nuevas = _activatedIds.length - antes;
+    if (nuevas > 0) {
+      _recomputeSighted();
+      _storage.save(Set<String>.of(_activatedIds));
+      notifyListeners();
+    }
+    return nuevas;
+  }
+
   /// Carga las atalayas activadas guardadas y recalcula los avistados. Llamar
   /// una vez al arrancar.
   Future<void> load() async {

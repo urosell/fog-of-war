@@ -137,5 +137,19 @@ void main() {
       expect(nuevos.map((p) => p.id), ['m']);
       expect(c.isDiscovered(tienda), isFalse);
     });
+
+    test('mergeDiscovered (sync nube) une, suma puntos y es idempotente', () {
+      final c = build();
+      c.checkDiscoveries(_poiA.location); // 'a' descubierto localmente
+      // De la nube llegan 'a' (repetido), 'b' y un id que no está en el pozo.
+      final nuevos = c.mergeDiscovered({'a', 'b', 'fantasma'});
+      expect(nuevos, 2); // 'b' y 'fantasma' eran nuevos
+      expect(c.isDiscoveredId('b'), isTrue);
+      // Los puntos se recalculan: solo cuentan los POIs del pozo actual.
+      expect(c.totalPoints, _poiA.points + _poiB.points);
+      // Repetir no cambia nada.
+      expect(c.mergeDiscovered({'a', 'b'}), 0);
+      expect(c.discoveredIds, containsAll({'a', 'b', 'fantasma'}));
+    });
   });
 }

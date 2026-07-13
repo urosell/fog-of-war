@@ -85,6 +85,25 @@ class PoiController extends ChangeNotifier {
   /// Igual que [isDiscovered] pero por ID (lo usan las colecciones).
   bool isDiscoveredId(String id) => _discoveredIds.contains(id);
 
+  /// IDs descubiertos (copia; para el sync en la nube).
+  Set<String> get discoveredIds => Set<String>.of(_discoveredIds);
+
+  /// Une IDs descubiertos venidos de la nube con los locales, SIN celebración
+  /// (son descubrimientos de otro móvil, no de este paseo). Igual que en
+  /// load(), se aceptan ids que no estén en el pozo actual: si el contenido de
+  /// la hoja los trae luego, cuentan. Devuelve cuántos eran nuevos.
+  int mergeDiscovered(Iterable<String> ids) {
+    final antes = _discoveredIds.length;
+    _discoveredIds.addAll(ids);
+    final nuevos = _discoveredIds.length - antes;
+    if (nuevos > 0) {
+      _recomputePoints();
+      _storage.save(Set<String>.of(_discoveredIds));
+      notifyListeners();
+    }
+    return nuevos;
+  }
+
   /// POIs ya descubiertos (para dibujarlos en el mapa).
   List<Poi> get discoveredPois =>
       _allPois.where((p) => _discoveredIds.contains(p.id)).toList();

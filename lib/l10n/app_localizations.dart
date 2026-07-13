@@ -414,6 +414,54 @@ abstract class AppLocalizations {
   /// **'System default'**
   String get languageSystem;
 
+  /// No description provided for @settingsAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get settingsAccount;
+
+  /// No description provided for @accountBenefit.
+  ///
+  /// In en, this message translates to:
+  /// **'Back up your progress to the cloud and restore it on any phone.'**
+  String get accountBenefit;
+
+  /// No description provided for @accountSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with Google'**
+  String get accountSignIn;
+
+  /// No description provided for @accountSignOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get accountSignOut;
+
+  /// No description provided for @accountSyncing.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing…'**
+  String get accountSyncing;
+
+  /// No description provided for @accountSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress synced'**
+  String get accountSynced;
+
+  /// No description provided for @accountSyncError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t sync; it will retry on its own'**
+  String get accountSyncError;
+
+  /// No description provided for @accountSignInFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open the sign-in page'**
+  String get accountSignInFailed;
+
   /// No description provided for @hudMission.
   ///
   /// In en, this message translates to:

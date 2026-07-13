@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 
 import '../avatar/avatar.dart';
 import '../avatar/avatar_controller.dart';
+import '../cloud/cloud_auth.dart';
+import '../cloud/cloud_sync.dart';
 import '../l10n/l10n_ext.dart';
 import '../locale/locale_controller.dart';
 import 'hud.dart' show kHudAccent;
@@ -34,15 +36,23 @@ const List<_LangOption> _kLanguages = [
 class SettingsScreen extends StatelessWidget {
   final AvatarController avatar;
   final LocaleController localeController;
+  // Cuenta y sync en la nube. Nulos (o sin backend configurado) = la sección
+  // de cuenta no se muestra y la pantalla queda como siempre.
+  final CloudAuth? cloudAuth;
+  final CloudSync? cloudSync;
 
   const SettingsScreen({
     super.key,
     required this.avatar,
     required this.localeController,
+    this.cloudAuth,
+    this.cloudSync,
   });
 
   @override
   Widget build(BuildContext context) {
+    final auth = cloudAuth;
+    final mostrarCuenta = auth != null && auth.isAvailable;
     return Scaffold(
       backgroundColor: _kBackground,
       appBar: AppBar(
@@ -51,15 +61,26 @@ class SettingsScreen extends StatelessWidget {
         elevation: 0,
         title: Text(context.l10n.settingsTitle),
       ),
-      // Escucha avatar + idioma: al cambiar cualquiera, se redibuja (y al
-      // cambiar el idioma, MaterialApp reconstruye todo en el nuevo idioma).
+      // Escucha avatar + idioma (+ cuenta/sync si hay): al cambiar cualquiera,
+      // se redibuja (y al cambiar el idioma, MaterialApp reconstruye todo).
       body: ListenableBuilder(
-        listenable: Listenable.merge([avatar, localeController]),
+        listenable: Listenable.merge([
+          avatar,
+          localeController,
+          if (mostrarCuenta) auth,
+          ?cloudSync,
+        ]),
         builder: (context, _) {
           final l = context.l10n;
           return ListView(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
             children: [
+              if (mostrarCuenta) ...[
+                _SectionTitle(l.settingsAccount),
+                const SizedBox(height: 12),
+                _AccountCard(auth: auth, sync: cloudSync),
+                const SizedBox(height: 28),
+              ],
               _PreviewCard(icon: avatar.icon, color: avatar.color),
               const SizedBox(height: 28),
               _SectionTitle(l.settingsIcon),
@@ -89,6 +110,117 @@ class SettingsScreen extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+}
+
+/// Tarjeta de cuenta: sin sesión, explica el beneficio y ofrece el login con
+/// Google; con sesión, muestra el email, el estado del sync y cerrar sesión.
+class _AccountCard extends StatelessWidget {
+  final CloudAuth auth;
+  final CloudSync? sync;
+
+  const _AccountCard({required this.auth, required this.sync});
+
+  Future<void> _login(BuildContext context) async {
+    final l = context.l10n;
+    final abierto = await auth.signInWithGoogle();
+    if (!abierto && context.mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l.accountSignInFailed)));
+    }
+  }
+
+  // Línea de estado del sync bajo el email.
+  (IconData, String, Color) _estado(BuildContext context) {
+    final l = context.l10n;
+    return switch (sync?.status) {
+      CloudSyncStatus.syncing => (Icons.sync, l.accountSyncing, Colors.white70),
+      CloudSyncStatus.error =>
+        (Icons.cloud_off, l.accountSyncError, Colors.orangeAccent),
+      _ => (Icons.cloud_done, l.accountSynced, kHudAccent),
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+      ),
+      child: !auth.isSignedIn
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  l.accountBenefit,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.75),
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                FilledButton.icon(
+                  onPressed: () => _login(context),
+                  icon: const Icon(Icons.login),
+                  label: Text(l.accountSignIn),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black87,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              ],
+            )
+          : Builder(builder: (context) {
+              final (icono, texto, color) = _estado(context);
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.account_circle,
+                          color: Colors.white70, size: 32),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          auth.email ?? '',
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Icon(icono, size: 16, color: color),
+                      const SizedBox(width: 6),
+                      Text(texto, style: TextStyle(color: color, fontSize: 13)),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: auth.signOut,
+                      child: Text(
+                        l.accountSignOut,
+                        style: const TextStyle(color: Colors.white54),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            }),
     );
   }
 }

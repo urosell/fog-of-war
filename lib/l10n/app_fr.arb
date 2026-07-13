@@ -62,6 +62,15 @@
   "settingsLanguage": "Langue",
   "languageSystem": "Langue du système",
 
+  "settingsAccount": "Compte",
+  "accountBenefit": "Sauvegardez votre progression dans le cloud et récupérez-la sur n'importe quel téléphone.",
+  "accountSignIn": "Se connecter avec Google",
+  "accountSignOut": "Se déconnecter",
+  "accountSyncing": "Synchronisation…",
+  "accountSynced": "Progression synchronisée",
+  "accountSyncError": "Échec de la synchronisation ; nouvelle tentative automatique",
+  "accountSignInFailed": "Impossible d'ouvrir la page de connexion",
+
   "hudMission": "Mission",
   "pinMission": "Épingler comme mission",
   "unpinMission": "Retirer la mission",

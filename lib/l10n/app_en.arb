@@ -86,6 +86,15 @@
   "settingsLanguage": "Language",
   "languageSystem": "System default",
 
+  "settingsAccount": "Account",
+  "accountBenefit": "Back up your progress to the cloud and restore it on any phone.",
+  "accountSignIn": "Sign in with Google",
+  "accountSignOut": "Sign out",
+  "accountSyncing": "Syncing…",
+  "accountSynced": "Progress synced",
+  "accountSyncError": "Couldn't sync; it will retry on its own",
+  "accountSignInFailed": "Couldn't open the sign-in page",
+
   "hudMission": "Mission",
   "pinMission": "Pin as mission",
   "unpinMission": "Unpin mission",

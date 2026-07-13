@@ -62,6 +62,15 @@
   "settingsLanguage": "Idioma",
   "languageSystem": "Idioma del sistema",
 
+  "settingsAccount": "Compte",
+  "accountBenefit": "Desa el teu progrés al núvol i recupera'l a qualsevol mòbil.",
+  "accountSignIn": "Inicia la sessió amb Google",
+  "accountSignOut": "Tanca la sessió",
+  "accountSyncing": "Sincronitzant…",
+  "accountSynced": "Progrés sincronitzat",
+  "accountSyncError": "No s'ha pogut sincronitzar; es reintentarà sol",
+  "accountSignInFailed": "No s'ha pogut obrir l'inici de sessió",
+
   "hudMission": "Missió",
   "pinMission": "Fixar com a missió",
   "unpinMission": "Treure la missió",

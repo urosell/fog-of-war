@@ -17,6 +17,8 @@ import 'achievement/achievement_controller.dart';
 import 'avatar/avatar.dart';
 import 'avatar/avatar_controller.dart';
 import 'cities/city.dart';
+import 'cloud/cloud_auth.dart';
+import 'cloud/cloud_sync.dart';
 import 'content/content_controller.dart';
 import 'debug/frame_stats.dart';
 import 'fog/fog_controller.dart';
@@ -51,7 +53,10 @@ import 'ui/transitions.dart';
 import 'watchtower/watchtower.dart';
 import 'watchtower/watchtower_controller.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Backend (cuenta + progreso en la nube). Sin configurar, no hace nada.
+  await initCloud();
   // Solo para capturas/depuración manual (tool/perf): arrancar directamente
   // en un estilo concreto, p. ej. --dart-define=MAP_PERF_STYLE=12. En el
   // binario normal no se define y queda en el estilo por defecto.
@@ -169,6 +174,19 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   // Contenido del juego (POIs y colecciones): semilla embebida o, si está
   // configurada la hoja, lo descargado de ella (ver content/).
   final ContentController _content = ContentController();
+  // Cuenta de Google (Supabase) y sync del progreso en la nube. Sin backend
+  // configurado (lib/cloud/cloud_config.dart) quedan inertes y no se muestran.
+  final CloudAuth _cloudAuth = CloudAuth();
+  late final CloudSync _cloudSync = CloudSync(
+    auth: _cloudAuth,
+    fog: _fog,
+    poi: _poi,
+    watchtowers: _watchtower,
+    achievements: _achievements,
+    avatar: _avatar,
+    locale: widget.localeController,
+    mission: _mission,
+  );
   // Permite mover/leer la cámara del mapa (para centrar en el usuario). El
   // test de rendimiento inyecta el suyo para guiar la cámara desde fuera.
   late final MapController _mapController =
@@ -238,6 +256,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     // merecidos por la partida guardada (sin lanzar una ráfaga de toasts) y deja
     // la "foto" de métricas al día para la pantalla de Logros.
     _evaluarLogros(celebrar: false);
+    // Con el estado local ya cargado, arrancar el sync en la nube (si hay
+    // sesión guardada, hace el merge inicial y sube la unión).
+    _cloudSync.start();
     // La primera vez, mostrar la intro ("¿de qué va el juego?") ANTES de pedir
     // el GPS, para que se entienda por qué el juego necesita la ubicación.
     await _mostrarIntroSiPrimeraVez();
@@ -268,6 +289,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     _posSub?.cancel();
     _userPosition.dispose();
+    _cloudSync.dispose();
+    _cloudAuth.dispose();
     _fog.dispose();
     _poi.dispose();
     _avatar.dispose();
@@ -282,10 +305,12 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // Solo "resumed" cuenta como visible; pausada/oculta/inactiva = minimizada.
     _enPrimerPlano = state == AppLifecycleState.resumed;
-    // Al minimizar, volcar a disco la niebla pendiente de guardar (debounce):
-    // si Android mata el proceso en segundo plano, no se pierde lo último.
+    // Al minimizar, volcar a disco la niebla pendiente de guardar (debounce) y
+    // subir a la nube lo que espere en el debounce del sync: si Android mata
+    // el proceso en segundo plano, no se pierde lo último.
     if (state == AppLifecycleState.paused) {
       _fog.flush();
+      _cloudSync.flush();
     }
   }
 
@@ -652,6 +677,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       appRoute(SettingsScreen(
         avatar: _avatar,
         localeController: widget.localeController,
+        cloudAuth: _cloudAuth,
+        cloudSync: _cloudSync,
       )),
     );
   }
