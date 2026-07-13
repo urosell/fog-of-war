@@ -13,6 +13,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../cities/city.dart';
 import 'fog_holes.dart';
 import 'fog_storage.dart';
 import 'tile_math.dart';
@@ -28,6 +29,24 @@ const int kMaxAutoFillHoleCells = 4;
 /// Cuánto se espera tras un cambio antes de guardar en disco.
 const Duration _saveDebounce = Duration(seconds: 2);
 
+// Recuento incremental de celdas descubiertas dentro de una ciudad. Los
+// límites en celdas se calculan UNA vez (llevan trigonometría); después,
+// contar una celda son cuatro comparaciones de enteros.
+class _CityCellCounter {
+  final City city;
+  final int xMin, yMin, xMax, yMax;
+  int count = 0;
+
+  _CityCellCounter(this.city, ({int xMin, int yMin, int xMax, int yMax}) b)
+      : xMin = b.xMin,
+        yMin = b.yMin,
+        xMax = b.xMax,
+        yMax = b.yMax;
+
+  bool contains(CellId c) =>
+      c.x >= xMin && c.x <= xMax && c.y >= yMin && c.y <= yMax;
+}
+
 class FogController extends ChangeNotifier {
   final FogStorage _storage;
 
@@ -41,6 +60,11 @@ class FogController extends ChangeNotifier {
   // descubiertas en cada frame.
   final Map<TileId, List<CellId>> _byTile = <TileId, List<CellId>>{};
 
+  // Celdas descubiertas DENTRO de cada ciudad, mantenidas al vuelo en _addCell.
+  // Así el % del HUD y de los logros no recorren todo el conjunto en cada tick
+  // de GPS (con años de juego serían cientos de miles de celdas).
+  final List<_CityCellCounter> _cityCounters;
+
   // Contador que sube con cada cambio en las celdas. La capa de niebla lo usa
   // para saber si su máscara cacheada sigue valiendo o hay que rehacerla.
   int _revision = 0;
@@ -48,7 +72,11 @@ class FogController extends ChangeNotifier {
   Timer? _saveTimer;
   bool _loaded = false;
 
-  FogController({FogStorage? storage}) : _storage = storage ?? FogStorage();
+  FogController({FogStorage? storage, List<City> cities = kCities})
+      : _storage = storage ?? FogStorage(),
+        _cityCounters = [
+          for (final c in cities) _CityCellCounter(c, c.cellBounds)
+        ];
 
   /// Vista de solo lectura de las celdas descubiertas (para dibujarlas).
   Set<CellId> get discovered => _discovered;
@@ -62,14 +90,26 @@ class FogController extends ChangeNotifier {
   /// Cuántas celdas se han descubierto en total.
   int get discoveredCount => _discovered.length;
 
+  /// Celdas descubiertas dentro de la ciudad [cityId] (recuento incremental,
+  /// O(1)). 0 si la ciudad no está entre las del constructor.
+  int discoveredCountInCity(String cityId) {
+    for (final c in _cityCounters) {
+      if (c.city.id == cityId) return c.count;
+    }
+    return 0;
+  }
+
   /// True una vez que se han cargado los datos guardados.
   bool get isLoaded => _loaded;
 
-  // Añade una celda al Set y al índice por tiles a la vez, para que nunca se
-  // desincronicen. Devuelve true si la celda era nueva.
+  // Añade una celda al Set, al índice por tiles y a los contadores por ciudad
+  // a la vez, para que nunca se desincronicen. Devuelve true si era nueva.
   bool _addCell(CellId cell) {
     if (!_discovered.add(cell)) return false;
     _byTile.putIfAbsent(tileForCell(cell), () => <CellId>[]).add(cell);
+    for (final counter in _cityCounters) {
+      if (counter.contains(cell)) counter.count++;
+    }
     return true;
   }
 
@@ -143,6 +183,9 @@ class FogController extends ChangeNotifier {
     if (_discovered.isEmpty) return;
     _discovered.clear();
     _byTile.clear();
+    for (final counter in _cityCounters) {
+      counter.count = 0;
+    }
     _revision++;
     _scheduleSave();
     notifyListeners();
@@ -152,6 +195,16 @@ class FogController extends ChangeNotifier {
   void _scheduleSave() {
     _saveTimer?.cancel();
     _saveTimer = Timer(_saveDebounce, _saveNow);
+  }
+
+  /// Si hay un guardado pendiente (debounce), lo ejecuta ya. Llamar cuando la
+  /// app pasa a segundo plano: si Android mata el proceso, no se pierden los
+  /// últimos desvelados.
+  Future<void> flush() async {
+    if (_saveTimer?.isActive ?? false) {
+      _saveTimer!.cancel();
+      await _saveNow();
+    }
   }
 
   // Guarda inmediatamente (copia el set para no leerlo mientras cambia).

@@ -47,6 +47,12 @@ class City {
   int get _xMax => _southEastCell.x;
   int get _yMax => _southEastCell.y;
 
+  /// Rango de celdas Z20 de la caja, para quien quiera cachearlo: calcular las
+  /// esquinas lleva trigonometría, así que quien compruebe muchas celdas (el
+  /// contador incremental del FogController) lo pide UNA vez y compara enteros.
+  ({int xMin, int yMin, int xMax, int yMax}) get cellBounds =>
+      (xMin: _xMin, yMin: _yMin, xMax: _xMax, yMax: _yMax);
+
   /// Número total de celdas Z20 que caben dentro de la caja de la ciudad.
   int get totalCells => (_xMax - _xMin + 1) * (_yMax - _yMin + 1);
 
@@ -58,20 +64,37 @@ class City {
       cell.y <= _yMax;
 
   /// Cuántas de las celdas [discovered] caen dentro de la ciudad.
+  ///
+  /// OJO: recorre todo el conjunto; para el camino caliente (HUD, logros en
+  /// cada tick de GPS) usa el contador incremental del FogController
+  /// (discoveredCountInCity) y [percentageFromCount].
   int discoveredCount(Set<CellId> discovered) {
+    // Límites hoy: calcularlos por celda repetiría la trigonometría miles de veces.
+    final b = cellBounds;
     var count = 0;
     for (final cell in discovered) {
-      if (containsCell(cell)) count++;
+      if (cell.x >= b.xMin &&
+          cell.x <= b.xMax &&
+          cell.y >= b.yMin &&
+          cell.y <= b.yMax) {
+        count++;
+      }
     }
     return count;
   }
 
-  /// Porcentaje (0..100) de la ciudad que se ha desvelado.
-  double discoveryPercentage(Set<CellId> discovered) {
+  /// Porcentaje (0..100) a partir de un recuento ya conocido de celdas dentro
+  /// de la ciudad (el que mantiene incrementalmente el FogController).
+  double percentageFromCount(int count) {
     final total = totalCells;
     if (total == 0) return 0;
-    return discoveredCount(discovered) / total * 100.0;
+    return count / total * 100.0;
   }
+
+  /// Porcentaje (0..100) de la ciudad que se ha desvelado. Recorre todo el
+  /// conjunto: ver la nota de [discoveredCount].
+  double discoveryPercentage(Set<CellId> discovered) =>
+      percentageFromCount(discoveredCount(discovered));
 
   /// Centro geográfico de la caja (para centrar el mapa en la ciudad).
   LatLng get center => LatLng((south + north) / 2, (west + east) / 2);

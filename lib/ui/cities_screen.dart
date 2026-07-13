@@ -101,8 +101,10 @@ class _CityCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
-    final cells = city.discoveredCount(fogController.discovered);
-    final percentage = city.discoveryPercentage(fogController.discovered);
+    // Contador incremental del FogController: evita recorrer todas las celdas
+    // descubiertas por cada ciudad en cada redibujado.
+    final cells = fogController.discoveredCountInCity(city.id);
+    final percentage = city.percentageFromCount(cells);
 
     // POIs que caen dentro de la ciudad y cuántos están descubiertos.
     var poisTotal = 0;
