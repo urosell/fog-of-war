@@ -24,6 +24,7 @@
 
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:vector_map_tiles/vector_map_tiles.dart';
 import 'package:vector_tile_renderer/vector_tile_renderer.dart' as vtr;
 
@@ -147,9 +148,34 @@ Map<String, dynamic> _roadLine(
       'paint': {'line-color': color, 'line-width': _byZoom(widthStops)},
     };
 
+/// Interruptores de partes CARAS del theme, para los experimentos de
+/// rendimiento (tool/perf): permiten medir cuánto cuesta cada una. El estilo
+/// de producción los lleva todos encendidos.
+class GameThemeTweaks {
+  /// Capa building_dilate (engordado de edificios, lo más caro del theme).
+  final bool buildingDilate;
+
+  /// Capas symbol (etiquetas de calle y de barrio, layout de texto).
+  final bool labels;
+
+  /// Etiquetas de calle "aligeradas": solo vías mayores y desde z15. El
+  /// layout de texto por tile resultó ser el mayor coste del theme (medido);
+  /// esto lo recorta manteniendo las etiquetas que se ven al jugar (z16 el
+  /// colisionador ya descarta casi todas las menores).
+  final bool liteRoadLabels;
+
+  const GameThemeTweaks({
+    this.buildingDilate = true,
+    this.labels = true,
+    this.liteRoadLabels = false,
+  });
+}
+
 /// JSON del estilo (solo id + capas; las "sources"/sprites las aportan los
-/// proveedores del estilo base). La estructura es común; [p] la tiñe.
-Map<String, dynamic> _gameStyleJson(String id, _GamePalette p) => {
+/// proveedores del estilo base). La estructura es común; [p] la tiñe y [t]
+/// permite apagar partes caras en los experimentos de rendimiento.
+Map<String, dynamic> _gameStyleJson(String id, _GamePalette p,
+        [GameThemeTweaks t = const GameThemeTweaks()]) => {
       'id': id,
       'version': 8,
       'layers': [
@@ -252,18 +278,26 @@ Map<String, dynamic> _gameStyleJson(String id, _GamePalette p) => {
         // contiguos y cierra los huecos pequeños entre ellos. Así las manzanas
         // SIN dato de uso de suelo (que solo tienen edificios sueltos) quedan
         // casi tan macizas como las que sí lo tienen → aspecto homogéneo.
-        {
-          'id': 'building_dilate',
-          'type': 'line',
-          'source': 'openmaptiles',
-          'source-layer': 'building',
-          'minzoom': 13,
-          'layout': {'line-join': 'round', 'line-cap': 'round'},
-          'paint': {
-            'line-color': p.building,
-            'line-width': _byZoom([13, 1, 16, 5, 19, 12]),
+        //
+        // RENDIMIENTO: esta capa es lo más caro del tema (miles de polígonos
+        // por tile con línea gruesa). Por eso arranca en z15 (a z13-14 un tile
+        // abarca media ciudad y la manzana ya la pinta landuse_urban) y usa
+        // join 'bevel' (el 'round' es mucho más caro de teselar; los anillos
+        // cerrados no pintan line-cap, así que ni se declara). Los anchos
+        // empalman con los que había: a partir de z15 se ve igual.
+        if (t.buildingDilate)
+          {
+            'id': 'building_dilate',
+            'type': 'line',
+            'source': 'openmaptiles',
+            'source-layer': 'building',
+            'minzoom': 15,
+            'layout': {'line-join': 'bevel'},
+            'paint': {
+              'line-color': p.building,
+              'line-width': _byZoom([15, 3.5, 16, 5, 19, 12]),
+            },
           },
-        },
         // 5) CASINGS (debajo de todas las calzadas): menor, avenida, principal.
         _roadLine('minor_casing', _minor, p.casingMinor,
             [13, 1.4, 16, 8, 20, 22],
@@ -306,14 +340,19 @@ Map<String, dynamic> _gameStyleJson(String id, _GamePalette p) => {
           },
         },
         // 8) Etiquetas de calle (en cursiva, como la referencia clásica). Hay
-        // skins sin ellas (corsario).
-        if (p.roadLabels)
+        // skins sin ellas (corsario). En modo "lite" solo se etiquetan las
+        // vías mayores y desde z15: menos layout de texto por tile (el mayor
+        // coste medido del theme) con impacto visual mínimo al jugar.
+        if (t.labels && p.roadLabels)
           {
             'id': 'road_label',
             'type': 'symbol',
             'source': 'openmaptiles',
             'source-layer': 'transportation_name',
-            'minzoom': 14,
+            'minzoom': t.liteRoadLabels ? 15 : 14,
+            if (t.liteRoadLabels)
+              'filter': _classFilter(
+                  ['motorway', 'trunk', 'primary', 'secondary', 'tertiary']),
             'layout': {
               'symbol-placement': 'line',
               'text-field': ['coalesce', ['get', 'name:latin'], ['get', 'name']],
@@ -327,6 +366,7 @@ Map<String, dynamic> _gameStyleJson(String id, _GamePalette p) => {
             },
           },
         // 9) Etiquetas de barrio / zona.
+        if (t.labels)
         {
           'id': 'place_label',
           'type': 'symbol',
@@ -351,9 +391,10 @@ Map<String, dynamic> _gameStyleJson(String id, _GamePalette p) => {
     };
 
 // Construye un estilo: proveedores del estilo base + tema propio de la skin.
-Future<Style> _loadSkin(String id, _GamePalette palette) async {
+Future<Style> _loadSkin(String id, _GamePalette palette,
+    [GameThemeTweaks tweaks = const GameThemeTweaks()]) async {
   final base = await StyleReader(uri: kGameBaseStyleUri).read();
-  final json = _gameStyleJson(id, palette);
+  final json = _gameStyleJson(id, palette, tweaks);
   // Versionamos el tema con un hash del propio estilo: cada cambio de paleta o
   // capas invalida la caché de tiles ya renderizados de vector_map_tiles.
   final version = jsonEncode(json['layers']).hashCode.toRadixString(16);
@@ -367,8 +408,53 @@ Future<Style> _loadSkin(String id, _GamePalette palette) async {
   );
 }
 
-/// Skin clásica del estilo "Juego" (navegación clásica cálida).
-Future<Style> loadGameStyle() => _loadSkin('fog_game', _classic);
+/// Skin clásica del estilo "Juego" (navegación clásica cálida). Lleva las
+/// etiquetas de calle "lite" (solo vías mayores, desde z15): medido en
+/// tool/perf, el layout de texto era el mayor coste del primer render de cada
+/// tile y esto lo recorta ~25% con impacto visual mínimo al jugar.
+Future<Style> loadGameStyle() =>
+    _loadSkin('fog_game', _classic, const GameThemeTweaks(liteRoadLabels: true));
 
 /// Skin "Corsario" (paleta Assassin's Creed IV).
 Future<Style> loadCorsairStyle() => _loadSkin('fog_corsair', _corsair);
+
+/// Variantes de la skin clásica para los experimentos de rendimiento
+/// (tool/perf; solo se alcanzan con --dart-define=MAP_PERF_EXPERIMENTS=true).
+/// OJO: cada variante lleva su propio id de theme aunque el aspecto no cambie
+/// (exp_c2, exp_c6…): la caché de tiles renderizados se namespacia por
+/// id+versión y así la pasada "fría" del test no hereda la caché de otra
+/// variante. Los knobs (concurrency, maximumZoom…) van en MapStyle.tuning,
+/// no aquí.
+/// Solo para tests (sin red): el JSON del theme de la skin clásica.
+@visibleForTesting
+Map<String, dynamic> classicThemeJsonForTest(
+        [GameThemeTweaks tweaks = const GameThemeTweaks()]) =>
+    _gameStyleJson('test_classic', _classic, tweaks);
+
+/// Solo para tests (sin red): el JSON del theme de la skin corsario.
+@visibleForTesting
+Map<String, dynamic> corsairThemeJsonForTest(
+        [GameThemeTweaks tweaks = const GameThemeTweaks()]) =>
+    _gameStyleJson('test_corsair', _corsair, tweaks);
+
+Future<Style> loadExperimentStyle(String skin) => switch (skin) {
+      'exp_nodilate' => _loadSkin('fog_exp_nodilate', _classic,
+          const GameThemeTweaks(buildingDilate: false)),
+      'exp_nolabels' => _loadSkin(
+          'fog_exp_nolabels', _classic, const GameThemeTweaks(labels: false)),
+      'exp_bare' => _loadSkin('fog_exp_bare', _classic,
+          const GameThemeTweaks(buildingDilate: false, labels: false)),
+      // Theme "Juego" intacto: solo cambia el espacio de caché y el tuning.
+      'exp_c2' => _loadSkin('fog_exp_c2', _classic),
+      'exp_c6' => _loadSkin('fog_exp_c6', _classic),
+      'exp_mz17' => _loadSkin('fog_exp_mz17', _classic),
+      'exp_off1' => _loadSkin('fog_exp_off1', _classic),
+      'exp_cache' => _loadSkin('fog_exp_cache', _classic),
+      // Candidatas a config de producción: etiquetas lite + tuning combinado
+      // (el tuning va en MapStyle.tuning; aquí solo el theme y el id de caché).
+      'exp_opt2' => _loadSkin('fog_exp_opt2', _classic,
+          const GameThemeTweaks(liteRoadLabels: true)),
+      'exp_opt4' => _loadSkin('fog_exp_opt4', _classic,
+          const GameThemeTweaks(liteRoadLabels: true)),
+      _ => throw ArgumentError('Skin de experimento desconocida: $skin'),
+    };
