@@ -5,11 +5,14 @@
 // podio con medallas oro/plata/bronce, tu fila resaltada y, si quedas fuera del
 // top, tu fila aparte al final. Solo cambian los datos y los textos.
 //
-// Tu puntuación se calcula EN VIVO (ListenableBuilder) a partir de tu progreso
-// real; los rivales son simulados (ver ranking.dart) hasta tener backend.
+// Fuente de datos: con sesión iniciada se pide el leaderboard REAL a la nube
+// (cloud_leaderboard.dart), con arrastrar-para-refrescar; sin sesión (o si la
+// petición falla) se cae a los rivales simulados de ranking.dart, calculados
+// EN VIVO (ListenableBuilder) a partir de tu progreso real.
 
 import 'package:flutter/material.dart';
 
+import '../cloud/cloud_leaderboard.dart';
 import '../fog/fog_controller.dart';
 import '../l10n/l10n_ext.dart';
 import '../poi/poi_collection.dart';
@@ -24,29 +27,51 @@ const Color _kBackground = Color(0xFF161A21);
 class LeaderboardScreen extends StatelessWidget {
   final FogController fogController;
   final PoiController poiController;
+  final CloudLeaderboard? cloud;
 
   const LeaderboardScreen({
     super.key,
     required this.fogController,
     required this.poiController,
+    this.cloud,
   });
+
+  // Tu puntuación según TU móvil (para el modo simulado y como plan B si el
+  // servidor aún no tiene tu fila).
+  int _localScore() => totalScore(
+        cells: fogController.discoveredCount,
+        poiPoints: poiController.totalPoints,
+      );
 
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
+    final nube = cloud;
     return _LeaderboardScaffold(
       title: l.leaderboardTitle,
       accent: kHudAccent,
       listenable: Listenable.merge([fogController, poiController]),
-      buildBoard: () {
-        final yourScore = totalScore(
-          cells: fogController.discoveredCount,
-          poiPoints: poiController.totalPoints,
-        );
-        final board = buildLeaderboard(
-          yourScore: yourScore,
-          rivals: rivalsForGlobal(),
-        );
+      fetchCloud: nube == null || !nube.isActive
+          ? null
+          : ({force = false}) async {
+              final rows = await nube.global(
+                cellPoints: kPointsPerCell,
+                // El catálogo vivo (viene de la hoja de contenido): id → puntos.
+                poiPoints: {
+                  for (final p in poiController.allPois) p.id: p.points,
+                },
+                force: force,
+              );
+              if (rows == null) return null;
+              return leaderboardFromRemote(rows,
+                  fallbackYourScore: _localScore());
+            },
+      buildBoard: (remote) {
+        final board = remote ??
+            buildLeaderboard(
+              yourScore: _localScore(),
+              rivals: rivalsForGlobal(),
+            );
         return _BoardData(
           board: board,
           headline: l.rankHeadline(board.you.rank),
@@ -64,28 +89,45 @@ class LeaderboardScreen extends StatelessWidget {
 class CollectionLeaderboardScreen extends StatelessWidget {
   final PoiController poiController;
   final PoiCollection collection;
+  final CloudLeaderboard? cloud;
 
   const CollectionLeaderboardScreen({
     super.key,
     required this.poiController,
     required this.collection,
+    this.cloud,
   });
 
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
     final total = collection.poiIds.length;
+    final nube = cloud;
     return _LeaderboardScaffold(
       title: collection
           .localizedName(Localizations.localeOf(context).languageCode),
       accent: collection.accent,
       listenable: poiController,
-      buildBoard: () {
-        final yours = collection.discoveredCount(poiController.isDiscoveredId);
-        final board = buildLeaderboard(
-          yourScore: yours,
-          rivals: rivalsForCollection(collection.poiIds),
-        );
+      fetchCloud: nube == null || !nube.isActive
+          ? null
+          : ({force = false}) async {
+              final rows = await nube.collection(
+                collectionId: collection.id,
+                poiIds: collection.poiIds,
+                force: force,
+              );
+              if (rows == null) return null;
+              return leaderboardFromRemote(rows,
+                  fallbackYourScore: collection
+                      .discoveredCount(poiController.isDiscoveredId));
+            },
+      buildBoard: (remote) {
+        final board = remote ??
+            buildLeaderboard(
+              yourScore:
+                  collection.discoveredCount(poiController.isDiscoveredId),
+              rivals: rivalsForCollection(collection.poiIds),
+            );
         return _BoardData(
           board: board,
           headline: l.rankHeadline(board.you.rank),
@@ -115,19 +157,55 @@ class _BoardData {
   });
 }
 
+// Petición del leaderboard real: null = sin nube esta vez (usar el simulado).
+// [force] salta la caché (para el gesto de refrescar).
+typedef _FetchCloud = Future<Leaderboard?> Function({bool force});
+
 // Andamiaje común: Scaffold + AppBar + recálculo en vivo de la clasificación.
-class _LeaderboardScaffold extends StatelessWidget {
+// Con [fetchCloud] pide el ranking real al entrar (y al arrastrar hacia
+// abajo); si devuelve null, [buildBoard] recibe null y pinta el simulado.
+class _LeaderboardScaffold extends StatefulWidget {
   final String title;
   final Color accent;
   final Listenable listenable;
-  final _BoardData Function() buildBoard;
+  final _FetchCloud? fetchCloud;
+  final _BoardData Function(Leaderboard? remote) buildBoard;
 
   const _LeaderboardScaffold({
     required this.title,
     required this.accent,
     required this.listenable,
+    required this.fetchCloud,
     required this.buildBoard,
   });
+
+  @override
+  State<_LeaderboardScaffold> createState() => _LeaderboardScaffoldState();
+}
+
+class _LeaderboardScaffoldState extends State<_LeaderboardScaffold> {
+  // Último leaderboard real recibido (null = la petición falló → simulado).
+  Leaderboard? _remote;
+  // false hasta que termina la primera petición (mientras: spinner). Al
+  // refrescar con el gesto NO se vuelve a false: la lista se queda a la vista.
+  bool _loaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.fetchCloud != null) {
+      _load();
+    }
+  }
+
+  Future<void> _load({bool force = false}) async {
+    final result = await widget.fetchCloud!(force: force);
+    if (!mounted) return;
+    setState(() {
+      _remote = result;
+      _loaded = true;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -137,11 +215,29 @@ class _LeaderboardScaffold extends StatelessWidget {
         backgroundColor: _kBackground,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: Text(title),
+        title: Text(widget.title),
       ),
       body: ListenableBuilder(
-        listenable: listenable,
-        builder: (context, _) => _LeaderboardView(data: buildBoard(), accent: accent),
+        listenable: widget.listenable,
+        builder: (context, _) {
+          if (widget.fetchCloud == null) {
+            // Sin nube: el simulado de siempre, recalculado en vivo.
+            return _LeaderboardView(
+                data: widget.buildBoard(null), accent: widget.accent);
+          }
+          if (!_loaded) {
+            return Center(
+                child: CircularProgressIndicator(color: widget.accent));
+          }
+          // _remote == null → la petición falló: plan B simulado.
+          return RefreshIndicator(
+            color: widget.accent,
+            backgroundColor: _kBackground,
+            onRefresh: () => _load(force: true),
+            child: _LeaderboardView(
+                data: widget.buildBoard(_remote), accent: widget.accent),
+          );
+        },
       ),
     );
   }
@@ -158,6 +254,9 @@ class _LeaderboardView extends StatelessWidget {
   Widget build(BuildContext context) {
     final board = data.board;
     return ListView(
+      // Siempre desplazable: sin esto, con pocas filas (leaderboard real
+      // recién estrenado) el gesto de arrastrar-para-refrescar no funciona.
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       children: [
         _Header(

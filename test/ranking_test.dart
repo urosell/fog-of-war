@@ -64,6 +64,59 @@ void main() {
     });
   });
 
+  group('leaderboardFromRemote', () {
+    // Filas como las devuelve el servidor: top N + tu fila (is_you).
+    const rows = [
+      RemoteRank(rank: 1, name: 'Ana', score: 300, isYou: false),
+      RemoteRank(rank: 2, name: 'Uros', score: 250, isYou: true),
+      RemoteRank(rank: 3, name: 'Beto', score: 200, isYou: false),
+    ];
+
+    test('respeta los puestos del servidor y encuentra tu fila', () {
+      final board = leaderboardFromRemote(rows, fallbackYourScore: 0);
+      expect(board.top.map((p) => p.name).toList(), ['Ana', 'Uros', 'Beto']);
+      expect(board.top.map((p) => p.rank).toList(), [1, 2, 3]);
+      expect(board.you.name, 'Uros');
+      expect(board.you.rank, 2);
+      expect(board.youInTop, isTrue);
+    });
+
+    test('tu fila fuera del top queda aparte (no se cuela en el top)', () {
+      const conCola = [
+        RemoteRank(rank: 1, name: 'Ana', score: 300, isYou: false),
+        RemoteRank(rank: 2, name: 'Beto', score: 200, isYou: false),
+        RemoteRank(rank: 7, name: 'Uros', score: 10, isYou: true),
+      ];
+      final board = leaderboardFromRemote(conCola,
+          fallbackYourScore: 0, topCount: 2);
+      expect(board.top.map((p) => p.name).toList(), ['Ana', 'Beto']);
+      expect(board.you.rank, 7);
+      expect(board.youInTop, isFalse);
+    });
+
+    test('sin tu fila (primer push pendiente): te coloca con el plan B local',
+        () {
+      const sinTi = [
+        RemoteRank(rank: 1, name: 'Ana', score: 300, isYou: false),
+        RemoteRank(rank: 2, name: 'Beto', score: 200, isYou: false),
+      ];
+      final board = leaderboardFromRemote(sinTi, fallbackYourScore: 250);
+      expect(board.top.map((p) => p.name).toList(), ['Ana', 'Tú', 'Beto']);
+      expect(board.you.rank, 2);
+      expect(board.you.isYou, isTrue);
+    });
+
+    test('solo tú en el servidor: primero', () {
+      const soloTu = [
+        RemoteRank(rank: 1, name: 'Uros', score: 42, isYou: true),
+      ];
+      final board = leaderboardFromRemote(soloTu, fallbackYourScore: 0);
+      expect(board.top.single.name, 'Uros');
+      expect(board.you.rank, 1);
+      expect(board.you.score, 42);
+    });
+  });
+
   group('Rival', () {
     const r = Rival(
       name: 'Test',

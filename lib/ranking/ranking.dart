@@ -1,13 +1,14 @@
 // Clasificación (ranking) de jugadores: global y por colección temática de POIs.
 //
-// IMPORTANTE: hoy NO hay backend ni cuentas, así que los rivales son SIMULADOS
-// (`kRivals`, lista fija escrita a mano). Cada rival se describe igual que un
-// jugador real: cuántas celdas de niebla ha descubierto y QUÉ POIs tiene. De ese
-// mismo dato salen los dos rankings:
+// Hay dos fuentes de datos y las dos acaban en el mismo `Leaderboard`:
+//   - REAL: con sesión iniciada, las RPCs de Supabase devuelven filas ya
+//     rankeadas en servidor (ver cloud_leaderboard.dart) y aquí solo se
+//     convierten con `leaderboardFromRemote`.
+//   - SIMULADA: sin sesión (o si la nube falla), los rivales son `kRivals`
+//     (lista fija escrita a mano) y ordena `buildLeaderboard`.
+// En ambos casos los criterios son los mismos:
 //   - GLOBAL: por puntuación (celdas * kPointsPerCell + puntos de sus POIs).
 //   - POR COLECCIÓN: por cuántos POIs de esa colección lleva descubiertos.
-// Cuando exista Supabase, basta sustituir `kRivals` por los jugadores reales:
-// la lógica de ordenación (`buildLeaderboard`) y la interfaz no cambian.
 
 import '../poi/poi.dart';
 
@@ -108,6 +109,58 @@ Leaderboard buildLeaderboard({
   return Leaderboard(
     top: ranked.take(topCount).toList(),
     you: ranked.firstWhere((p) => p.isYou),
+  );
+}
+
+/// Una fila del leaderboard REAL tal y como la devuelve el servidor: puesto ya
+/// calculado, nombre público, puntuación y si eres tú. Vive aquí (y no en
+/// cloud_leaderboard.dart) para que el mapeo a [Leaderboard] sea puro y
+/// testeable sin Supabase.
+class RemoteRank {
+  final int rank;
+  final String name;
+  final int score;
+  final bool isYou;
+
+  const RemoteRank({
+    required this.rank,
+    required this.name,
+    required this.score,
+    required this.isYou,
+  });
+}
+
+/// Convierte las filas del servidor en un [Leaderboard] listo para pintar.
+///
+/// El servidor devuelve el top más tu fila (is_you) aunque quedes fuera del
+/// top. Caso raro: si tu fila aún no existe en el servidor (sesión recién
+/// iniciada, primer push pendiente), te colocamos localmente entre los reales
+/// con [fallbackYourScore] reutilizando [buildLeaderboard].
+Leaderboard leaderboardFromRemote(
+  List<RemoteRank> rows, {
+  required int fallbackYourScore,
+  int topCount = 10,
+}) {
+  RemoteRank? you;
+  for (final r in rows) {
+    if (r.isYou) you = r;
+  }
+  if (you == null) {
+    return buildLeaderboard(
+      yourScore: fallbackYourScore,
+      rivals: [for (final r in rows) Player(name: r.name, score: r.score)],
+      topCount: topCount,
+    );
+  }
+  return Leaderboard(
+    top: [
+      for (final r in rows)
+        if (r.rank <= topCount)
+          RankedPlayer(
+              rank: r.rank, name: r.name, score: r.score, isYou: r.isYou),
+    ],
+    you: RankedPlayer(
+        rank: you.rank, name: you.name, score: you.score, isYou: true),
   );
 }
 

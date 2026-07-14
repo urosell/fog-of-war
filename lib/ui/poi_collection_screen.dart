@@ -9,6 +9,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../cloud/cloud_leaderboard.dart';
 import '../l10n/l10n_ext.dart';
 import '../mission/mission_controller.dart';
 import '../poi/poi.dart';
@@ -52,12 +53,15 @@ class PoiCollectionScreen extends StatelessWidget {
   final PoiController poiController;
   final PoiCollection collection;
   final MissionController mission;
+  // Para el ranking de la colección (real con sesión, simulado sin ella).
+  final CloudLeaderboard? cloud;
 
   const PoiCollectionScreen({
     super.key,
     required this.poiController,
     required this.collection,
     required this.mission,
+    this.cloud,
   });
 
   // Fija/quita esta colección como misión activa y avisa.
@@ -110,6 +114,7 @@ class PoiCollectionScreen extends StatelessWidget {
               appRoute(CollectionLeaderboardScreen(
                 poiController: poiController,
                 collection: collection,
+                cloud: cloud,
               )),
             ),
           ),

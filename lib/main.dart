@@ -18,6 +18,7 @@ import 'avatar/avatar.dart';
 import 'avatar/avatar_controller.dart';
 import 'cities/city.dart';
 import 'cloud/cloud_auth.dart';
+import 'cloud/cloud_leaderboard.dart';
 import 'cloud/cloud_sync.dart';
 import 'content/content_controller.dart';
 import 'debug/frame_stats.dart';
@@ -187,6 +188,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     locale: widget.localeController,
     mission: _mission,
   );
+  // Leaderboard real (RPCs de Supabase); las pantallas de ranking caen al
+  // simulado si no hay sesión.
+  late final CloudLeaderboard _cloudBoard = CloudLeaderboard(auth: _cloudAuth);
   // Permite mover/leer la cámara del mapa (para centrar en el usuario). El
   // test de rendimiento inyecta el suyo para guiar la cámara desde fuera.
   late final MapController _mapController =
@@ -658,6 +662,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         poiController: _poi,
         collection: coleccion,
         mission: _mission,
+        cloud: _cloudBoard,
       )),
     );
     if (elegido == null || !mounted) return;
@@ -689,6 +694,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       appRoute(LeaderboardScreen(
         fogController: _fog,
         poiController: _poi,
+        cloud: _cloudBoard,
       )),
     );
   }

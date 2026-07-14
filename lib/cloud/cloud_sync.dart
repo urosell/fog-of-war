@@ -8,9 +8,10 @@
 // - Después, cada cambio local se sube con un debounce (pocas filas: solo los
 //   tiles de niebla tocados y los ids nuevos). Si falla (sin cobertura), lo
 //   pendiente se re-marca y se reintenta solo.
-// - Los puntos NO se suben: se derivan (igual que en local). La validación
-//   anti-trampas de verdad (límites de celdas/hora en servidor) llegará con el
-//   leaderboard real; el esquema ya calcula la puntuación en SQL para eso.
+// - Los puntos NO se suben: se derivan en servidor (triggers → player_stats;
+//   ver supabase/schema.sql). El anti-trampas de celdas/hora vive allí: si
+//   una subida excede el presupuesto, el upsert entero se rechaza y este
+//   cliente la reintenta sin fin (un tramposo queda congelado, no borrado).
 //
 // Ajustes (avatar/idioma/misión): al iniciar sesión manda lo REMOTO (es tu
 // cuenta recuperada en este móvil); después, cada cambio local se sube.
