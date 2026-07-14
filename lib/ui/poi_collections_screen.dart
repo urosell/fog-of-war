@@ -9,6 +9,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import '../cloud/cloud_leaderboard.dart';
 import '../l10n/l10n_ext.dart';
 import '../mission/mission_controller.dart';
 import '../poi/poi.dart';
@@ -24,6 +25,8 @@ const Color _kScrim = Color(0xC2161A21); // ~76% de opacidad
 class PoiCollectionsScreen extends StatelessWidget {
   final PoiController poiController;
   final MissionController mission;
+  // Baja hasta el ranking de cada colección (real con sesión).
+  final CloudLeaderboard? cloud;
 
   /// Colecciones a mostrar (por defecto las de Barcelona).
   final List<PoiCollection> collections;
@@ -32,6 +35,7 @@ class PoiCollectionsScreen extends StatelessWidget {
     super.key,
     required this.poiController,
     required this.mission,
+    required this.cloud,
     this.collections = kPoiCollections,
   });
 
@@ -43,6 +47,7 @@ class PoiCollectionsScreen extends StatelessWidget {
         poiController: poiController,
         collection: collection,
         mission: mission,
+        cloud: cloud,
       )),
     );
     if (elegido != null && context.mounted) {

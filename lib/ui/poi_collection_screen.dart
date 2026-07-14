@@ -54,6 +54,8 @@ class PoiCollectionScreen extends StatelessWidget {
   final PoiCollection collection;
   final MissionController mission;
   // Para el ranking de la colección (real con sesión, simulado sin ella).
+  // Obligatorio (aunque admite null) a propósito: que ninguna ruta de
+  // navegación se olvide de pasarlo y caiga al simulado en silencio.
   final CloudLeaderboard? cloud;
 
   const PoiCollectionScreen({
@@ -61,7 +63,7 @@ class PoiCollectionScreen extends StatelessWidget {
     required this.poiController,
     required this.collection,
     required this.mission,
-    this.cloud,
+    required this.cloud,
   });
 
   // Fija/quita esta colección como misión activa y avisa.

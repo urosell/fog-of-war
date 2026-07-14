@@ -27,13 +27,15 @@ const Color _kBackground = Color(0xFF161A21);
 class LeaderboardScreen extends StatelessWidget {
   final FogController fogController;
   final PoiController poiController;
+  // Obligatorio (aunque admite null) a propósito: que ningún llamante se
+  // olvide de pasarlo y caiga al ranking simulado en silencio.
   final CloudLeaderboard? cloud;
 
   const LeaderboardScreen({
     super.key,
     required this.fogController,
     required this.poiController,
-    this.cloud,
+    required this.cloud,
   });
 
   // Tu puntuación según TU móvil (para el modo simulado y como plan B si el
@@ -89,13 +91,14 @@ class LeaderboardScreen extends StatelessWidget {
 class CollectionLeaderboardScreen extends StatelessWidget {
   final PoiController poiController;
   final PoiCollection collection;
+  // Obligatorio (aunque admite null), igual que en LeaderboardScreen.
   final CloudLeaderboard? cloud;
 
   const CollectionLeaderboardScreen({
     super.key,
     required this.poiController,
     required this.collection,
-    this.cloud,
+    required this.cloud,
   });
 
   @override

@@ -577,6 +577,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         PoiCollectionsScreen(
           poiController: _poi,
           mission: _mission,
+          cloud: _cloudBoard,
           collections: _content.collections,
         ),
         opaque: false,
@@ -597,6 +598,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         poiController: _poi,
         collection: mision,
         mission: _mission,
+        cloud: _cloudBoard,
       )),
     );
     if (elegido == null || !mounted) return;
