@@ -979,6 +979,10 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                         : _poi.allPois
                             .where((p) => soloIds.contains(p.id))
                             .toList();
+                    // Con el mapa cerca, cada atalaya enseña el nombre de su
+                    // lugar real; de lejos se esconden para no amontonarse.
+                    // MapCamera.of se suscribe: esto se rehace al mover/zoom.
+                    final conNombre = MapCamera.of(context).zoom >= 13.5;
                     return Stack(children: [
                       // Modo admin: el rango de cada atalaya sobre el mapa,
                       // para colocar/ajustar contenido viendo qué alcanza.
@@ -1014,14 +1018,20 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                     // mapa (flutter_map los contrarrota respecto a la cámara).
                     rotate: true,
                     markers: [
-                      // Atalayas: marcador propio, siempre visible.
+                      // Atalayas: marcador propio, siempre visible; con zoom
+                      // cercano, el nombre del lugar real debajo. La caja crece
+                      // para la etiqueta, pero el punto geográfico se ancla al
+                      // centro del ICONO (22 px de 70 → Alignment(0, 0.37)).
                       for (final tower in _watchtower.towers)
                         Marker(
                           point: tower.location,
-                          width: 44,
-                          height: 44,
+                          width: 150,
+                          height: 70,
+                          alignment: const Alignment(0, 0.37),
                           child: _WatchtowerMarker(
-                              activated: _watchtower.isActivated(tower)),
+                            activated: _watchtower.isActivated(tower),
+                            name: conNombre ? tower.name : null,
+                          ),
                         ),
                       // POIs: dorado si descubierto; gris si solo avistado. En
                       // modo admin, TODOS se muestran como descubiertos (dorado
@@ -1146,24 +1156,55 @@ class _GhostPoiMarker extends StatelessWidget {
 class _WatchtowerMarker extends StatelessWidget {
   final bool activated;
 
-  const _WatchtowerMarker({required this.activated});
+  /// Nombre del lugar real bajo el icono, o null para esconderlo (de lejos).
+  final String? name;
+
+  const _WatchtowerMarker({required this.activated, this.name});
 
   @override
   Widget build(BuildContext context) {
     final color =
         activated ? const Color(0xFF1FB8C4) : const Color(0xFF566B8C);
-    return Container(
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 2.5),
-        boxShadow: const [BoxShadow(color: Colors.black45, blurRadius: 4)],
-      ),
-      child: Icon(
-        activated ? Icons.visibility : Icons.visibility_outlined,
-        color: Colors.white,
-        size: 22,
-      ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 2.5),
+            boxShadow: const [BoxShadow(color: Colors.black45, blurRadius: 4)],
+          ),
+          child: Icon(
+            activated ? Icons.visibility : Icons.visibility_outlined,
+            color: Colors.white,
+            size: 22,
+          ),
+        ),
+        if (name != null) ...[
+          const SizedBox(height: 2),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.65),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: color.withValues(alpha: 0.6)),
+            ),
+            child: Text(
+              name!,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
