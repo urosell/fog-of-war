@@ -94,6 +94,11 @@
   "accountSynced": "Progress synced",
   "accountSyncError": "Couldn't sync; it will retry on its own",
   "accountSignInFailed": "Couldn't open the sign-in page",
+  "accountPublicName": "Public name",
+  "accountPublicNameHint": "This is the name other players see in the leaderboard.",
+  "accountNameSaveFailed": "Couldn't save the name",
+  "commonSave": "Save",
+  "commonCancel": "Cancel",
 
   "hudMission": "Mission",
   "pinMission": "Pin as mission",

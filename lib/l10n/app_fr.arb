@@ -70,6 +70,11 @@
   "accountSynced": "Progression synchronisée",
   "accountSyncError": "Échec de la synchronisation ; nouvelle tentative automatique",
   "accountSignInFailed": "Impossible d'ouvrir la page de connexion",
+  "accountPublicName": "Nom public",
+  "accountPublicNameHint": "C'est le nom que les autres joueurs voient dans le classement.",
+  "accountNameSaveFailed": "Impossible d'enregistrer le nom",
+  "commonSave": "Enregistrer",
+  "commonCancel": "Annuler",
 
   "hudMission": "Mission",
   "pinMission": "Épingler comme mission",

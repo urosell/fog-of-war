@@ -17,6 +17,19 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'cloud_config.dart';
 
+/// Máximo de caracteres del nombre público al editarlo. El servidor admite 60
+/// (por si el nombre de Google es largo); al escribirlo a mano pedimos menos.
+const int kDisplayNameMaxLength = 40;
+
+/// Normaliza un nombre público escrito a mano: recorta espacios de los bordes
+/// y colapsa los repetidos. Devuelve null si no queda nada utilizable (vacío
+/// o demasiado largo). Pura, para poder testearla.
+String? normalizeDisplayName(String raw) {
+  final limpio = raw.trim().replaceAll(RegExp(r'\s+'), ' ');
+  if (limpio.isEmpty || limpio.length > kDisplayNameMaxLength) return null;
+  return limpio;
+}
+
 /// Llamar UNA vez antes de runApp. Sin configuración no hace nada (la app
 /// sigue siendo 100% local). Si Supabase no responde al arrancar, tampoco
 /// rompe el arranque: se queda sin nube hasta el próximo inicio.
@@ -38,9 +51,12 @@ class CloudAuth extends ChangeNotifier {
     if (!kCloudConfigured) return;
     try {
       _sub = Supabase.instance.client.auth.onAuthStateChange.listen((_) {
+        if (!isSignedIn) _displayName = null; // sesión cerrada: olvidarlo
         notifyListeners();
+        _loadDisplayName();
       });
       _ready = true;
+      _loadDisplayName(); // por si ya había sesión guardada de otro arranque
     } catch (e) {
       // Supabase.initialize falló al arrancar: sin nube esta sesión.
       debugPrint('[cloud] auth no disponible: $e');
@@ -57,6 +73,51 @@ class CloudAuth extends ChangeNotifier {
 
   /// Email de la cuenta (para mostrar en Ajustes), o null sin sesión.
   String? get email => _session?.user.email;
+
+  /// Nombre público (tabla profiles): lo que ven los demás en el ranking.
+  /// null = sin sesión o aún cargando (Ajustes muestra un hueco ese instante).
+  String? get displayName => _displayName;
+  String? _displayName;
+
+  // Baja el nombre una vez por sesión (el perfil lo crea un trigger al
+  // registrarse, así que normalmente existe; si no, queda null y ya).
+  Future<void> _loadDisplayName() async {
+    if (!isSignedIn || _displayName != null) return;
+    try {
+      final row = await Supabase.instance.client
+          .from('profiles')
+          .select('display_name')
+          .eq('user_id', _session!.user.id)
+          .maybeSingle();
+      final nombre = row?['display_name'] as String?;
+      if (nombre != null && nombre != _displayName) {
+        _displayName = nombre;
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('[cloud] no se pudo leer el nombre público: $e');
+    }
+  }
+
+  /// Cambia el nombre público. Devuelve false si no se pudo (sin red, nombre
+  /// inválido...); el llamante avisa al usuario. Upsert: si el perfil no
+  /// existiera (cuenta antigua sin backfill), se crea aquí mismo.
+  Future<bool> setDisplayName(String raw) async {
+    final nombre = normalizeDisplayName(raw);
+    if (nombre == null || !isSignedIn) return false;
+    try {
+      await Supabase.instance.client.from('profiles').upsert({
+        'user_id': _session!.user.id,
+        'display_name': nombre,
+      });
+      _displayName = nombre;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint('[cloud] no se pudo guardar el nombre público: $e');
+      return false;
+    }
+  }
 
   /// Abre el navegador con el login de Google. La vuelta llega por el deep
   /// link y onAuthStateChange notifica. Devuelve false si no se pudo lanzar.

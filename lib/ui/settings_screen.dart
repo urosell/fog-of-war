@@ -115,7 +115,8 @@ class SettingsScreen extends StatelessWidget {
 }
 
 /// Tarjeta de cuenta: sin sesión, explica el beneficio y ofrece el login con
-/// Google; con sesión, muestra el email, el estado del sync y cerrar sesión.
+/// Google; con sesión, muestra el nombre público (editable), el email, el
+/// estado del sync y cerrar sesión.
 class _AccountCard extends StatelessWidget {
   final CloudAuth auth;
   final CloudSync? sync;
@@ -128,6 +129,65 @@ class _AccountCard extends StatelessWidget {
     if (!abierto && context.mounted) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(l.accountSignInFailed)));
+    }
+  }
+
+  // Diálogo para cambiar el nombre público (lo que ven los demás en el
+  // ranking). Cancelar o dejarlo vacío no guarda nada.
+  Future<void> _editarNombre(BuildContext context) async {
+    final l = context.l10n;
+    final controller = TextEditingController(text: auth.displayName ?? '');
+    final nuevo = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF222834),
+        title: Text(l.accountPublicName,
+            style: const TextStyle(color: Colors.white)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l.accountPublicNameHint,
+              style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.7), fontSize: 13),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              autofocus: true,
+              maxLength: kDisplayNameMaxLength,
+              style: const TextStyle(color: Colors.white),
+              cursorColor: kHudAccent,
+              decoration: InputDecoration(
+                counterStyle: const TextStyle(color: Colors.white38),
+                enabledBorder: const UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white24)),
+                focusedBorder: const UnderlineInputBorder(
+                    borderSide: BorderSide(color: kHudAccent)),
+              ),
+              onSubmitted: (texto) => Navigator.pop(context, texto),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l.commonCancel,
+                style: const TextStyle(color: Colors.white54)),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            child: Text(l.commonSave),
+          ),
+        ],
+      ),
+    );
+    if (nuevo == null || normalizeDisplayName(nuevo) == null) return;
+    final ok = await auth.setDisplayName(nuevo);
+    if (!ok && context.mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l.accountNameSaveFailed)));
     }
   }
 
@@ -184,18 +244,40 @@ class _AccountCard extends StatelessWidget {
                   Row(
                     children: [
                       const Icon(Icons.account_circle,
-                          color: Colors.white70, size: 32),
+                          color: Colors.white70, size: 36),
                       const SizedBox(width: 10),
                       Expanded(
-                        child: Text(
-                          auth.email ?? '',
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              // Mientras carga (o sin perfil), el email hace
+                              // de nombre para no dejar un hueco.
+                              auth.displayName ?? auth.email ?? '',
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            if (auth.email != null)
+                              Text(
+                                auth.email!,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.white54,
+                                  fontSize: 12,
+                                ),
+                              ),
+                          ],
                         ),
+                      ),
+                      IconButton(
+                        onPressed: () => _editarNombre(context),
+                        tooltip: l.accountPublicName,
+                        icon: const Icon(Icons.edit,
+                            color: Colors.white54, size: 20),
                       ),
                     ],
                   ),

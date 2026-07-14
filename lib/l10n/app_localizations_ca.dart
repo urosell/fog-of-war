@@ -209,6 +209,22 @@ class AppLocalizationsCa extends AppLocalizations {
   String get accountSignInFailed => 'No s\'ha pogut obrir l\'inici de sessió';
 
   @override
+  String get accountPublicName => 'Nom públic';
+
+  @override
+  String get accountPublicNameHint =>
+      'És el nom que veuen els altres jugadors al rànquing.';
+
+  @override
+  String get accountNameSaveFailed => 'No s\'ha pogut desar el nom';
+
+  @override
+  String get commonSave => 'Desa';
+
+  @override
+  String get commonCancel => 'Cancel·la';
+
+  @override
   String get hudMission => 'Missió';
 
   @override

@@ -155,22 +155,40 @@ drop trigger if exists player_stats_touch on public.player_stats;
 create trigger player_stats_touch before update on public.player_stats
   for each row execute function public.touch_updated_at();
 
--- Ambas tablas: RLS activado SIN políticas y sin GRANTs → invisibles para el
--- Data API. Solo se leen a través de las RPCs security definer del final.
-alter table public.profiles     enable row level security;
+-- player_stats: RLS activado SIN políticas y sin GRANTs → invisible para el
+-- Data API. Solo se lee a través de las RPCs security definer del final.
 alter table public.player_stats enable row level security;
+
+-- profiles: el jugador ve y EDITA su propio nombre desde Ajustes (solo su
+-- fila; las de los demás siguen invisibles y solo salen vía RPCs). Sin grant
+-- de DELETE: el perfil se va con la cuenta (cascade), no a mano.
+alter table public.profiles enable row level security;
+
+alter table public.profiles drop constraint if exists profiles_display_name_len;
+alter table public.profiles add constraint profiles_display_name_len
+  check (char_length(display_name) between 1 and 60);
+
+drop policy if exists "own profile" on public.profiles;
+create policy "own profile" on public.profiles
+  for all to authenticated
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+grant select, insert, update on public.profiles to authenticated;
 
 -- Perfil automático al crear la cuenta: nombre de Google, o la parte local
 -- del email, o un genérico. security definer: lo dispara auth, no el cliente.
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = '' as $$
 begin
+  -- left(60): que un nombre de Google kilométrico no viole la restricción
+  -- de longitud y rompa el alta de la cuenta.
   insert into public.profiles (user_id, display_name)
-  values (new.id, coalesce(
+  values (new.id, left(coalesce(
     nullif(trim(new.raw_user_meta_data ->> 'full_name'), ''),
     nullif(trim(new.raw_user_meta_data ->> 'name'), ''),
     nullif(split_part(coalesce(new.email, ''), '@', 1), ''),
-    'Explorador'))
+    'Explorador'), 60))
   on conflict (user_id) do nothing;
   return new;
 end $$;
@@ -257,11 +275,11 @@ create trigger discovered_pois_stats
 -- Backfill idempotente para cuentas creadas ANTES de estos triggers: perfil
 -- y contadores calculados de sus datos ya subidos. Si la fila existe, no toca.
 insert into public.profiles (user_id, display_name)
-select u.id, coalesce(
+select u.id, left(coalesce(
     nullif(trim(u.raw_user_meta_data ->> 'full_name'), ''),
     nullif(trim(u.raw_user_meta_data ->> 'name'), ''),
     nullif(split_part(coalesce(u.email, ''), '@', 1), ''),
-    'Explorador')
+    'Explorador'), 60)
 from auth.users u
 on conflict (user_id) do nothing;
 

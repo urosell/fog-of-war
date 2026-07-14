@@ -462,6 +462,36 @@ abstract class AppLocalizations {
   /// **'Couldn\'t open the sign-in page'**
   String get accountSignInFailed;
 
+  /// No description provided for @accountPublicName.
+  ///
+  /// In en, this message translates to:
+  /// **'Public name'**
+  String get accountPublicName;
+
+  /// No description provided for @accountPublicNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This is the name other players see in the leaderboard.'**
+  String get accountPublicNameHint;
+
+  /// No description provided for @accountNameSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the name'**
+  String get accountNameSaveFailed;
+
+  /// No description provided for @commonSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get commonSave;
+
+  /// No description provided for @commonCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get commonCancel;
+
   /// No description provided for @hudMission.
   ///
   /// In en, this message translates to:

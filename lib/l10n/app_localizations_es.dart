@@ -208,6 +208,22 @@ class AppLocalizationsEs extends AppLocalizations {
   String get accountSignInFailed => 'No se pudo abrir el inicio de sesión';
 
   @override
+  String get accountPublicName => 'Nombre público';
+
+  @override
+  String get accountPublicNameHint =>
+      'Es el nombre que ven los demás jugadores en el ranking.';
+
+  @override
+  String get accountNameSaveFailed => 'No se pudo guardar el nombre';
+
+  @override
+  String get commonSave => 'Guardar';
+
+  @override
+  String get commonCancel => 'Cancelar';
+
+  @override
   String get hudMission => 'Misión';
 
   @override

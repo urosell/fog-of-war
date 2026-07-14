@@ -70,6 +70,11 @@
   "accountSynced": "Progrés sincronitzat",
   "accountSyncError": "No s'ha pogut sincronitzar; es reintentarà sol",
   "accountSignInFailed": "No s'ha pogut obrir l'inici de sessió",
+  "accountPublicName": "Nom públic",
+  "accountPublicNameHint": "És el nom que veuen els altres jugadors al rànquing.",
+  "accountNameSaveFailed": "No s'ha pogut desar el nom",
+  "commonSave": "Desa",
+  "commonCancel": "Cancel·la",
 
   "hudMission": "Missió",
   "pinMission": "Fixar com a missió",
