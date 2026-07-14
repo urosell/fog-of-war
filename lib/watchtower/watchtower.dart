@@ -36,14 +36,19 @@ class Watchtower {
 }
 
 /// Atalayas jugables de Barcelona: miradores icónicos colocados para que cada
-/// uno revele un buen puñado de POIs de su zona. Las coordenadas y el radio son
-/// fáciles de ajustar tras probar en el terreno.
+/// uno revele un buen puñado de POIs de su zona. Las coordenadas y el radio
+/// están verificados con `dart run tool/watchtower_coverage.dart` (qué avista
+/// cada una y qué POIs quedan huérfanos); el círculo del modo admin enseña el
+/// rango sobre el mapa. Único POI sin cubrir a propósito: el Tibidabo, que ya
+/// es un mirador en sí mismo.
 const List<Watchtower> kBarcelonaWatchtowers = [
-  // Casco antiguo: Catedral, Picasso, Born (tapas), Palau Güell, Pl. Catalunya.
+  // Casco antiguo: Catedral, Picasso, Born (tapas), Palau Güell. Radio 650
+  // para llegar también a Pl. Catalunya (a ~620 m de la Catedral).
   Watchtower(
     id: 'atalaya_gotica',
     name: 'Atalaya Gòtica',
     location: LatLng(41.3839, 2.1762),
+    revealRadiusMeters: 650,
   ),
   // Eixample: Casa Batlló, La Pedrera, Lasarte y compañía.
   Watchtower(
@@ -57,16 +62,70 @@ const List<Watchtower> kBarcelonaWatchtowers = [
     name: 'Atalaya del Port',
     location: LatLng(41.3759, 2.1774),
   ),
-  // Montjuïc: Castell, Fundació Miró, MNAC.
+  // Montjuïc, ladera del Migdia: Castell, MNAC y Fundació Miró (en el castillo
+  // no se llegaba al MNAC). Radio 700: la montaña es grande y el castillo
+  // queda a ~640 m; como mirador amplio que es, lo justifica.
   Watchtower(
     id: 'atalaya_montjuic',
     name: 'Atalaya de Montjuïc',
-    location: LatLng(41.3667, 2.1656),
+    location: LatLng(41.3660, 2.1590),
+    revealRadiusMeters: 700,
   ),
   // El Carmel: Park Güell y los Búnkers.
   Watchtower(
     id: 'atalaya_carmel',
     name: 'Atalaya del Carmel',
     location: LatLng(41.4165, 2.1575),
+  ),
+  // Plaça de Gaudí, el mirador clásico de la Sagrada Família. Hoy avista solo
+  // ese POI; la zona (Sant Pau, Monumental...) crecerá con el contenido.
+  Watchtower(
+    id: 'atalaya_sagrada',
+    name: 'Atalaya de la Sagrada Família',
+    location: LatLng(41.4045, 2.1768),
+  ),
+  // Passeig de Lluís Companys: Arc de Triomf, Ciutadella y las tiendas otaku.
+  Watchtower(
+    id: 'atalaya_ciutadella',
+    name: 'Atalaya de la Ciutadella',
+    location: LatLng(41.3897, 2.1845),
+  ),
+  // Rambla del Raval: MACBA, CCCB, Bar Cañete y Palau Güell.
+  Watchtower(
+    id: 'atalaya_raval',
+    name: 'Atalaya del Raval',
+    location: LatLng(41.3796, 2.1698),
+  ),
+  // Pie de la Av. Tibidabo / Bellesguard: Torre Bellesguard, CosmoCaixa, ABaC.
+  Watchtower(
+    id: 'atalaya_bellesguard',
+    name: 'Atalaya de Bellesguard',
+    location: LatLng(41.4135, 2.1327),
+  ),
+  // Gràcia alta (Travessera de Dalt): Casa Vicens y la entrada del Park Güell.
+  // Radio 700: los dos quedan a ~600 m en direcciones opuestas.
+  Watchtower(
+    id: 'atalaya_gracia',
+    name: 'Atalaya de Gràcia',
+    location: LatLng(41.4090, 2.1522),
+    revealRadiusMeters: 700,
+  ),
+  // Passeig Marítim de la Barceloneta: La Cova Fumada y la Enoteca.
+  Watchtower(
+    id: 'atalaya_barceloneta',
+    name: 'Atalaya de la Barceloneta',
+    location: LatLng(41.3823, 2.1926),
+  ),
+  // Esquerra de l'Eixample (Mercat del Ninot): Disfrutar y Cinc Sentits.
+  Watchtower(
+    id: 'atalaya_ninot',
+    name: 'Atalaya del Ninot',
+    location: LatLng(41.3876, 2.1520),
+  ),
+  // Poble-sec (Plaça del Sortidor): Quimet & Quimet (y refuerza la Miró).
+  Watchtower(
+    id: 'atalaya_poblesec',
+    name: 'Atalaya del Poble-sec',
+    location: LatLng(41.3722, 2.1633),
   ),
 ];

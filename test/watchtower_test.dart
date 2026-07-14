@@ -43,6 +43,16 @@ void main() {
       final ids = kBarcelonaWatchtowers.map((t) => t.id).toSet();
       expect(ids.length, kBarcelonaWatchtowers.length);
     });
+
+    test('toda atalaya avista al menos un POI del pozo (no hay atalayas '
+        'inútiles; los números: tool/watchtower_coverage.dart)', () {
+      const distance = Distance();
+      for (final tower in kBarcelonaWatchtowers) {
+        final avistados = kBarcelonaPois.where((p) =>
+            distance(tower.location, p.location) <= tower.revealRadiusMeters);
+        expect(avistados, isNotEmpty, reason: tower.name);
+      }
+    });
   });
 
   group('WatchtowerController', () {

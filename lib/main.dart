@@ -979,7 +979,37 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                         : _poi.allPois
                             .where((p) => soloIds.contains(p.id))
                             .toList();
-                    return MarkerLayer(
+                    return Stack(children: [
+                      // Modo admin: el rango de cada atalaya sobre el mapa,
+                      // para colocar/ajustar contenido viendo qué alcanza.
+                      // Círculo grande = radio de avistado (por atalaya);
+                      // pequeño = radio de activación (70 m, global). Los
+                      // números exactos: tool/watchtower_coverage.dart.
+                      if (_adminMostrarTodos)
+                        CircleLayer(circles: [
+                          for (final tower in _watchtower.towers) ...[
+                            CircleMarker(
+                              point: tower.location,
+                              radius: tower.revealRadiusMeters,
+                              useRadiusInMeter: true,
+                              color: const Color(0xFF566B8C)
+                                  .withValues(alpha: 0.14),
+                              borderColor: const Color(0xFF8FA7CC)
+                                  .withValues(alpha: 0.75),
+                              borderStrokeWidth: 2,
+                            ),
+                            CircleMarker(
+                              point: tower.location,
+                              radius: kWatchtowerActivationRadiusMeters,
+                              useRadiusInMeter: true,
+                              color: const Color(0xFF1FB8C4)
+                                  .withValues(alpha: 0.25),
+                              borderColor: const Color(0xFF1FB8C4),
+                              borderStrokeWidth: 1.5,
+                            ),
+                          ],
+                        ]),
+                      MarkerLayer(
                     // Mantener los marcadores en vertical aunque se gire el
                     // mapa (flutter_map los contrarrota respecto a la cámara).
                     rotate: true,
@@ -1021,8 +1051,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                               child: _GhostPoiMarker(category: poi.category),
                             ),
                           ),
-                    ],
-                    );
+                      ],
+                      ),
+                    ]);
                   },
                 ),
                 // Marcador de "estás aquí" (solo si ya tenemos posición). Se
