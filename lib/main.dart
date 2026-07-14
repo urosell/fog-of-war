@@ -979,10 +979,12 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                         : _poi.allPois
                             .where((p) => soloIds.contains(p.id))
                             .toList();
-                    // Con el mapa cerca, cada atalaya enseña el nombre de su
-                    // lugar real; de lejos se esconden para no amontonarse.
-                    // MapCamera.of se suscribe: esto se rehace al mover/zoom.
-                    final conNombre = MapCamera.of(context).zoom >= 13.5;
+                    // Solo en modo admin (para colocar contenido): cada
+                    // atalaya enseña el nombre de su lugar real. Aun así, de
+                    // lejos se esconden para no amontonarse. MapCamera.of se
+                    // suscribe: esto se rehace al mover/zoom.
+                    final conNombre = _adminMostrarTodos &&
+                        MapCamera.of(context).zoom >= 13.5;
                     return Stack(children: [
                       // Modo admin: el rango de cada atalaya sobre el mapa,
                       // para colocar/ajustar contenido viendo qué alcanza.
