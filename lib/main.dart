@@ -285,6 +285,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   void _aplicarContenido() {
     _poi.setPois(_content.pois);
     _watchtower.setPois(_content.pois);
+    _watchtower.setTowers(_content.watchtowers);
     _mission.setCollections(_content.collections);
   }
 

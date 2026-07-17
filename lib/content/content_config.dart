@@ -13,6 +13,7 @@ const String? kSpreadsheetId = '1oLCwYutbWWN6ANN6oRhr5PJqyZcYeFDOpThDtYN0WaE';
 /// Nombres de las pestañas dentro de la hoja.
 const String kPoisSheetName = 'POIs';
 const String kCollectionsSheetName = 'Collections';
+const String kWatchtowersSheetName = 'Watchtowers';
 
 /// Idiomas soportados (deben coincidir con los de la app y los sufijos de las
 /// columnas name_xx / desc_xx de la hoja).

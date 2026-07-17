@@ -11,19 +11,27 @@ import 'package:latlong2/latlong.dart';
 
 import '../poi/poi.dart';
 import '../poi/poi_collection.dart';
+import '../watchtower/watchtower.dart';
 import 'content_config.dart';
 import 'game_content.dart';
 import 'icon_catalog.dart';
 
-/// Parsea las dos pestañas (CSV en texto) a un [GameContent]. Lanza si AMBAS
-/// listas quedan vacías (señal de CSV inválido: el llamador conserva lo previo).
-GameContent parseContent(String poisCsv, String collectionsCsv) {
+/// Parsea las pestañas (CSV en texto) a un [GameContent]. Lanza si POIs Y
+/// colecciones quedan vacíos (señal de CSV inválido: el llamador conserva lo
+/// previo). Las atalayas nunca invalidan la carga: sin pestaña válida se usa
+/// la semilla embebida.
+GameContent parseContent(String poisCsv, String collectionsCsv,
+    [String watchtowersCsv = '']) {
   final pois = _parsePois(poisCsv);
   final collections = _parseCollections(collectionsCsv);
   if (pois.isEmpty && collections.isEmpty) {
     throw const FormatException('Contenido vacío tras parsear el CSV');
   }
-  return GameContent(pois: pois, collections: collections);
+  return GameContent(
+    pois: pois,
+    collections: collections,
+    watchtowers: _parseWatchtowers(watchtowersCsv),
+  );
 }
 
 // --- POIs -----------------------------------------------------------------
@@ -163,6 +171,54 @@ List<PoiCollection> _parseCollections(String csv) {
       descriptions: descriptions,
       featured: _truthy(_cell(row, col, 'featured')),
     ));
+  }
+  return out;
+}
+
+// --- Atalayas ---------------------------------------------------------------
+
+/// Parsea la pestaña `Watchtowers`. Devuelve la SEMILLA embebida si el CSV no
+/// es de atalayas: si la pestaña no existe, gviz responde la PRIMERA pestaña
+/// de la hoja (POIs) con HTTP 200, y sus filas también tienen id/lat/lon — se
+/// convertirían en decenas de atalayas fantasma. La firma que distingue la
+/// pestaña buena es su columna `radius_m` en la cabecera.
+List<Watchtower> _parseWatchtowers(String csv) {
+  final rows = _toRows(csv);
+  if (rows.isEmpty) return kBarcelonaWatchtowers;
+  final col = _header(rows.first);
+  if (!col.containsKey('radius_m')) {
+    _warn('CSV de atalayas sin columna radius_m (¿falta la pestaña '
+        '"$kWatchtowersSheetName"?); usando la semilla');
+    return kBarcelonaWatchtowers;
+  }
+  final out = <Watchtower>[];
+  final seen = <String>{};
+  for (final row in rows.skip(1)) {
+    final id = _cell(row, col, 'id');
+    final name = _cell(row, col, 'name');
+    final lat = double.tryParse(_cell(row, col, 'lat'));
+    final lon = double.tryParse(_cell(row, col, 'lon'));
+    if (id.isEmpty || name.isEmpty || lat == null || lon == null) {
+      _warn('Atalaya ignorada (id/name/lat/lon inválidos): $row');
+      continue;
+    }
+    if (!seen.add(id)) {
+      _warn('Atalaya con id duplicado, ignorada: $id');
+      continue;
+    }
+    out.add(Watchtower(
+      id: id,
+      name: name,
+      location: LatLng(lat, lon),
+      revealRadiusMeters:
+          _tryDouble(_cell(row, col, 'radius_m')) ?? kWatchtowerRevealRadiusMeters,
+    ));
+  }
+  // Cabecera válida pero cero filas útiles: más probable un accidente de
+  // edición que querer un juego sin atalayas; mejor la semilla que nada.
+  if (out.isEmpty) {
+    _warn('Pestaña de atalayas sin filas válidas; usando la semilla');
+    return kBarcelonaWatchtowers;
   }
   return out;
 }

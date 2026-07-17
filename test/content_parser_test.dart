@@ -8,6 +8,7 @@ import 'dart:io';
 import 'package:fog_of_war/content/content_parser.dart';
 import 'package:fog_of_war/poi/poi.dart';
 import 'package:fog_of_war/poi/poi_collection.dart';
+import 'package:fog_of_war/watchtower/watchtower.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -122,16 +123,86 @@ void main() {
     });
   });
 
+  group('parseContent: atalayas', () {
+    const pois = 'id,name,lat,lon,category\n'
+        'a,Sitio A,41.4,2.1,museo\n';
+    const colls = 'id,icon,color,poi_ids,name_es,desc_es\n'
+        'c,star,#FFB300,"a","N","D"\n';
+
+    test('parsea la pestaña Watchtowers', () {
+      const towers = 'id,name,lat,lon,radius_m\n'
+          't1,Mirador Uno,41.40,2.10,800\n'
+          't2,Mirador Dos,41.41,2.11,\n'; // radio vacío → por defecto
+
+      final content = parseContent(pois, colls, towers);
+      expect(content.watchtowers.length, 2);
+
+      final t1 = content.watchtowers.firstWhere((t) => t.id == 't1');
+      expect(t1.name, 'Mirador Uno');
+      expect(t1.location.latitude, 41.40);
+      expect(t1.revealRadiusMeters, 800);
+
+      final t2 = content.watchtowers.firstWhere((t) => t.id == 't2');
+      expect(t2.revealRadiusMeters, kWatchtowerRevealRadiusMeters);
+    });
+
+    test('sin CSV de atalayas → semilla embebida', () {
+      final content = parseContent(pois, colls);
+      expect(content.watchtowers, kBarcelonaWatchtowers);
+    });
+
+    test('cabecera sin radius_m (gviz devolvió otra pestaña) → semilla', () {
+      // Si la pestaña Watchtowers no existe, gviz responde la PRIMERA pestaña
+      // (POIs) con HTTP 200. Sus filas tienen id/lat/lon válidos: sin la
+      // guarda, se convertirían en atalayas fantasma.
+      const impostor = 'id,name,lat,lon,category,maps_url\n'
+          'sagrada_familia,Sagrada Família,41.4036,2.1744,iglesia,\n'
+          'park_guell,Park Güell,41.4145,2.1527,parque,\n';
+
+      final content = parseContent(pois, colls, impostor);
+      expect(content.watchtowers, kBarcelonaWatchtowers);
+    });
+
+    test('filas inválidas o duplicadas se ignoran; sin ninguna válida → semilla',
+        () {
+      const soloMalas = 'id,name,lat,lon,radius_m\n'
+          ',Sin id,41.4,2.1,600\n'
+          't1,Sin coords,,,600\n';
+      expect(parseContent(pois, colls, soloMalas).watchtowers,
+          kBarcelonaWatchtowers);
+
+      const conDuplicada = 'id,name,lat,lon,radius_m\n'
+          't1,Buena,41.4,2.1,600\n'
+          't1,Duplicada,41.5,2.2,700\n';
+      final content = parseContent(pois, colls, conDuplicada);
+      expect(content.watchtowers.length, 1);
+      expect(content.watchtowers.single.name, 'Buena');
+    });
+  });
+
   group('plantilla docs/sheet', () {
     test('los CSV de arranque parsean y cuadran con la semilla', () {
       final poisCsv = File('docs/sheet/POIs.csv').readAsStringSync();
       final collsCsv = File('docs/sheet/Collections.csv').readAsStringSync();
+      final towersCsv = File('docs/sheet/Watchtowers.csv').readAsStringSync();
 
-      final content = parseContent(poisCsv, collsCsv);
+      final content = parseContent(poisCsv, collsCsv, towersCsv);
 
       // Mismo número de POIs y colecciones que el contenido embebido.
       expect(content.pois.length, kBarcelonaPois.length);
       expect(content.collections.length, kPoiCollections.length);
+
+      // Las atalayas de la plantilla calcan la semilla (id, sitio y radio).
+      expect(content.watchtowers.length, kBarcelonaWatchtowers.length);
+      for (var i = 0; i < kBarcelonaWatchtowers.length; i++) {
+        final semilla = kBarcelonaWatchtowers[i];
+        final csv = content.watchtowers[i];
+        expect(csv.id, semilla.id);
+        expect(csv.name, semilla.name);
+        expect(csv.location, semilla.location);
+        expect(csv.revealRadiusMeters, semilla.revealRadiusMeters,
+            reason: 'radio de ${semilla.id}');
+      }
 
       // Todos los poi_ids referenciados existen en la pestaña POIs.
       final ids = {for (final p in content.pois) p.id};

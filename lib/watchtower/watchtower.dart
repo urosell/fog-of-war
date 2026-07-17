@@ -35,7 +35,10 @@ class Watchtower {
   });
 }
 
-/// Atalayas jugables de Barcelona: cada una está ANCLADA a un lugar real y
+/// SEMILLA de atalayas de Barcelona. Desde que existe la pestaña `Watchtowers`
+/// de la Google Sheet (ver docs/sheet/README.md), la lista viva se edita ALLÍ:
+/// esta copia embebida solo se usa de arranque en frío y de respaldo si la
+/// pestaña falta o no valida. Cada atalaya está ANCLADA a un lugar real y
 /// reconocible (una plaza, un mirador, un mercado...) y su nombre es ese
 /// lugar, para que el jugador sepa exactamente adónde ir. Las coordenadas y
 /// el radio están verificados con `dart run tool/watchtower_coverage.dart`

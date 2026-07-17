@@ -15,6 +15,7 @@ import 'package:flutter/foundation.dart';
 
 import '../poi/poi.dart';
 import '../poi/poi_collection.dart';
+import '../watchtower/watchtower.dart';
 import 'content_config.dart';
 import 'content_parser.dart';
 import 'content_repository.dart';
@@ -29,9 +30,10 @@ class ContentController extends ChangeNotifier {
   GameContent _content = GameContent.seed();
   GameContent get content => _content;
 
-  /// Atajos al contenido actual (POIs y colecciones).
+  /// Atajos al contenido actual (POIs, colecciones y atalayas).
   List<Poi> get pois => _content.pois;
   List<PoiCollection> get collections => _content.collections;
+  List<Watchtower> get watchtowers => _content.watchtowers;
 
   /// Deja el contenido listo para usar YA: caché si la hay, si no la semilla.
   Future<void> loadInitial() async {
@@ -49,7 +51,8 @@ class ContentController extends ChangeNotifier {
       final remote = await _repo.fetchRemote(id);
       // Validamos parseando: si el CSV está roto, parseContent lanza y NO
       // cacheamos basura.
-      parseContent(remote.poisCsv, remote.collectionsCsv);
+      parseContent(remote.poisCsv, remote.collectionsCsv,
+          remote.watchtowersCsv);
       await _repo.writeCache(remote);
     } catch (e) {
       if (kDebugMode) debugPrint('[content] descarga fallida: $e');
@@ -59,7 +62,8 @@ class ContentController extends ChangeNotifier {
   // Parsea y aplica al contenido en uso. Si el parseo falla, conserva lo previo.
   bool _tryApply(RawContent raw) {
     try {
-      _content = parseContent(raw.poisCsv, raw.collectionsCsv);
+      _content = parseContent(
+          raw.poisCsv, raw.collectionsCsv, raw.watchtowersCsv);
       notifyListeners();
       return true;
     } catch (e) {

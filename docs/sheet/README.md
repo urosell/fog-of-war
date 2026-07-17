@@ -1,9 +1,9 @@
 # Contenido del juego desde una hoja de cálculo
 
-La app puede leer sus **POIs** y **colecciones** de una Google Sheet, para poder
-añadir contenido sin tocar código ni recompilar. Este directorio contiene la
-**plantilla de arranque** (`POIs.csv` y `Collections.csv`) con el contenido
-actual de Barcelona, lista para importar.
+La app puede leer sus **POIs**, **colecciones** y **atalayas** de una Google
+Sheet, para poder añadir contenido sin tocar código ni recompilar. Este
+directorio contiene la **plantilla de arranque** (`POIs.csv`, `Collections.csv`
+y `Watchtowers.csv`) con el contenido actual de Barcelona, lista para importar.
 
 ## Regla de oro: los `id` son sagrados
 
@@ -83,11 +83,35 @@ Si dejas un idioma en blanco, se usa el español como respaldo. Los `id` de
 `theater_comedy`, `palette`, `music_note`, `menu_book`.
 (¿Quieres otro icono? Pídemelo y lo añado al catálogo.)
 
+## Pestaña `Watchtowers`
+
+Las atalayas: miradores que, al llegar físicamente (a menos de 70 m), **avistan**
+los POIs de su alrededor (aparecen en gris; descubrirlos sigue exigiendo ir).
+Una fila por atalaya. Columnas:
+
+| Columna | Qué es | Ejemplo |
+|---|---|---|
+| `id` | Identificador único y estable (misma regla de oro que los POIs) | `atalaya_gracia` |
+| `name` | Nombre del lugar real al que está anclada (no se traduce) | `Plaça del Sol` |
+| `lat` / `lon` | Coordenadas (grados decimales, con **punto**) | `41.4016` / `2.1567` |
+| `radius_m` | Radio de avistado en metros. Vacío = 600. | `800` |
+
+> **Importante:** la columna `radius_m` debe existir en la cabecera **aunque
+> dejes celdas vacías**: es la firma con la que la app reconoce la pestaña. Si
+> la pestaña no existe o le falta esa columna, la app ignora la descarga y usa
+> las atalayas embebidas de fábrica (no se rompe nada, pero tus cambios no
+> salen).
+
+Para colocar atalayas nuevas o ajustar radios sin ir a ciegas:
+`dart run tool/watchtower_coverage.dart` descarga esta misma hoja y te dice qué
+POIs avista cada atalaya y cuáles quedan huérfanos. En el móvil, el modo admin
+dibuja el círculo de rango de cada atalaya sobre el mapa.
+
 ## Puesta en marcha (una sola vez)
 
-1. Crea una Google Sheet con **dos pestañas** llamadas exactamente `POIs` y
-   `Collections`.
-2. Importa `POIs.csv` en la pestaña `POIs` y `Collections.csv` en `Collections`
+1. Crea una Google Sheet con **tres pestañas** llamadas exactamente `POIs`,
+   `Collections` y `Watchtowers`.
+2. Importa cada CSV de esta carpeta en su pestaña
    (Archivo → Importar → Subir → "Reemplazar hoja actual").
 3. Comparte la hoja: **Compartir → Acceso general → "Cualquiera con el enlace" →
    Lector**.

@@ -16,7 +16,7 @@ import 'watchtower_storage.dart';
 
 class WatchtowerController extends ChangeNotifier {
   final WatchtowerStorage _storage;
-  final List<Watchtower> _towers;
+  List<Watchtower> _towers;
   List<Poi> _pois;
   final Distance _distance = const Distance();
 
@@ -39,6 +39,16 @@ class WatchtowerController extends ChangeNotifier {
   /// POIs quedan avistados por las atalayas ya activadas.
   void setPois(List<Poi> pois) {
     _pois = pois;
+    _recomputeSighted();
+    notifyListeners();
+  }
+
+  /// Reemplaza las atalayas (contenido cargado de la hoja) y recalcula los
+  /// avistados. Las activaciones guardadas son solo IDs: las de atalayas que
+  /// ya no existan siguen contando para los logros (se ganaron) pero no
+  /// avistan nada, y reviven completas si la atalaya vuelve a la hoja.
+  void setTowers(List<Watchtower> towers) {
+    _towers = towers;
     _recomputeSighted();
     notifyListeners();
   }
