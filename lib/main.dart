@@ -45,7 +45,8 @@ import 'ui/cities_screen.dart';
 import 'ui/hud.dart';
 import 'ui/leaderboard_screen.dart';
 import 'ui/onboarding_screen.dart';
-import 'ui/poi_collection_screen.dart' show iconForCategory, PoiCollectionScreen;
+import 'ui/poi_collection_screen.dart'
+    show iconForCategory, colorForCategory, PoiCollectionScreen;
 import 'ui/poi_collections_screen.dart';
 import 'ui/poi_detail_sheet.dart';
 import 'ui/settings_screen.dart';
@@ -1110,7 +1111,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   }
 }
 
-// Marcador de un POI descubierto: un círculo ámbar con el icono de su categoría.
+// Marcador de un POI descubierto: un círculo del color de su categoría con el
+// icono (blanco) de esa categoría dentro.
 class _PoiMarker extends StatelessWidget {
   final PoiCategory category;
 
@@ -1120,7 +1122,7 @@ class _PoiMarker extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFFFB300), // ámbar: "tesoro" descubierto
+        color: colorForCategory(category), // cada categoría, su color
         shape: BoxShape.circle,
         border: Border.all(color: Colors.white, width: 2.5),
         boxShadow: const [

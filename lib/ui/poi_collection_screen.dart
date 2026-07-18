@@ -43,6 +43,34 @@ IconData iconForCategory(PoiCategory c) {
   }
 }
 
+/// Color de marca de cada categoría, para pintar el marcador del POI en el mapa
+/// (círculo relleno con el icono blanco encima). Cada tipo su color, para que el
+/// mapa se lea "colorido" y se distingan las categorías de un vistazo. Son tonos
+/// de luminosidad media (contrastan con el icono blanco) y bien separados entre
+/// sí; se evita el turquesa a propósito, que es el color de las atalayas.
+Color colorForCategory(PoiCategory c) {
+  switch (c) {
+    case PoiCategory.monumento:
+      return const Color(0xFFE0A02A); // dorado ámbar (piedra noble)
+    case PoiCategory.iglesia:
+      return const Color(0xFF7C4DD4); // violeta litúrgico
+    case PoiCategory.museo:
+      return const Color(0xFF3E6FD6); // azul cultura
+    case PoiCategory.parque:
+      return const Color(0xFF2E9E4A); // verde naturaleza
+    case PoiCategory.mirador:
+      return const Color(0xFF0FA383); // esmeralda (vistas)
+    case PoiCategory.plaza:
+      return const Color(0xFFB846B8); // magenta urbano
+    case PoiCategory.tienda:
+      return const Color(0xFFDD5591); // rosa comercio
+    case PoiCategory.michelin:
+      return const Color(0xFFD83A4F); // rojo estrella
+    case PoiCategory.tapas:
+      return const Color(0xFFE85A2E); // naranja tapas
+  }
+}
+
 /// Color ámbar de un POI descubierto (mismo "tesoro" que sus marcadores).
 const Color _kDiscoveredColor = Color(0xFFFFB300);
 
