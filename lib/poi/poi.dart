@@ -21,6 +21,7 @@ enum PoiCategory {
   iglesia(label: 'Iglesia', points: 45, radiusMeters: 80),
   museo(label: 'Museo', points: 40, radiusMeters: 50),
   parque(label: 'Parque', points: 30, radiusMeters: 120),
+  playa(label: 'Playa', points: 30, radiusMeters: 150),
   mirador(label: 'Mirador', points: 25, radiusMeters: 50),
   plaza(label: 'Plaza', points: 20, radiusMeters: 100),
   tienda(label: 'Tienda', points: 15, radiusMeters: 30),

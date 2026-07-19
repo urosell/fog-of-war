@@ -30,6 +30,8 @@ IconData iconForCategory(PoiCategory c) {
       return Icons.museum;
     case PoiCategory.parque:
       return Icons.park;
+    case PoiCategory.playa:
+      return Icons.beach_access;
     case PoiCategory.mirador:
       return Icons.landscape;
     case PoiCategory.plaza:
@@ -58,6 +60,8 @@ Color colorForCategory(PoiCategory c) {
       return const Color(0xFF3E6FD6); // azul cultura
     case PoiCategory.parque:
       return const Color(0xFF2E9E4A); // verde naturaleza
+    case PoiCategory.playa:
+      return const Color(0xFF1F9BE0); // azul cerúleo (mar)
     case PoiCategory.mirador:
       return const Color(0xFF0FA383); // esmeralda (vistas)
     case PoiCategory.plaza:
