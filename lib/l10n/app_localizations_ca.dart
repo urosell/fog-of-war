@@ -126,6 +126,20 @@ class AppLocalizationsCa extends AppLocalizations {
   }
 
   @override
+  String get watchtowerSheetStatusActive => 'Talaia activada';
+
+  @override
+  String get watchtowerSheetStatusInactive => 'Sense activar';
+
+  @override
+  String get watchtowerSheetHint =>
+      'Això és una talaia. Acosta\'t per activar-la: en fer-ho es mostraran tots els punts d\'interès que tingui a prop. 🔭';
+
+  @override
+  String get watchtowerSheetHintActive =>
+      'Ja l\'has activat: et mostra els punts d\'interès del seu voltant.';
+
+  @override
   String get notifDiscoveryTitle => 'Nou descobriment!';
 
   @override

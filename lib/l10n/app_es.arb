@@ -40,6 +40,10 @@
   "poiDiscoveredSingle": "🏛️ ¡Descubriste {name}!  +{points} puntos",
   "poiDiscoveredMultiple": "🏛️ ¡{count} POIs descubiertos!  +{points} puntos",
   "watchtowerSighted": "🔭 {name}: {count} puntos avistados",
+  "watchtowerSheetStatusActive": "Atalaya activada",
+  "watchtowerSheetStatusInactive": "Sin activar",
+  "watchtowerSheetHint": "Esto es una atalaya. Acércate para activarla: al hacerlo se mostrarán todos los puntos de interés que tenga cerca. 🔭",
+  "watchtowerSheetHintActive": "Ya la has activado: te muestra los puntos de interés de su alrededor.",
   "notifDiscoveryTitle": "¡Nuevo descubrimiento!",
 
   "mapStyleVoyager": "Voyager",

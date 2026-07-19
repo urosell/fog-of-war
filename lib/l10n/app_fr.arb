@@ -40,6 +40,10 @@
   "poiDiscoveredSingle": "🏛️ Vous avez découvert {name} !  +{points} points",
   "poiDiscoveredMultiple": "🏛️ {count} POIs découverts !  +{points} points",
   "watchtowerSighted": "🔭 {name} : {count} POI en vue",
+  "watchtowerSheetStatusActive": "Tour de guet activée",
+  "watchtowerSheetStatusInactive": "Pas encore activée",
+  "watchtowerSheetHint": "Ceci est une tour de guet. Approche-toi pour l'activer : cela révèle tous les points d'intérêt à proximité. 🔭",
+  "watchtowerSheetHintActive": "Tu l'as déjà activée : elle révèle les points d'intérêt autour d'elle.",
   "notifDiscoveryTitle": "Nouvelle découverte !",
 
   "mapStyleVoyager": "Voyager",

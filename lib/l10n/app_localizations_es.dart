@@ -126,6 +126,20 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get watchtowerSheetStatusActive => 'Atalaya activada';
+
+  @override
+  String get watchtowerSheetStatusInactive => 'Sin activar';
+
+  @override
+  String get watchtowerSheetHint =>
+      'Esto es una atalaya. Acércate para activarla: al hacerlo se mostrarán todos los puntos de interés que tenga cerca. 🔭';
+
+  @override
+  String get watchtowerSheetHintActive =>
+      'Ya la has activado: te muestra los puntos de interés de su alrededor.';
+
+  @override
   String get notifDiscoveryTitle => '¡Nuevo descubrimiento!';
 
   @override

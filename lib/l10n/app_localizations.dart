@@ -300,6 +300,30 @@ abstract class AppLocalizations {
   /// **'🔭 {name}: {count} POIs in sight'**
   String watchtowerSighted(String name, int count);
 
+  /// No description provided for @watchtowerSheetStatusActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Watchtower activated'**
+  String get watchtowerSheetStatusActive;
+
+  /// No description provided for @watchtowerSheetStatusInactive.
+  ///
+  /// In en, this message translates to:
+  /// **'Not activated yet'**
+  String get watchtowerSheetStatusInactive;
+
+  /// No description provided for @watchtowerSheetHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This is a watchtower. Get close to activate it: doing so reveals all the points of interest nearby. 🔭'**
+  String get watchtowerSheetHint;
+
+  /// No description provided for @watchtowerSheetHintActive.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve already activated it: it reveals the points of interest around it.'**
+  String get watchtowerSheetHintActive;
+
   /// No description provided for @notifDiscoveryTitle.
   ///
   /// In en, this message translates to:

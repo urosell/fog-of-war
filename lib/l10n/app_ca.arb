@@ -40,6 +40,10 @@
   "poiDiscoveredSingle": "🏛️ Has descobert {name}!  +{points} punts",
   "poiDiscoveredMultiple": "🏛️ {count} POIs descoberts!  +{points} punts",
   "watchtowerSighted": "🔭 {name}: {count} punts albirats",
+  "watchtowerSheetStatusActive": "Talaia activada",
+  "watchtowerSheetStatusInactive": "Sense activar",
+  "watchtowerSheetHint": "Això és una talaia. Acosta't per activar-la: en fer-ho es mostraran tots els punts d'interès que tingui a prop. 🔭",
+  "watchtowerSheetHintActive": "Ja l'has activat: et mostra els punts d'interès del seu voltant.",
   "notifDiscoveryTitle": "Nou descobriment!",
 
   "mapStyleVoyager": "Voyager",

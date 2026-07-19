@@ -64,6 +64,10 @@
       "count": { "type": "int" }
     }
   },
+  "watchtowerSheetStatusActive": "Watchtower activated",
+  "watchtowerSheetStatusInactive": "Not activated yet",
+  "watchtowerSheetHint": "This is a watchtower. Get close to activate it: doing so reveals all the points of interest nearby. 🔭",
+  "watchtowerSheetHintActive": "You've already activated it: it reveals the points of interest around it.",
   "notifDiscoveryTitle": "New discovery!",
 
   "mapStyleVoyager": "Voyager",

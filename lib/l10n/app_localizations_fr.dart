@@ -126,6 +126,20 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get watchtowerSheetStatusActive => 'Tour de guet activée';
+
+  @override
+  String get watchtowerSheetStatusInactive => 'Pas encore activée';
+
+  @override
+  String get watchtowerSheetHint =>
+      'Ceci est une tour de guet. Approche-toi pour l\'activer : cela révèle tous les points d\'intérêt à proximité. 🔭';
+
+  @override
+  String get watchtowerSheetHintActive =>
+      'Tu l\'as déjà activée : elle révèle les points d\'intérêt autour d\'elle.';
+
+  @override
   String get notifDiscoveryTitle => 'Nouvelle découverte !';
 
   @override

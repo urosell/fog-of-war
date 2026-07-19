@@ -52,6 +52,7 @@ import 'ui/poi_detail_sheet.dart';
 import 'ui/settings_screen.dart';
 import 'ui/toast.dart';
 import 'ui/transitions.dart';
+import 'ui/watchtower_detail_sheet.dart';
 import 'watchtower/watchtower.dart';
 import 'watchtower/watchtower_controller.dart';
 
@@ -657,6 +658,16 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     );
   }
 
+  // Abre el panel de detalle de una atalaya al tocar su marcador: su nombre, si
+  // está activada o no, y la frase que explica el avistado.
+  void _abrirDetalleAtalaya(Watchtower tower) {
+    showWatchtowerDetailSheet(
+      context: context,
+      tower: tower,
+      activated: _watchtower.isActivated(tower),
+    );
+  }
+
   // Abre la pantalla de una colección concreta (desde un chip del detalle de un
   // POI). Si dentro tocas un POI descubierto, la pantalla se cierra devolviéndolo
   // y centramos el mapa en él (igual que la misión fijada).
@@ -1032,9 +1043,12 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                           width: 150,
                           height: 70,
                           alignment: const Alignment(0, 0.37),
-                          child: _WatchtowerMarker(
-                            activated: _watchtower.isActivated(tower),
-                            name: conNombre ? tower.name : null,
+                          child: GestureDetector(
+                            onTap: () => _abrirDetalleAtalaya(tower),
+                            child: _WatchtowerMarker(
+                              activated: _watchtower.isActivated(tower),
+                              name: conNombre ? tower.name : null,
+                            ),
                           ),
                         ),
                       // POIs: dorado si descubierto; gris si solo avistado. En

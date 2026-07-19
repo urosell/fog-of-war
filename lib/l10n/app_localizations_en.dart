@@ -126,6 +126,20 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get watchtowerSheetStatusActive => 'Watchtower activated';
+
+  @override
+  String get watchtowerSheetStatusInactive => 'Not activated yet';
+
+  @override
+  String get watchtowerSheetHint =>
+      'This is a watchtower. Get close to activate it: doing so reveals all the points of interest nearby. 🔭';
+
+  @override
+  String get watchtowerSheetHintActive =>
+      'You\'ve already activated it: it reveals the points of interest around it.';
+
+  @override
   String get notifDiscoveryTitle => 'New discovery!';
 
   @override
